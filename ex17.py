@@ -1,0 +1,17 @@
+from sys import argv
+from os.path import exists
+
+script, fromFile, toFile = argv
+
+print "Copying from %s to %s" % (fromFile, toFile)
+
+# TODO: accomplish this in 1 line
+inFile = open(fromFile)
+inData = inFile.read()
+
+print "The input file length is %d bytes long" % len(inData)
+
+print "Does the output file exist? %r" exists(toFile)
+
+print "Ready, hit RETURN to continue, else CTRL-C to abort."
+

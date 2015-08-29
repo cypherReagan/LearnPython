@@ -11,23 +11,18 @@ raw_input("?")
 print "Opening the file %r..." % filename
 target = open(filename, 'w')
 
-print "Truncating the file..."
-target.truncate()
+# The following is redundant. The w option in open() call
+# will truncate automatically.
+#print "Truncating the file..."
+#target.truncate()
 
 print "Now I'm going to ask you for 3 lines."
 
-line = raw_input("line1: ")
-target.write(line)
-target.write("\n")
+line1 = raw_input("line1: ")
+line2 = raw_input("line2: ")
+line3 = raw_input("line3: ")
 
-line = raw_input("line2: ")
-target.write(line)
-target.write("\n")
-
-
-line = raw_input("line3: ")
-target.write(line)
-target.write("\n")
+target.write(line1 + "\n" + line2 + "\n" + line3 + "\n")
 
 
 print"Closing file..."
