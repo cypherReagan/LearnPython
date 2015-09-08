@@ -1,8 +1,13 @@
+# This script will generate OOP questions from random word list
+# and allow user to drill concepts.
+#
+# example calls: 
+#	python ex41_OOP.py english	- gives English phrase that requires user to provide code example
+#	python ex41_OOP.py			- gives code example that requires user to provide description
+
 import random
 from urllib import urlopen
 import sys
-
-# example call: python ex41.py english
 
 # Globals here
 WORD_URL = "http://learncodethehardway.org/words.txt"
@@ -33,13 +38,18 @@ else:
 for word in urlopen(WORD_URL).readlines():
 	WORD_LIST.append(word.strip())
 	
-	
-# convert snippet in phrases dict
+#----------------------------------------------------------------------
+# Function converts snippet in phrases dict to fake code example.
+#
+# Preconditon: 	WORD_LIST is populated from URL file in order to 
+#				generate random names.
+#----------------------------------------------------------------------
 def convert(snippet, phrase):
 	classNames = [w.capitalize() for w in 
 				  random.sample(WORD_LIST, snippet.count("%%%"))]
 				  
 	otherNames = random.sample(WORD_LIST, snippet.count("***"))
+	
 	resultList = []
 	paramNamesList = [] 
 	
@@ -48,17 +58,19 @@ def convert(snippet, phrase):
 		paramNamesList.append(','.join(random.samples(WORD_LIST, paramCount)))
 		
 	for sentence in snippet, phrase:
+		# use list slice to copy all elements from sentence and 
+		# create result list with these elements
 		result = sentence[:]
 		
-		# fake class names
+		# generate fake class names
 		for word in classNames:
 			result = result.replace("%%%", word, 1)
 			
-		# fake other names
+		# generate fake other names
 		for word in otherNames:
 			result = result.replace("***", word, 1)
 			
-		# fake parameter list
+		# generate fake parameter list
 		for word in paramNamesList:
 			result = result.replace("@@@", word, 1)
 			
@@ -71,12 +83,12 @@ def convert(snippet, phrase):
 try:
 	while True:
 		# get list of all phrase keys (code snippets) 
-		# and shuffle the
+		# and shuffle them randomly
 		snippetList = PHRASES_DICT.keys()
 		random.shuffle(snippetList)
 		
 		for snippet in snippetList:
-		# use randomly-shuffled key to get current phrase
+			# use randomly-shuffled key to get current quiz phrase
 			phrase = PHRASES_DICT[snippet]
 			question, answer = convert(snippet, phrase)
 			
