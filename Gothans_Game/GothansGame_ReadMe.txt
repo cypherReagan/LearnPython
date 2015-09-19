@@ -37,4 +37,10 @@ Design:
 		  * Laser Weapon Armory
 		  * The Bridge
 		  * Escape Pod
+		  
+_______________________________________________________________________________________________
+
+These are my notes:  
+
+IDEA: After completing the Bridge scene, implement a global counter to expire in X minutes.
 		
