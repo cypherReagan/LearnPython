@@ -37,6 +37,9 @@ Design:
 		  * Laser Weapon Armory
 		  * The Bridge
 		  * Escape Pod
+		* Attack
+		  - evalute_attack
+		  - is_valid
 		  
 _______________________________________________________________________________________________
 
@@ -44,3 +47,25 @@ These are my notes:
 
 IDEA: After completing the Bridge scene, implement a global counter to expire in X minutes.
 		
+		
+COMBAT IDEAS:
+	- 	Rock-paper-scissor scenario? 
+		I choose attack A, enemy (randomly!) chooses attack B. 
+		A beats B so I win. As an extra bonus, with markov chains you cam make an AI for
+		it if you want tougher opponents.
+		
+		Ex.
+			Rock - beats scissors, loses to paper
+			Paper - beats scissors, loses to rock
+			Scissors - beats paper, loses to rock
+			
+			
+		
+	-	Ranged attack?
+		Type: snipe <direction> <target>
+		Let's say that there is a jawa 5 rooms to the east, and the player is holding a rifle, they would type:
+		Type: snipe east jawa
+		The code would first look at the contents of the room directly to the east of this one if there is one. 
+		If there are no targets named jawa, it continues by searching any room directly east of the one it just 
+		checked until it reaches a certain distance (in number of rooms), finds the target, or there are no more 
+		rooms to the east.
