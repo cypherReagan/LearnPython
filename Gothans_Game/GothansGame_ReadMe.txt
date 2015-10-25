@@ -32,6 +32,7 @@ Design:
 		  - play
 		* Scene
 		  - enter
+		  - run_attack
 		  * Death
 		  * Central Corridor
 		  * Laser Weapon Armory
@@ -56,8 +57,12 @@ COMBAT IDEAS:
 		
 		Ex.
 			Rock - beats scissors, loses to paper
-			Paper - beats scissors, loses to rock
+			Paper - beats rock, loses to scissors
 			Scissors - beats paper, loses to rock
+			
+			Leg Sweep - beats knife, loses to cloak
+			Cloak - beats leg sweep, loses to knife
+			Knife - beats cloak, loses to leg sweep
 			
 			
 		
@@ -69,3 +74,12 @@ COMBAT IDEAS:
 		If there are no targets named jawa, it continues by searching any room directly east of the one it just 
 		checked until it reaches a certain distance (in number of rooms), finds the target, or there are no more 
 		rooms to the east.
+		
+DEATH IDEAS:
+	-	I could create a whole host of death descriptions (i.e. "The Gothan proceeds to dismember you.").
+		I could then randomly select one on each death instance.
+		
+EXPANSION IDEAS:
+	- 	Overrides:	At each keypad, allow user to override the door controls by cutting/splicing wires (red/green/black). 
+					These wires would be connected to power/control/ect...
+	

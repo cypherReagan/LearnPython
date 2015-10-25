@@ -24,7 +24,9 @@ ARMORY_CHEAT = 'pass armory'
 BRIDGE_CHEAT = 'pass bridge'
 EP_CHEAT = 'pass ep'
 
+INVALID_ENTRY_RSP = 'DOES NOT COMPUTE!'
 HELP_REQ_STR = '?'
+OVERRIDE_CMD_STR = 'hack'
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -77,6 +79,20 @@ class Attack:
 		print "-------------"
 		print "%s" % desc
 		print "-------------"
+		
+	# Gets the attack name string based on number.
+	# Returns empty string on invalid attackNum.
+	def get_attack_name(self, attackNum):
+		retStr = ""
+		
+		if (attackNum == Attack.ROCK):
+			retStr = "Rock"
+		elif (attackNum == Attack.PAPER):
+			retStr = "Paper"
+		elif (attackNum == Attack.SCISSORS):
+			retStr = "Scissors"
+		
+		return retStr
 		
 	# Determines winning attack given 2 inputs.
 	# Returns:
@@ -149,6 +165,77 @@ class Scene(object):
 		print "Subclasses handle implentation."
 		exit(1)
 		
+	# Runs attack scenario of user against Gothan.
+	# Returns:
+	#	- True if user wins, else False
+	def run_attack(self):
+		retVal = False
+		
+		done = False
+				
+		while (not done):
+			answer = raw_input("[Attack %s]> " % Attack.OPTION_STR)
+			
+			anAttack = Attack()
+			
+			if (answer == HELP_REQ_STR):
+				anAttack.print_desc()
+			else:
+				userAttack = anAttack.translate_cmd(answer)
+				
+				if (userAttack == Attack.INVALID):
+					print INVALID_ENTRY_RSP
+				else:
+					gothanAttack = anAttack.get_random_attack()
+					print "The Gothan attacks with %s" % anAttack.get_attack_name(gothanAttack)
+					
+					if (userAttack == gothanAttack):
+						# we have a tie
+						print "The two attacks cancel each other. Try again."
+					else:
+						result = anAttack.evaluate(userAttack, gothanAttack)
+						
+						if (result == userAttack):
+							retVal = True
+															
+						done = True
+		
+		return retVal
+		
+		
+	# Runs keypad scenario of user entering keycode.
+	# Returns:
+	#	- True if user passes, else False
+	def run_keyPad(self, cheatCode, retryMax):
+		retVal = False
+		
+		keyCode = randint(1, 9)
+		print "DEBUG_JW: keyCode = %d" % keyCode
+		print "DEBUG_JW: retryMax = %d" % retryMax
+		
+		tryCount = 0
+		done = False
+		 
+		while (not done):
+			answer = raw_input("[Code]> ")
+			answerNum = int(answer)
+			print "DEBUG_JW: answerNum = %d" % answerNum
+		
+			if ((answerNum == keyCode) or (answerNum == cheatCode)):
+				retVal = True
+				done = True
+			else:
+				tryCount += 1
+				
+				if (tryCount > retryMax):
+					print """
+					You ran out of guesses. The system sounds an alarm and locks you out!\n 
+					A Gothan sneaks up and disembowels you with his super-sharp blade.
+					"""
+					done = True
+		
+		return retVal
+		
 		
 class Death(Scene):
 	
@@ -177,58 +264,76 @@ class CentralCorridor(Scene):
 			retScene = ARMORY_KEY
 		else:
 			if (answer == 'attack'):
-			
-				done = False
+				isWin = self.run_attack()
 				
-				while (not done):
-					answer = raw_input("[Attack %s]> " % Attack.OPTION_STR)
-					
-					anAttack = Attack()
-					
-					if (answer == HELP_REQ_STR):
-						anAttack.print_desc()
-					else:
-						userAttack = anAttack.translate_cmd(answer)
-						
-						if (userAttack == Attack.INVALID):
-							print "DOES NOT COMPUTE!"
-						else:
-							gothanAttack = anAttack.get_random_attack()
-							print "DEBUG_JW: GothanAttack = %d" % gothanAttack
-							
-							if (userAttack == gothanAttack):
-								# we have a tie
-								print "The Gothan responds with the same attack and blocks you. Try again."
-							else:
-								result = anAttack.evaluate(userAttack, gothanAttack)
-								
-								if (result == userAttack):
-									retScene = ARMORY_KEY
-								
-								done = True
+				if (isWin):
+					print "You defeated the Gothan!"
+					retScene = ARMORY_KEY
 				
 			else:
 				# user chose not to attack => Death
 				print "The Gothan proceeds to dismember you."
 		
 		return retScene
-		pass
+		
+	
 		
 		
 class Armory(Scene):
 	
 	def enter(self):
 		retScene = DEATH_KEY
-		print "This is the Laser Weapon Armory. This is where you get the neutron bomb."
+		print "\nYou are now in the Laser Weapon Armory. This is where you get the neutron bomb."
 		print "It must be placed on the bridge to blow up the ship. You must guess the keypad code to obtain the bomb."
 		
-		answer = raw_input("[Code]> ")
+		answer = raw_input("[Action]> ")
 		
 		if (answer == ARMORY_CHEAT):
 			retScene = BRIDGE_KEY
+		else:
+			if (answer == 'keypad'):
+				isWin = self.run_keyPad(ARMORY_CHEAT, 4)
+				
+				if (isWin):
+					retScene = BRIDGE_KEY
+				else:
+					print "A Gothan hears the alarms and moves in to attack!"
+					
+					answer = raw_input("[Action]> ")
+		
+					if (answer == ARMORY_CHEAT):
+						retScene = BRIDGE_KEY
+					else:
+						if (answer == 'attack'):
+							isWin = self.run_attack()
+							
+							if (isWin):
+								print "You defeated the Gothan but the door is still locked."
+								
+								done = False
+								
+								while (not done):
+									answer = raw_input("[Action]> ")
+
+									if (answer == ARMORY_CHEAT):
+										retScene = BRIDGE_KEY
+									else:
+										if (answer == OVERRIDE_CMD_STR):
+											# TODO: implement override
+											retScene = BRIDGE_KEY
+											done = True
+										else:
+											print INVALID_ENTRY_RSP
+								
+						else:
+							# user chose not to attack => Death
+							print "The Gothan proceeds to dismember you."
+				
+			elif (answer == OVERRIDE_CMD_STR):
+				#TODO: implement override functionality
+				retScene = BRIDGE_KEY
 		
 		return retScene
-		pass
 		
 		
 class Bridge(Scene):
