@@ -1,14 +1,16 @@
 # Name				: GothansGame.py
-# Author			: Jonathan Walker
+# Author			: JWalker
 # Created			: 17th September 2015
 # Version			: 1.0
+# RuntimeError		: Python27
 
-# Implementation of Gothans from the Planet Percal #25
+# Implementation of Gothans Attack
 
 # Concept from Learn Python the Hard Way ex43
 
 from sys import exit
 from random import randint
+import AsciiArt
 
 
 #Globals
@@ -44,7 +46,7 @@ class Attack:
 	SCISSORS = 3
 	
 	MAX_ATTACK_NUM = 3
-	OPTION_STR = 'r/p/s/' + HELP_REQ_STR
+	OPTION_STR = 'h/n/k/' + HELP_REQ_STR
 	
 	def is_valid(self, inputAttack):
 		retVal = False
@@ -57,11 +59,11 @@ class Attack:
 	def translate_cmd(self, attackCmd):
 		retAttack = Attack.INVALID
 		
-		if (attackCmd == 'r'):
+		if (attackCmd == 'h'):
 			retAttack = Attack.ROCK
-		elif (attackCmd == 'p'):
+		elif (attackCmd == 'n'):
 			retAttack = Attack.PAPER
-		elif (attackCmd == 's'):
+		elif (attackCmd == 'k'):
 			retAttack = Attack.SCISSORS
 			
 		return retAttack
@@ -71,9 +73,9 @@ class Attack:
 	
 	def print_desc(self):
 		desc = """
-		Rock (r) - beats scissors, loses to paper\n
-		Paper (p) - beats scissors, loses to rock\n
-		Scissors (s) - beats paper, loses to rock\n
+		Helmet (h) - beats knife, loses to net\n
+		Net (n) - beats scissors, loses to knife\n
+		Knife (k) - beats paper, loses to helmet\n
 		"""
 
 		print "-------------"
@@ -126,6 +128,61 @@ class Attack:
 	
 #---------------------------------------------------
 #---------------------------------------------------
+# Class: Override
+#
+# Member Variables:	
+#		wireDict - dictionary containing override config
+#--------------------------------------------------
+#---------------------------------------------------		
+class Override(object):
+	
+	# global IDs
+	INVALID_ID = -1
+	RED_ID = 0
+	GREEN_ID = 1
+	YELLOW_ID = 2
+	
+	
+	def __init__(self):
+	
+		wireColorList = {'red', 'green', 'yellow'}
+	
+		wireDict = {
+			'keypad': '',
+			'door': '',
+			'battery': ''
+		}
+		
+		self.set_wires()
+		
+	def set_wires(self):
+		#DEBUG_JW - TODO: randomize this
+		self.wireDict['keypad'] = self.wireColorList[RED_ID]
+		self.wireDict['door'] = self.wireColorList[GREEN_ID]
+		self.wireDict['battery'] = self.wireColorList[YELLOW_ID]
+		
+	
+	# Determines successful override given 2 input wires. 
+	# Success = cross 'door' with 'battery'.
+	# Returns TRUE if override succeeds, else FALSE
+	def evaluate(self, wireStr1, wireStr2):
+	
+		retVal = False
+		
+		#DEBUG_JW - testing
+		print "door wire = %s" % self.wireDict['door']
+		print "battery wire = %s" % self.wireDict['battery']
+		
+		cond1 = ((wireStr1 == self.wireDict['door']) and (wireStr2 == self.wireDict['battery']))
+		cond2 = ((wireStr1 == self.wireDict['battery']) and (wireStr2 == self.wireDict['door']))
+		
+		if ((cond1) or (cond2)):
+			retVal = True
+		
+		return retVal
+		
+#---------------------------------------------------
+#---------------------------------------------------
 # Class: Engine
 #
 # Member Variables:	
@@ -136,19 +193,19 @@ class Engine(object):
 	
 	def __init__(self, sceneMap):
 		self.sceneMap = sceneMap
-		pass
 		
 	def play(self):
-		print "------------------------------------------------"
+		print "------------------------------------------------------------------------------------------------"
+		print AsciiArt.GothansGameTitle
+		print "------------------------------------------------------------------------------------------------\n"
 		print "Gothans have invaded your spaceship... time to blow this baby and escape to the planet below!\n\n"
 		# need while-loop here to drive game
 		result = self.sceneMap.opening_scene()
 		
 		while (result != FINISH_RESULT):
-			print "DEBUG_JW: Engine::play() - result = %s" % result
 			result = self.sceneMap.next_scene(result)
 			
-		print"DONE!!!"
+		print"GAME OVER"
 		exit(1)
 
 
@@ -203,7 +260,7 @@ class Scene(object):
 		return retVal
 		
 		
-	# Runs keypad scenario of user entering keycode.
+	# Runs scenario of user entering keycode.
 	# Returns:
 	#	- True if user passes, else False
 	def run_keyPad(self, cheatCode, retryMax):
@@ -218,21 +275,48 @@ class Scene(object):
 		 
 		while (not done):
 			answer = raw_input("[Code]> ")
-			answerNum = int(answer)
-			print "DEBUG_JW: answerNum = %d" % answerNum
-		
-			if ((answerNum == keyCode) or (answerNum == cheatCode)):
-				retVal = True
+			
+			if (answer == OVERRIDE_CMD_STR):
+				retVal = self.run_override()
 				done = True
 			else:
-				tryCount += 1
-				
-				if (tryCount > retryMax):
-					print """
-					You ran out of guesses. The system sounds an alarm and locks you out!\n 
-					A Gothan sneaks up and disembowels you with his super-sharp blade.
-					"""
+				answerNum = int(answer)
+				print "DEBUG_JW: answerNum = %d" % answerNum
+			
+				if ((answerNum == keyCode) or (answerNum == cheatCode)):
+					retVal = True
 					done = True
+				else:
+					tryCount += 1
+					
+					if (tryCount > retryMax):
+						print """
+						You ran out of guesses. The system sounds an alarm and locks you out!\n 
+						A Gothan sneaks up and disembowels you with his super-sharp blade.
+						"""
+						done = True
+		
+		return retVal
+	
+	
+	# Runs scenario of user overriding keypad.
+	# Returns:
+	#	- True if user passes, else False	
+	def run_override(self):
+		retVal = False
+		
+		print """
+		You pry off the panel to reveal a series of wires.\n
+		Choose the wires to cross.
+		"""
+		print AsciiArt.OverrideDiagram3Wire
+		
+		wireStr1 = raw_input("[Wire1 = red/green/yellow]> ")
+		wireStr2 = raw_input("[Wire2 = red/green/yellow]> ")
+		#DEBUG: TODO - verify inputs
+		
+		anOverride = Override()
+		retVal = anOverride.evaluate(wireStr1, wireStr2)
 		
 		return retVal
 		
@@ -241,6 +325,9 @@ class Death(Scene):
 	
 	def enter(self):
 		retScene = FINISH_RESULT
+		
+	
+		print AsciiArt.Skull
 		print "You died in a really horrifying way!"
 
 		print "Do you want to play again (y/n)?"
@@ -319,8 +406,11 @@ class Armory(Scene):
 										retScene = BRIDGE_KEY
 									else:
 										if (answer == OVERRIDE_CMD_STR):
-											# TODO: implement override
-											retScene = BRIDGE_KEY
+											# user chose to override the keypad
+											isWin = self.run_override()
+											
+											if (isWin):
+												retScene = BRIDGE_KEY
 											done = True
 										else:
 											print INVALID_ENTRY_RSP
@@ -330,8 +420,11 @@ class Armory(Scene):
 							print "The Gothan proceeds to dismember you."
 				
 			elif (answer == OVERRIDE_CMD_STR):
-				#TODO: implement override functionality
-				retScene = BRIDGE_KEY
+				# user chose to override the keypad
+				isWin = self.run_override()
+				
+				if (isWin):
+					retScene = BRIDGE_KEY
 		
 		return retScene
 		
@@ -414,7 +507,7 @@ class Map(object):
 		return self.next_scene(self.firstScene)
 			
 		
-# simple test
+# run game
 aMap = Map(CORRIDOR_KEY) # pass in the key for the starting scene
 aGame = Engine(aMap)
 aGame.play()

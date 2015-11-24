@@ -41,6 +41,10 @@ Design:
 		* Attack
 		  - evalute_attack
 		  - is_valid
+		* Override
+		  - run_override
+		  - assign_wires
+		  - 
 		  
 _______________________________________________________________________________________________
 
@@ -82,4 +86,14 @@ DEATH IDEAS:
 EXPANSION IDEAS:
 	- 	Overrides:	At each keypad, allow user to override the door controls by cutting/splicing wires (red/green/black). 
 					These wires would be connected to power/control/ect...
+					
+					Given 3 options:
+						- Keypad output
+						- Door input
+						- Battery
+						
+					To win the user must cross the Battery wire with the Door input.
+						
+					Randomize the colors red/green/yellow.
+			
 	
