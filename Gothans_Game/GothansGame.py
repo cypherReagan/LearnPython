@@ -2,7 +2,7 @@
 # Author			: JWalker
 # Created			: 17th September 2015
 # Version			: 1.0
-# RuntimeError		: Python27
+# Runtime			: Python27
 
 # Implementation of Gothans Attack
 
@@ -10,6 +10,7 @@
 
 from sys import exit
 from random import randint
+import random
 import AsciiArt
 
 
@@ -39,19 +40,19 @@ OVERRIDE_CMD_STR = 'hack'
 #---------------------------------------------------
 #---------------------------------------------------
 class Attack:
-	# TODO: rename attacks to something more appropriate
+
 	INVALID = 0
-	ROCK = 1
-	PAPER = 2
-	SCISSORS = 3
+	SHIELD = 1
+	NET = 2
+	KNIFE = 3
 	
 	MAX_ATTACK_NUM = 3
-	OPTION_STR = 'h/n/k/' + HELP_REQ_STR
+	OPTION_STR = 's/n/k/' + HELP_REQ_STR
 	
 	def is_valid(self, inputAttack):
 		retVal = False
 		
-		if ((inputAttack == Attack.ROCK) or (inputAttack == Attack.PAPER) or (inputAttack == Attack.SCISSORS)):
+		if ((inputAttack == Attack.SHIELD) or (inputAttack == Attack.NET) or (inputAttack == Attack.KNIFE)):
 			retVal = True
 			
 		return retVal
@@ -59,12 +60,12 @@ class Attack:
 	def translate_cmd(self, attackCmd):
 		retAttack = Attack.INVALID
 		
-		if (attackCmd == 'h'):
-			retAttack = Attack.ROCK
+		if (attackCmd == 's'):
+			retAttack = Attack.SHIELD
 		elif (attackCmd == 'n'):
-			retAttack = Attack.PAPER
+			retAttack = Attack.NET
 		elif (attackCmd == 'k'):
-			retAttack = Attack.SCISSORS
+			retAttack = Attack.KNIFE
 			
 		return retAttack
 		
@@ -73,9 +74,9 @@ class Attack:
 	
 	def print_desc(self):
 		desc = """
-		Helmet (h) - beats knife, loses to net\n
-		Net (n) - beats scissors, loses to knife\n
-		Knife (k) - beats paper, loses to helmet\n
+		Shield (s) - beats knife, loses to net\n
+		Net (n) - beats shield, loses to knife\n
+		Knife (k) - beats paper, loses to shield\n
 		"""
 
 		print "-------------"
@@ -87,12 +88,12 @@ class Attack:
 	def get_attack_name(self, attackNum):
 		retStr = ""
 		
-		if (attackNum == Attack.ROCK):
-			retStr = "Rock"
-		elif (attackNum == Attack.PAPER):
-			retStr = "Paper"
-		elif (attackNum == Attack.SCISSORS):
-			retStr = "Scissors"
+		if (attackNum == Attack.SHIELD):
+			retStr = "Shield"
+		elif (attackNum == Attack.NET):
+			retStr = "Net"
+		elif (attackNum == Attack.KNIFE):
+			retStr = "Knife"
 		
 		return retStr
 		
@@ -106,20 +107,20 @@ class Attack:
 	
 		if (self.is_valid(attack1) and self.is_valid(attack2)):
 			# we have valid inputs to work with
-			if (attack1 == self.ROCK):
-				if (attack2 == self.PAPER):
+			if (attack1 == self.SHIELD):
+				if (attack2 == self.NET):
 					retVal = attack2
 				else:
 					retVal = attack1
 					
-			if (attack1 == self.PAPER):
-				if (attack2 == self.SCISSORS):
+			if (attack1 == self.NET):
+				if (attack2 == self.KNIFE):
 					retVal = attack2
 				else:
 					retVal = attack1
 					
-			if (attack1 == self.SCISSORS):
-				if (attack2 == self.ROCK):
+			if (attack1 == self.KNIFE):
+				if (attack2 == self.SHIELD):
 					retVal = attack2
 				else:
 					retVal = attack1
@@ -137,29 +138,29 @@ class Attack:
 class Override(object):
 	
 	# global IDs
-	INVALID_ID = -1
-	RED_ID = 0
-	GREEN_ID = 1
-	YELLOW_ID = 2
+	KEYPAD_ID = 0
+	DOOR_ID = 1
+	BATTERY_ID = 2
 	
-	
-	def __init__(self):
-	
-		wireColorList = {'red', 'green', 'yellow'}
-	
-		wireDict = {
+	# DEBUG_JW - determine why these cannot go in init()
+	wireDict = {
 			'keypad': '',
 			'door': '',
 			'battery': ''
 		}
+	
+	def __init__(self):
 		
 		self.set_wires()
 		
 	def set_wires(self):
-		#DEBUG_JW - TODO: randomize this
-		self.wireDict['keypad'] = self.wireColorList[RED_ID]
-		self.wireDict['door'] = self.wireColorList[GREEN_ID]
-		self.wireDict['battery'] = self.wireColorList[YELLOW_ID]
+		# randomize wire selection
+		wireColorList = ['red', 'green', 'yellow']
+		random.shuffle(wireColorList)
+		
+		self.wireDict['keypad'] = wireColorList[self.KEYPAD_ID]
+		self.wireDict['door'] = wireColorList[self.DOOR_ID]
+		self.wireDict['battery'] = wireColorList[self.BATTERY_ID]
 		
 	
 	# Determines successful override given 2 input wires. 
@@ -180,6 +181,15 @@ class Override(object):
 			retVal = True
 		
 		return retVal
+		
+		
+	def getWireColorStr(self):
+		
+		keyPadStr = self.wireDict['keypad']
+		doorStr = self.wireDict['door']
+		batteryStr = self.wireDict['battery']
+		
+		return keyPadStr, doorStr, batteryStr
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -305,18 +315,30 @@ class Scene(object):
 	def run_override(self):
 		retVal = False
 		
+		anOverride = Override()
+		keypadWire, doorWire, batteryWire = anOverride.getWireColorStr()
+		
 		print """
 		You pry off the panel to reveal a series of wires.\n
 		Choose the wires to cross.
 		"""
 		print AsciiArt.OverrideDiagram3Wire
+		print AsciiArt.OverrideDiagram3Wire_Seed % (keypadWire, doorWire, batteryWire)
+		print '\n'
 		
 		wireStr1 = raw_input("[Wire1 = red/green/yellow]> ")
 		wireStr2 = raw_input("[Wire2 = red/green/yellow]> ")
 		#DEBUG: TODO - verify inputs
 		
-		anOverride = Override()
 		retVal = anOverride.evaluate(wireStr1, wireStr2)
+		
+		if (retVal == True):
+			print "You successfully hacked the door!\n\n"
+		else:
+			print """
+			You failed to open the door and security now countermeasures activate.\n
+			Toxic nerve gas releases, causing you to asphyxiate immediately.
+			"""
 		
 		return retVal
 		
