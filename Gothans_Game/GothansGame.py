@@ -12,6 +12,8 @@ from sys import exit
 from random import randint
 import random
 import AsciiArt
+import os
+import platform
 
 
 #Globals
@@ -30,6 +32,15 @@ EP_CHEAT = 'pass ep'
 INVALID_ENTRY_RSP = 'DOES NOT COMPUTE!'
 HELP_REQ_STR = '?'
 OVERRIDE_CMD_STR = 'hack'
+PROMPT_CONTINUE_STR = "[Press any key to continue...]> "
+
+# Utility function to clear shell
+def Clear_screen():
+		
+	if (platform.system() == 'Windows'):
+		os.system('cls')
+	else:
+		os.system('clear') # Linux
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -47,7 +58,13 @@ class Attack:
 	KNIFE = 3
 	
 	MAX_ATTACK_NUM = 3
-	OPTION_STR = 's/n/k/' + HELP_REQ_STR
+
+	ATTACK_OPTION_STR = """
+	Attack Options:\n\n
+	1. Shield\n
+	2. Net\n
+	3. Knife\n\n
+	"""
 	
 	def is_valid(self, inputAttack):
 		retVal = False
@@ -60,11 +77,11 @@ class Attack:
 	def translate_cmd(self, attackCmd):
 		retAttack = Attack.INVALID
 		
-		if (attackCmd == 's'):
+		if (attackCmd == '1'):
 			retAttack = Attack.SHIELD
-		elif (attackCmd == 'n'):
+		elif (attackCmd == '2'):
 			retAttack = Attack.NET
-		elif (attackCmd == 'k'):
+		elif (attackCmd == '3'):
 			retAttack = Attack.KNIFE
 			
 		return retAttack
@@ -142,6 +159,17 @@ class Override(object):
 	DOOR_ID = 1
 	BATTERY_ID = 2
 	
+	COLOR_ID_STR_RED = '1'
+	COLOR_ID_STR_GREEN = '2'
+	COLOR_ID_STR_YELLOW = '3'
+	
+	OVERRIDE_OPTION_STR = """
+	Override Options:\n\n
+	1. Red\n
+	2. Green\n
+	3. Yellow\n\n
+	""" 
+	
 	# DEBUG_JW - determine why these cannot go in init()
 	wireDict = {
 			'keypad': '',
@@ -170,9 +198,8 @@ class Override(object):
 	
 		retVal = False
 		
-		#DEBUG_JW - testing
-		print "door wire = %s" % self.wireDict['door']
-		print "battery wire = %s" % self.wireDict['battery']
+		print "DEBUG_JW: door wire = %s" % self.wireDict['door']
+		print "DEBUG_JW: battery wire = %s" % self.wireDict['battery']
 		
 		cond1 = ((wireStr1 == self.wireDict['door']) and (wireStr2 == self.wireDict['battery']))
 		cond2 = ((wireStr1 == self.wireDict['battery']) and (wireStr2 == self.wireDict['door']))
@@ -182,14 +209,49 @@ class Override(object):
 		
 		return retVal
 		
-		
-	def getWireColorStr(self):
+	# Returns the wire color of each override element	
+	def get_wire_color(self):
 		
 		keyPadStr = self.wireDict['keypad']
 		doorStr = self.wireDict['door']
 		batteryStr = self.wireDict['battery']
 		
 		return keyPadStr, doorStr, batteryStr
+		
+		
+	# Verify that the wire menu input is valid and convert them if necessary.
+	# Returns converted wire string if valid, else INVALID_ENTRY_RSP.
+	def translate_cmd(self, wireStr):
+	
+		retStr = '' 
+		isValid = True
+		
+		# normalize to lowercase for future evalution
+		wireStr = wireStr.lower()
+		
+		if ((wireStr == self.COLOR_ID_STR_RED) or (wireStr == 'red')):
+			if (wireStr == self.COLOR_ID_STR_RED):
+				wireStr = 'red'
+			
+		elif ((wireStr == self.COLOR_ID_STR_GREEN) or (wireStr == 'green')):
+			if (wireStr == self.COLOR_ID_STR_GREEN):
+				wireStr = 'green'
+
+		elif ((wireStr == self.COLOR_ID_STR_YELLOW) or (wireStr == 'yellow')):
+			if (wireStr == self.COLOR_ID_STR_YELLOW):
+				wireStr = 'yellow'
+
+		else:
+			isValid = False
+			
+		if (isValid):
+			retStr = wireStr
+		else:
+			retStr = INVALID_ENTRY_RSP
+		
+		return retStr
+		
+		
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -205,17 +267,48 @@ class Engine(object):
 		self.sceneMap = sceneMap
 		
 	def play(self):
+		Clear_screen()
 		print "------------------------------------------------------------------------------------------------"
 		print AsciiArt.GothansGameTitle
 		print "------------------------------------------------------------------------------------------------\n"
-		print "Gothans have invaded your spaceship... time to blow this baby and escape to the planet below!\n\n"
+		print """
+		Gothans have invaded your spaceship and killed everyone else on board. 
+		Time to blow this baby and escape to the planet below!\n\n
+		"""
+		
+		startMenuStr = """
+			1. Start Game
+			2. Help
+		"""
+		
+		helpStr = """
+			 Use the '?' in action prompts for hints on how to proceed.
+		""" 
+		
+		done = False
+		
+		while (not done):
+			answer = raw_input("%s\n\t\t> " % startMenuStr)
+			
+			if (answer == '1'):
+				done = True
+			elif (answer == '2'):
+				Clear_screen()
+				print helpStr
+				raw_input(PROMPT_CONTINUE_STR)
+				Clear_screen()
+			else:
+				print INVALID_ENTRY_RSP
+				Clear_screen()
+
 		# need while-loop here to drive game
 		result = self.sceneMap.opening_scene()
 		
 		while (result != FINISH_RESULT):
 			result = self.sceneMap.next_scene(result)
 			
-		print"GAME OVER"
+		Clear_screen()
+		print AsciiArt.GameOverMsg
 		exit(1)
 
 
@@ -229,9 +322,11 @@ class Engine(object):
 class Scene(object):
 	
 	def enter(self):
+		# should never get here
 		print "Subclasses handle implentation."
 		exit(1)
 		
+
 	# Runs attack scenario of user against Gothan.
 	# Returns:
 	#	- True if user wins, else False
@@ -241,8 +336,7 @@ class Scene(object):
 		done = False
 				
 		while (not done):
-			answer = raw_input("[Attack %s]> " % Attack.OPTION_STR)
-			
+			answer = raw_input("%s> " % Attack.ATTACK_OPTION_STR)
 			anAttack = Attack()
 			
 			if (answer == HELP_REQ_STR):
@@ -254,7 +348,7 @@ class Scene(object):
 					print INVALID_ENTRY_RSP
 				else:
 					gothanAttack = anAttack.get_random_attack()
-					print "The Gothan attacks with %s" % anAttack.get_attack_name(gothanAttack)
+					print "\nThe Gothan attacks with %s" % anAttack.get_attack_name(gothanAttack)
 					
 					if (userAttack == gothanAttack):
 						# we have a tie
@@ -316,7 +410,7 @@ class Scene(object):
 		retVal = False
 		
 		anOverride = Override()
-		keypadWire, doorWire, batteryWire = anOverride.getWireColorStr()
+		keypadWire, doorWire, batteryWire = anOverride.get_wire_color()
 		
 		print """
 		You pry off the panel to reveal a series of wires.\n
@@ -326,9 +420,23 @@ class Scene(object):
 		print AsciiArt.OverrideDiagram3Wire_Seed % (keypadWire, doorWire, batteryWire)
 		print '\n'
 		
-		wireStr1 = raw_input("[Wire1 = red/green/yellow]> ")
-		wireStr2 = raw_input("[Wire2 = red/green/yellow]> ")
-		#DEBUG: TODO - verify inputs
+		done = False
+		
+		while (not done):
+
+			wireStr1 = raw_input("\tWire 1 %s> " % Override.OVERRIDE_OPTION_STR)
+			wireStr1 = anOverride.translate_cmd(wireStr1)
+			
+			if (wireStr1 == INVALID_ENTRY_RSP):
+				print INVALID_ENTRY_RSP
+			else:
+				wireStr2 = raw_input("\tWire 2 %s> " % Override.OVERRIDE_OPTION_STR)
+				wireStr2 = anOverride.translate_cmd(wireStr2)
+				
+				if (wireStr2 == INVALID_ENTRY_RSP):
+					print INVALID_ENTRY_RSP
+				else:
+					done = True
 		
 		retVal = anOverride.evaluate(wireStr1, wireStr2)
 		
@@ -348,7 +456,7 @@ class Death(Scene):
 	def enter(self):
 		retScene = FINISH_RESULT
 		
-	
+		Clear_screen()
 		print AsciiArt.Skull
 		print "You died in a really horrifying way!"
 
@@ -365,6 +473,8 @@ class CentralCorridor(Scene):
 	
 	def enter(self):
 		retScene = DEATH_KEY
+		
+		Clear_screen()
 		print " This is the Central Corridor. A Gothan stands before you. You must defeat him with an attack before proceeding."
 		
 		answer = raw_input("[Action]> ")
@@ -377,11 +487,16 @@ class CentralCorridor(Scene):
 				
 				if (isWin):
 					print "You defeated the Gothan!"
+					
 					retScene = ARMORY_KEY
+				else:
+					print "The Gothan defeated you."
 				
 			else:
 				# user chose not to attack => Death
 				print "The Gothan proceeds to dismember you."
+		
+		raw_input(PROMPT_CONTINUE_STR)	
 		
 		return retScene
 		
@@ -392,6 +507,8 @@ class Armory(Scene):
 	
 	def enter(self):
 		retScene = DEATH_KEY
+		
+		Clear_screen()
 		print "\nYou are now in the Laser Weapon Armory. This is where you get the neutron bomb."
 		print "It must be placed on the bridge to blow up the ship. You must guess the keypad code to obtain the bomb."
 		
@@ -401,6 +518,7 @@ class Armory(Scene):
 			retScene = BRIDGE_KEY
 		else:
 			if (answer == 'keypad'):
+
 				isWin = self.run_keyPad(ARMORY_CHEAT, 4)
 				
 				if (isWin):
@@ -448,6 +566,8 @@ class Armory(Scene):
 				if (isWin):
 					retScene = BRIDGE_KEY
 		
+		raw_input(PROMPT_CONTINUE_STR)	
+		
 		return retScene
 		
 		
@@ -455,6 +575,8 @@ class Bridge(Scene):
 	
 	def enter(self):
 		retScene = DEATH_KEY
+		
+		Clear_screen()
 		print "This is the Bridge. A Gothan stands in your way."
 		print "You must defeat him in order to set the bomb and attempt to escape."
 		
@@ -471,6 +593,8 @@ class EscapePod(Scene):
 	
 	def enter(self):
 		retScene = DEATH_KEY
+		
+		Clear_screen()
 		print "This is the Escape Pod Bay. You must guess the correct escape pod in order to leave."
 		
 		escapeNum = '5' # TODO: implemnent random number
