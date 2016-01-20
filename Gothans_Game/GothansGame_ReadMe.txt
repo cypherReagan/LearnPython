@@ -98,5 +98,17 @@ EXPANSION IDEAS:
 					To win the user must cross the Battery wire with the Door input.
 						
 					Randomize the colors red/green/yellow.
+					
+	Inventory:	Weapons characterized by the following:
+	
+				  NAME			| TYPE		| AMMO			| DAMAGE %	| Range
+				  ________________________________________________________________________
+				- battery		| utility	| 1				| 			|
+				- shield		| melee		| -1 (infinite)	| 100		|
+				- net			| melee		| -1			| 100		|
+				- knife			| melee		| -1			| 100		|
+				- grenade		| ranged	| 1-5			| 100		|
+				- blaster pistol| ranged	| 10			| 40		|
+				- plasma rifle	| ranged	| 10			| 80		|
 			
 	

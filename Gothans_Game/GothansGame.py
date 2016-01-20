@@ -16,6 +16,8 @@ import os
 import platform
 
 
+DEBUG_MODE = False
+
 #Globals
 CORRIDOR_KEY = 'central corridor'
 ARMORY_KEY = 'armory'
@@ -30,17 +32,26 @@ BRIDGE_CHEAT = 'pass bridge'
 EP_CHEAT = 'pass ep'
 
 INVALID_ENTRY_RSP = 'DOES NOT COMPUTE!'
+PROMPT_CONTINUE_STR = "[Press any key to continue...]> "
+INVALID_OVERRIDE_EQUIP_RSP = "You do not have the necessary equipment for an override."
+
+# User Action Commands
 HELP_REQ_STR = '?'
 OVERRIDE_CMD_STR = 'hack'
-PROMPT_CONTINUE_STR = "[Press any key to continue...]> "
+SEARCH_CMD_STR = 'search'
+#DEBUG_JW: - TODO - add cheat cmds to restore player health, add weapons, ect...
+# Also, player xp goes to 0 when you cheat
 
 # Utility function to clear shell
 def Clear_screen():
 		
-	if (platform.system() == 'Windows'):
-		os.system('cls')
-	else:
-		os.system('clear') # Linux
+	if (DEBUG_MODE):
+		x = 1
+	else:	
+		if (platform.system() == 'Windows'):
+			os.system('cls')
+		else:
+			os.system('clear') # Linux/Mac OS
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -53,7 +64,7 @@ def Clear_screen():
 class Attack:
 
 	INVALID = 0
-	SHIELD = 1
+	SLEDGEHAMMER = 1
 	NET = 2
 	KNIFE = 3
 	
@@ -61,7 +72,7 @@ class Attack:
 
 	ATTACK_OPTION_STR = """
 	Attack Options:\n\n
-	1. Shield\n
+	1. Sledgehammer\n
 	2. Net\n
 	3. Knife\n\n
 	"""
@@ -69,7 +80,7 @@ class Attack:
 	def is_valid(self, inputAttack):
 		retVal = False
 		
-		if ((inputAttack == Attack.SHIELD) or (inputAttack == Attack.NET) or (inputAttack == Attack.KNIFE)):
+		if ((inputAttack == Attack.SLEDGEHAMMER) or (inputAttack == Attack.NET) or (inputAttack == Attack.KNIFE)):
 			retVal = True
 			
 		return retVal
@@ -78,7 +89,7 @@ class Attack:
 		retAttack = Attack.INVALID
 		
 		if (attackCmd == '1'):
-			retAttack = Attack.SHIELD
+			retAttack = Attack.SLEDGEHAMMER
 		elif (attackCmd == '2'):
 			retAttack = Attack.NET
 		elif (attackCmd == '3'):
@@ -91,9 +102,9 @@ class Attack:
 	
 	def print_desc(self):
 		desc = """
-		Shield (s) - beats knife, loses to net\n
-		Net (n) - beats shield, loses to knife\n
-		Knife (k) - beats paper, loses to shield\n
+		Sledgehammer (s) - beats knife, loses to net\n
+		Net (n) - beats sledgehammer, loses to knife\n
+		Knife (k) - beats paper, loses to sledgehammer\n
 		"""
 
 		print "-------------"
@@ -105,8 +116,8 @@ class Attack:
 	def get_attack_name(self, attackNum):
 		retStr = ""
 		
-		if (attackNum == Attack.SHIELD):
-			retStr = "Shield"
+		if (attackNum == Attack.SLEDGEHAMMER):
+			retStr = "Slaedgehammer"
 		elif (attackNum == Attack.NET):
 			retStr = "Net"
 		elif (attackNum == Attack.KNIFE):
@@ -124,7 +135,7 @@ class Attack:
 	
 		if (self.is_valid(attack1) and self.is_valid(attack2)):
 			# we have valid inputs to work with
-			if (attack1 == self.SHIELD):
+			if (attack1 == self.SLEDGEHAMMER):
 				if (attack2 == self.NET):
 					retVal = attack2
 				else:
@@ -137,7 +148,7 @@ class Attack:
 					retVal = attack1
 					
 			if (attack1 == self.KNIFE):
-				if (attack2 == self.SHIELD):
+				if (attack2 == self.SLEDGEHAMMER):
 					retVal = attack2
 				else:
 					retVal = attack1
@@ -162,6 +173,10 @@ class Override(object):
 	COLOR_ID_STR_RED = '1'
 	COLOR_ID_STR_GREEN = '2'
 	COLOR_ID_STR_YELLOW = '3'
+	
+	OVERRIDE_RESULT_SUCCESS = 1
+	OVERRIDE_RESULT_FAIL = 2
+	OVERRIDE_RESULT_DECLINE = 3
 	
 	OVERRIDE_OPTION_STR = """
 	Override Options:\n\n
@@ -251,7 +266,85 @@ class Override(object):
 		
 		return retStr
 		
+
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: Player
+#--------------------------------------------------
+#---------------------------------------------------		
+class Player(object):
+	
+	
+	def __init__(self):
+		self.reset_data()
 		
+	def reset_data(self):
+		self.health = 100
+		self.xp = 0
+		self.theInventoryMgr = InventoryMgr()
+		
+		
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: InventoryMgr
+#
+# Member Variables:	
+#		utilItemDict - dictionary containing utility items
+#--------------------------------------------------
+#---------------------------------------------------		
+class InventoryMgr(object):
+	
+	# Item type IDs
+	TYPE_ID_UTILITY = 0
+	TYPE_ID_WEAPON = 1
+	
+	# DEBUG_JW - determine why these cannot go in init()
+	utilItemDict = {}
+		
+		
+	def add_item(self, typeID, newItem):
+		
+		if (typeID == TYPE_ID_UTILITY):
+			# append to list
+			self.utilItemDict[newItem.name] = newItem
+		else:
+			print "ERROR: Feature not implemented yet!"
+			
+			
+	def print_items(self):
+		#TODO - test this
+	
+		count = 1 
+		
+		for name in self.utilItemDict.items():
+			print "%d. %s" % (count, name)
+		
+		
+		
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: Item
+#--------------------------------------------------
+#---------------------------------------------------		
+class Item(object):
+
+	def __init__(self):
+		# should never get here
+		print "Item Subclasses handle implentation."
+		exit(1)
+
+		
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: UtilityItem
+#--------------------------------------------------
+#---------------------------------------------------		
+class UtilityItem(Item):
+
+	def __init__(self, newName, newCount):
+		self.name = newName
+		self.count = newCount
+
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -279,6 +372,7 @@ class Engine(object):
 		startMenuStr = """
 			1. Start Game
 			2. Help
+			3. Quit
 		"""
 		
 		helpStr = """
@@ -297,18 +391,26 @@ class Engine(object):
 				print helpStr
 				raw_input(PROMPT_CONTINUE_STR)
 				Clear_screen()
+			elif (answer == '3'):
+				Clear_screen()
+				exit(1)
 			else:
 				print INVALID_ENTRY_RSP
 				Clear_screen()
 
+		#DEBUG_JW - create player and pass them to every scene. 
+		# Each scene should return the player obj to maintain state.
+		thePlayer = Player()
+		
 		# need while-loop here to drive game
-		result = self.sceneMap.opening_scene()
+		result, thePlayer = self.sceneMap.opening_scene(thePlayer)
 		
 		while (result != FINISH_RESULT):
-			result = self.sceneMap.next_scene(result)
+			result, thePlayer = self.sceneMap.next_scene(result, thePlayer)
 			
 		Clear_screen()
 		print AsciiArt.GameOverMsg
+		print "DEBUG_JW: Engine::play() - thePlayer.xp = %d" % thePlayer.xp
 		exit(1)
 
 
@@ -321,9 +423,9 @@ class Engine(object):
 #---------------------------------------------------
 class Scene(object):
 	
-	def enter(self):
+	def enter(self, thePlayer):
 		# should never get here
-		print "Subclasses handle implentation."
+		print "Scene Subclasses handle implentation."
 		exit(1)
 		
 
@@ -357,7 +459,10 @@ class Scene(object):
 						result = anAttack.evaluate(userAttack, gothanAttack)
 						
 						if (result == userAttack):
+							print "You defeated the Gothan!"
 							retVal = True
+						else:
+							print "The Gothan defeated you."
 															
 						done = True
 		
@@ -381,24 +486,34 @@ class Scene(object):
 			answer = raw_input("[Code]> ")
 			
 			if (answer == OVERRIDE_CMD_STR):
-				retVal = self.run_override()
-				done = True
+			
+				userHasBattery = True #DEBUG_JW: TODO - implement inventory
+			
+				if (not userHasBattery):
+					print INVALID_OVERRIDE_EQUIP_RSP
+				else:
+					retVal = self.run_keypad_override()
+					done = True
 			else:
+                # DEBUG_JW: TODO - check for invalid inputs (i.e. ENTER key)
 				answerNum = int(answer)
 				print "DEBUG_JW: answerNum = %d" % answerNum
 			
 				if ((answerNum == keyCode) or (answerNum == cheatCode)):
 					retVal = True
 					done = True
+					print "You successfully opened the door!"
 				else:
 					tryCount += 1
 					
 					if (tryCount > retryMax):
 						print """
 						You ran out of guesses. The system sounds an alarm and locks you out!\n 
-						A Gothan sneaks up and disembowels you with his super-sharp blade.
+						DEBUG_JW - move this death elsewhere: A Gothan sneaks up and disembowels you with his super-sharp blade.
 						"""
 						done = True
+					else:
+						print "You entered an incorrect code. Please try again."
 		
 		return retVal
 	
@@ -406,55 +521,61 @@ class Scene(object):
 	# Runs scenario of user overriding keypad.
 	# Returns:
 	#	- True if user passes, else False	
-	def run_override(self):
+	def run_keypad_override(self):
 		retVal = False
 		
 		anOverride = Override()
 		keypadWire, doorWire, batteryWire = anOverride.get_wire_color()
 		
-		print """
-		You pry off the panel to reveal a series of wires.\n
-		Choose the wires to cross.
-		"""
-		print AsciiArt.OverrideDiagram3Wire
-		print AsciiArt.OverrideDiagram3Wire_Seed % (keypadWire, doorWire, batteryWire)
-		print '\n'
-		
-		done = False
-		
-		while (not done):
+		print "You pry off the panel to reveal a series of wires.\n"
+		print AsciiArt.OverrideDiagram2Wire
+		print AsciiArt.OverrideDiagram2Wire_Seed % (keypadWire, doorWire)
 
-			wireStr1 = raw_input("\tWire 1 %s> " % Override.OVERRIDE_OPTION_STR)
-			wireStr1 = anOverride.translate_cmd(wireStr1)
-			
-			if (wireStr1 == INVALID_ENTRY_RSP):
-				print INVALID_ENTRY_RSP
-			else:
-				wireStr2 = raw_input("\tWire 2 %s> " % Override.OVERRIDE_OPTION_STR)
-				wireStr2 = anOverride.translate_cmd(wireStr2)
+		useBattery = True #DEBUG_JW: implement Inventory class and prompt user to use item
+		if (not useBattery):
+			print INVALID_OVERRIDE_EQUIP_RSP
+		else:
+			Clear_screen()
+			print AsciiArt.OverrideDiagram3Wire
+			print AsciiArt.OverrideDiagram3Wire_Seed % (keypadWire, doorWire, batteryWire) 
+		
+			print "\n\nChoose the wires to cross.\n"
+			done = False
+
+			# get user input for crossing wires
+			while (not done):
+
+				wireStr1 = raw_input("\tWire 1 %s> " % Override.OVERRIDE_OPTION_STR)
+				wireStr1 = anOverride.translate_cmd(wireStr1)
 				
-				if (wireStr2 == INVALID_ENTRY_RSP):
+				if (wireStr1 == INVALID_ENTRY_RSP):
 					print INVALID_ENTRY_RSP
 				else:
-					done = True
-		
-		retVal = anOverride.evaluate(wireStr1, wireStr2)
-		
-		if (retVal == True):
-			print "You successfully hacked the door!\n\n"
-		else:
-			print """
-			You failed to open the door and security now countermeasures activate.\n
-			Toxic nerve gas releases, causing you to asphyxiate immediately.
-			"""
-		
+					wireStr2 = raw_input("\n\tWire 2 %s> " % Override.OVERRIDE_OPTION_STR)
+					wireStr2 = anOverride.translate_cmd(wireStr2)
+					
+					if (wireStr2 == INVALID_ENTRY_RSP):
+						print INVALID_ENTRY_RSP
+					else:
+						done = True
+			
+			retVal = anOverride.evaluate(wireStr1, wireStr2)
+			
+			if (retVal == True):
+				print "You successfully hacked the door!\n\n"
+			else:
+				print """
+				You failed to open the door and security now countermeasures activate.\n
+				Toxic nerve gas releases, causing you to asphyxiate immediately.
+				"""
 		return retVal
 		
 		
 class Death(Scene):
 	
-	def enter(self):
+	def enter(self, thePlayer):
 		retScene = FINISH_RESULT
+		self.ThePlayer = thePlayer
 		
 		Clear_screen()
 		print AsciiArt.Skull
@@ -466,13 +587,14 @@ class Death(Scene):
 		if (answer == 'y'):
 			retScene = CORRIDOR_KEY
 		
-		return retScene
+		return retScene, self.ThePlayer
 		
 
 class CentralCorridor(Scene):
 	
-	def enter(self):
+	def enter(self, thePlayer):
 		retScene = DEATH_KEY
+		self.ThePlayer = thePlayer
 		
 		Clear_screen()
 		print " This is the Central Corridor. A Gothan stands before you. You must defeat him with an attack before proceeding."
@@ -486,11 +608,7 @@ class CentralCorridor(Scene):
 				isWin = self.run_attack()
 				
 				if (isWin):
-					print "You defeated the Gothan!"
-					
 					retScene = ARMORY_KEY
-				else:
-					print "The Gothan defeated you."
 				
 			else:
 				# user chose not to attack => Death
@@ -498,15 +616,16 @@ class CentralCorridor(Scene):
 		
 		raw_input(PROMPT_CONTINUE_STR)	
 		
-		return retScene
+		return retScene, self.ThePlayer
 		
 	
 		
 		
 class Armory(Scene):
 	
-	def enter(self):
+	def enter(self, thePlayer):
 		retScene = DEATH_KEY
+		self.ThePlayer = thePlayer
 		
 		Clear_screen()
 		print "\nYou are now in the Laser Weapon Armory. This is where you get the neutron bomb."
@@ -534,10 +653,13 @@ class Armory(Scene):
 						if (answer == 'attack'):
 							isWin = self.run_attack()
 							
-							if (isWin):
+							#DEBUG_JW - remove 'or not isWin' which is only for testing
+							if (isWin or not isWin):
 								print "You defeated the Gothan but the door is still locked."
+								#DEBUG_JW: - TODO - allow the user to search the defeated enemy for a battery pack (which will facilitate an override)
 								
 								done = False
+								userHasBattery = False #DEBUG_JW - implement inventory
 								
 								while (not done):
 									answer = raw_input("[Action]> ")
@@ -546,35 +668,39 @@ class Armory(Scene):
 										retScene = BRIDGE_KEY
 									else:
 										if (answer == OVERRIDE_CMD_STR):
-											# user chose to override the keypad
-											isWin = self.run_override()
+											if (not userHasBattery):
+												print INVALID_OVERRIDE_EQUIP_RSP
+											else:
+												# user chose to override the keypad
+												isWin = self.run_keypad_override()
+												
+												if (isWin):
+													retScene = BRIDGE_KEY
+												done = True
 											
-											if (isWin):
-												retScene = BRIDGE_KEY
-											done = True
+										elif (answer == SEARCH_CMD_STR):
+											print "You search the Gothans dead body and find a battery pack!"
+											
+											batteryItem = UtilityItem('battery', 1)
+											userHasBattery = True
 										else:
 											print INVALID_ENTRY_RSP
 								
 						else:
 							# user chose not to attack => Death
 							print "The Gothan proceeds to dismember you."
-				
-			elif (answer == OVERRIDE_CMD_STR):
-				# user chose to override the keypad
-				isWin = self.run_override()
-				
-				if (isWin):
-					retScene = BRIDGE_KEY
+							
 		
 		raw_input(PROMPT_CONTINUE_STR)	
 		
-		return retScene
+		return retScene, self.ThePlayer
 		
 		
 class Bridge(Scene):
 	
-	def enter(self):
+	def enter(self, thePlayer):
 		retScene = DEATH_KEY
+		self.ThePlayer = thePlayer
 		
 		Clear_screen()
 		print "This is the Bridge. A Gothan stands in your way."
@@ -585,14 +711,15 @@ class Bridge(Scene):
 		if (answer == BRIDGE_CHEAT):
 			retScene = ESCAPE_POD_KEY
 		
-		return retScene
+		return retScene, self.ThePlayer
 		pass
 		
 		
 class EscapePod(Scene):
 	
-	def enter(self):
+	def enter(self, thePlayer):
 		retScene = DEATH_KEY
+		self.ThePlayer = thePlayer
 		
 		Clear_screen()
 		print "This is the Escape Pod Bay. You must guess the correct escape pod in order to leave."
@@ -607,7 +734,7 @@ class EscapePod(Scene):
 			
 			retScene = FINISH_RESULT
 		
-		return retScene
+		return retScene, self.ThePlayer
 		pass
 		
 		
@@ -635,25 +762,35 @@ class Map(object):
 		self.firstScene = startScene
 		
 		
-	def next_scene(self, sceneName):
+	def next_scene(self, sceneName, thePlayer):
 		# run the next scene and save off the result
 		retScene = ''
 		theNextScene = self.sceneDict.get(sceneName)
 		
+		if (DEBUG_MODE):
+			print "\n\n\nsceneName = "
+			print sceneName
+			print "\n\n"
+		
 		if (not theNextScene):
 			# should never get here
-			print "ERROR: Map::next_scene() - invalid key %s" % sceneName
+			print "ERROR: Map::next_scene() - invalid key %s" % (sceneName)
 		else:
-			retScene = theNextScene.enter()
+			retScene, thePlayer = theNextScene.enter(thePlayer) #DEBUG_JW - add player here
 		
-		return retScene
+		return retScene, thePlayer
 		
 		
-	def opening_scene(self):
-		return self.next_scene(self.firstScene)
+	def opening_scene(self, thePlayer):
+		thePlayer.xp = 99
+		print "DEBUG_JW: Map::opening_scene() - thePlayer.xp = %d" % thePlayer.xp
+		return self.next_scene(self.firstScene, thePlayer)
 			
+
+if __name__ == '__main__':	
+		# Start here when this file is being run directly (rather than being imported).
 		
-# run game
-aMap = Map(CORRIDOR_KEY) # pass in the key for the starting scene
-aGame = Engine(aMap)
-aGame.play()
+        # => Start the game
+        aMap = Map(CORRIDOR_KEY) # pass in the key for the starting scene
+        aGame = Engine(aMap)
+        aGame.play()

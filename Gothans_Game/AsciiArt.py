@@ -138,6 +138,8 @@ OverrideDiagram2Wire = """
 		   -----           -----           
 		"""
 		
+OverrideDiagram2Wire_Seed = '\t\t    %s          %s'
+		
 OverrideDiagram3Wire = """
 		-------------   -------------   -------------
 		|  Keypad   |   |   Door    |   |  Battery  |
