@@ -1,4 +1,3 @@
-
 # http://www.network-science.de/ascii/
 GothansGameTitle = """
 		  ________        __  .__                          
@@ -6,7 +5,6 @@ GothansGameTitle = """
 		/   \  ___ /  _ \   __\  |  \\__  \  /    \ /  ___/
 		\    \_\  (  <_> )  | |   Y  \/ __ \|   |  \\___ \ 
 		 \________/\____/|__| |___|  (______/___|  /______>
-
 		   _____   __    __                 __    
 		  /  _  \_/  |__/  |______    ____ |  | __
 		 /  /_\  \   __\   __\__  \ _/ ___\|  |/ /
@@ -15,7 +13,7 @@ GothansGameTitle = """
 		
 		"""
 	
-# The original paste from site has shifed characters (for some reason).
+# The original paste from site has shifted characters (for some reason).
 # The good image has been corrected by adding appropriate line feeds (\n) 
 # and then deleting them.
 GameOverMsg_BAD = """
@@ -155,3 +153,5 @@ OverrideDiagram3Wire = """
 		"""
 		
 OverrideDiagram3Wire_Seed = '\t\t    %s          %s          %s'
+
+Separator_Line = '------------------------------------------------------------------------------------------------'
