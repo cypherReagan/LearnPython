@@ -45,14 +45,15 @@ SEARCH_CMD_STR = 'search'
 PLAYER_STATS_CMD_STR = 'stats'
 PLAYER_INV_CMD_STR = 'inv'
 
-CHEAT_CMD_STR = '-f'
+CHEAT_CMD_STR = '-frc'
 CC_CHEAT_CMD_STR = CHEAT_CMD_STR + ' cc'
 ARMORY_CHEAT_CMD_STR = CHEAT_CMD_STR + ' armory'
 BRIDGE_CHEAT_CMD_STR = CHEAT_CMD_STR + ' bridge'
 EP_CHEAT_CMD_STR = CHEAT_CMD_STR + ' ep'
+FULL_HEALTH_CHEAT_CMD_STR = CHEAT_CMD_STR + ' health++'
+SET_HEALTH_CHEAT_CMD_STR = CHEAT_CMD_STR + ' sethealth'
+ADD_ITEM_CHEAT_CMD_STR = CHEAT_CMD_STR + ' item++'
 DEBUG_MODE_TOGGLE_CMD_STR = CHEAT_CMD_STR + ' dbg'
-#TODO - add cheat cmds to restore player health, add weapons, ect...
-# Also, player xp goes to 0 when you cheat
 				
 #TODO - make this a list of tuples (str, number) to allow menu referencing				
 CMD_STR_LIST = [HELP_REQ_CMD_STR,
@@ -68,6 +69,9 @@ CMD_STR_LIST = [HELP_REQ_CMD_STR,
 				ARMORY_CHEAT_CMD_STR,
 				BRIDGE_CHEAT_CMD_STR,
 				EP_CHEAT_CMD_STR,
+				FULL_HEALTH_CHEAT_CMD_STR,
+				SET_HEALTH_CHEAT_CMD_STR,
+				ADD_ITEM_CHEAT_CMD_STR,
 				
 				DEBUG_MODE_TOGGLE_CMD_STR]
 
@@ -77,6 +81,12 @@ ITEM_BOMB_STR = 'bomb'
 ITEM_SLEDGEHAMMER_STR = 'sledgehammer'
 ITEM_NET_STR = 'net'
 ITEM_KNIFE_STR = 'knife'
+
+ITEM_STR_LIST = [ITEM_BATTERY_STR,
+				 ITEM_BOMB_STR,
+				 ITEM_SLEDGEHAMMER_STR,
+				 ITEM_NET_STR,
+				 ITEM_KNIFE_STR]
 #-------------------------- End Globals --------------------------
 
 # Utility function to clear shell
@@ -90,7 +100,7 @@ def Clear_Screen():
 			
 			
 # Utility function to ask user for game command
-def Prompt_User_Action(thePlayer = None):
+def Prompt_User_Action(thePlayer):
 	answer = ''
 	done = False
 	
@@ -99,16 +109,20 @@ def Prompt_User_Action(thePlayer = None):
 		answer = answer.lower()
 		
 		if answer in CMD_STR_LIST:
-			if (not Process_Common_Actions(answer, thePlayer)):
+			# we have a good command
+			isCmdHandled, thePlayer = Process_Common_Actions(answer, thePlayer)
+			
+			if (not isCmdHandled):
+				# not a common command so let caller handle this one
 				done = True
 		else:
 			print INVALID_ENTRY_RSP
 				
-	return answer
+	return answer, thePlayer
 
 # Process any common user commands.
 # Returns True if command is handled, else False
-def Process_Common_Actions(userCmdStr, thePlayer = None):
+def Process_Common_Actions(userCmdStr, thePlayer):
 
 	retVal = True
 	
@@ -118,7 +132,11 @@ def Process_Common_Actions(userCmdStr, thePlayer = None):
 		print "GAME COMMANDS:\n"
 
 		for entry in CMD_STR_LIST:
-			if (CHEAT_CMD_STR not in entry):
+			isDbgPrint = False
+			if (DEBUG_MODE):
+				isDbgPrint = True
+				
+			if (isDbgPrint or (CHEAT_CMD_STR not in entry)):
 				print entry
 		
 		print AsciiArt.Separator_Line
@@ -136,8 +154,68 @@ def Process_Common_Actions(userCmdStr, thePlayer = None):
 	elif (userCmdStr == PLAYER_INV_CMD_STR):
 		thePlayer.theInventoryMgr.print_items()
 		
+	elif (userCmdStr == FULL_HEALTH_CHEAT_CMD_STR):
+		thePlayer.set_health(100)
+		
+	elif (userCmdStr == SET_HEALTH_CHEAT_CMD_STR):
+		
+		done = False
+		
+		while (not done):
+			try:
+				answerNum = int(raw_input("(Enter new health value) > "))
+		
+				thePlayer.set_health(answerNum)
+				done = True
+			except:
+				print "Please enter a valid number!"
+				
+	elif (userCmdStr == ADD_ITEM_CHEAT_CMD_STR):
+		
+		done = False
+		
+		while (not done):
+			typeAnswer = raw_input("(Enter item type (u/w/q)) > ")
+			
+			theItem = None
+			isGoodItem = False
+			
+			if (typeAnswer == "u"):
+				# utility item
+				itemAnswer = raw_input("(Enter item name) > ")
+				theItem = UtilityItem(itemAnswer, 1)
+				isGoodItem = True
+				
+			elif (typeAnswer == "w"):
+				# weapon item
+				itemAnswer = raw_input("(Enter item name) > ")
+				theItem = WeaponItem(itemAnswer, INFINITE_VAL)
+				isGoodItem = True
+				
+			elif (typeAnswer == "q"):
+				# quit
+				done = True
+			else:
+				print "Please enter a valid item type!"
+			
+			if (isGoodItem):
+				try:			
+					itemCount = int(raw_input("(Count) > "))
+					
+					isUpdatedItem = theItem.set_count(itemCount)
+					
+					if (isUpdatedItem):
+						isGoodItem = thePlayer.theInventoryMgr.add_item(theItem)
+
+						if (isGoodItem):
+							done = True
+					else:
+						print "Could not update item count!"
+				except:
+					print "Please enter a valid number!"
+		
 	elif (userCmdStr == DEBUG_MODE_TOGGLE_CMD_STR):
-		global DEBUG_MODE
+		global DEBUG_MODE #TODO - fix warning generated here
 		
 		if (not DEBUG_MODE):
 			DEBUG_MODE = True
@@ -150,7 +228,17 @@ def Process_Common_Actions(userCmdStr, thePlayer = None):
 		retVal = False
 
 		
-	return retVal
+	return retVal, thePlayer
+
+	
+def Show_Game_Error(errMsgStr):
+	
+	errMsgStr = "GAME ERROR: " + errMsgStr
+	errorSeparator = '************************************************************'
+	
+	printMsgStr = "%s\n***  %s  ***\n%s\n%s\n" % (errorSeparator, errMsgStr, errorSeparator, PROMPT_CONTINUE_STR)
+	raw_input(printMsgStr)	
+	
 	
 def Exit_Game(thePlayer):
 	Clear_Screen()
@@ -159,13 +247,13 @@ def Exit_Game(thePlayer):
 	
 #---------------------------------------------------
 #---------------------------------------------------
-# Class: Attack
+# Class: MeleeAttack
 #
 # DESCRIPTION:
 # 	This is a static class used to handle attack data.
 #---------------------------------------------------
 #---------------------------------------------------
-class Attack:
+class MeleeAttack:
 
 	INVALID = 0
 	SLEDGEHAMMER_NUM = 1
@@ -203,7 +291,7 @@ class Attack:
 		return retVal
 		
 	def translate_cmd(self, attackCmd):
-		retAttack = Attack.INVALID
+		retAttack = MeleeAttack.INVALID
 		
 		if (attackCmd == str(self.SLEDGEHAMMER_NUM)):
 			retAttack = self.SLEDGEHAMMER_NUM
@@ -395,17 +483,39 @@ class Player(object):
 		self.reset_data()
 		
 	def reset_data(self):
-		self.health = 100
+		self.__health = 100
 		self.xp = 0
 		self.theInventoryMgr = InventoryMgr()
 		
 		# start with default melee weapons
-		self.theInventoryMgr.add_item(WeaponItem(ITEM_SLEDGEHAMMER_STR, INFINITE_VAL))
-		self.theInventoryMgr.add_item(WeaponItem(ITEM_NET_STR, INFINITE_VAL))
-		self.theInventoryMgr.add_item(WeaponItem(ITEM_KNIFE_STR, INFINITE_VAL))
+		suppressPrintMsg = True
+		self.theInventoryMgr.add_item(WeaponItem(ITEM_SLEDGEHAMMER_STR, INFINITE_VAL), suppressPrintMsg)
+		self.theInventoryMgr.add_item(WeaponItem(ITEM_NET_STR, INFINITE_VAL), suppressPrintMsg)
+		self.theInventoryMgr.add_item(WeaponItem(ITEM_KNIFE_STR, INFINITE_VAL), suppressPrintMsg)
+		#DEBUG_JW - this is for testing
+		#self.theInventoryMgr.add_item(UtilityItem(ITEM_BATTERY_STR, 1))
+		
+	def get_health(self):
+		return self.__health
+		
+	def set_health(self, healthVal):
+		
+		if (healthVal > 100):
+			self.__health = 100
+		elif (healthVal < 0):
+			self.__health = 0
+			
+	def add_health(self, healthVal):
+		self.__health += healthVal
+		
+	def subtract_health(self, healthVal):
+		if ((self.__health - healthVal) < 0):
+			self.__health = 0
+		else:
+			self.__health -= healthVal
 		
 	def print_stats(self):
-		print "%s\n\nPLAYER STATS:\n\nHEALTH = %d\nXP = %d\n\n%s" % (AsciiArt.Separator_Line, self.health, self.xp, AsciiArt.Separator_Line)
+		print "%s\n\nPLAYER STATS:\n\nHEALTH = %d\nXP = %d\n\n%s" % (AsciiArt.Separator_Line, self.get_health(), self.xp, AsciiArt.Separator_Line)
 		
 		
 #---------------------------------------------------
@@ -414,62 +524,61 @@ class Player(object):
 #
 # NOTES:
 #	Sequence of using item:	
-#	-> InventoryMgr::get_item()
+#	-> InventoryMgr__get_item()
 #	-> (operate on it)
-#	-> InventoryMgr::updateItem()
+#	-> InventoryMgr__updateItem()
 #
 # Member Variables:	
-#		itemList - list of all inventory items
+#		__itemList - list of all inventory items
 #--------------------------------------------------
 #---------------------------------------------------		
 class InventoryMgr(object):
 	
 	# TODO - determine why these cannot go in init()
-	utilItemDict = {} #DEBUG_JW - might not need this
-	itemList = []
+	__itemList = []
 		
-	INVALID_TYPE_ID_STR = "ERROR: Invalid Item Type ID"
+	INVALID_TYPE_ID_STR = "Invalid Item Type ID"
 		
-	def add_item(self, newItem):
+	def add_item(self, newItem, suppressPrintMsg = False):
 		
-		#if (newItem.typeID == Item.TYPE_ID_UTILITY):
-		#	# append to list
-		#	self.utilItemDict[newItem.name] = newItem
-		#	self.itemList.append(newItem) 
-		#	print "DEBUG_JW - Adding %s to Inventory..." % newItem.name
-		#else:
-		#	print "ERROR: Feature not implemented yet!"
+		retVal = True
 		
+		# we have valid item name
+		itemIndex = self.get_item_index(newItem.get_name())
 		
-		itemIndex = self.get_item_index(newItem.name)
-		
-		if ((itemIndex >= 0) and (itemIndex < len(self.itemList))):
+		if ((itemIndex >= 0) and (itemIndex < len(self.__itemList))):
 			# item already exists in list => update existing item counts
-			theItem = self.itemList[itemIndex]
+			theItem = self.__itemList[itemIndex]
 			
-			if (theItem.typeID == Item.TYPE_ID_UTILITY):
-				theItem.count += 1
-			elif (theItem.typeID == Item.TYPE_ID_WEAPON):
+			if (theItem.get_typeID() == Item.TYPE_ID_UTILITY):
+				theItem.add_count(1)
+			elif (theItem.get_typeID() == Item.TYPE_ID_WEAPON):
 				theItem.ammo += newItem.ammo
 			else:
 				# should never get here
-				print INVALID_TYPE_ID_STR
+				Show_Game_Error(INVALID_TYPE_ID_STR)
+				retVal = False
 		else:
 			# brand new item to add
 			
 			# Determine collection index for fast referencing
-			listIndex = len (self.itemList) - 1
+			listIndex = len (self.__itemList) - 1
 			newItem.index = listIndex
 			
-			self.itemList.append(newItem) 
-			print "Adding %s to Inventory..." % newItem.name
+			self.__itemList.append(newItem) 
+			
+			if (not suppressPrintMsg):
+				print "Adding %s to Inventory..." % newItem.get_name()
 		
+		return retVal
 		
 	def is_item_index_valid(self, theItem):
 		retIndex = INVALID_INDEX
 		itemIndex = theItem.index
 		
-		if ((itemIndex < len(self.itemList) and (theItem.name == self.itemList[itemIndex].name))):
+		print "DEBUG_JW: %s item index is %d and itemList len = %d" % (self.__itemList[itemIndex].get_name(), itemIndex, len(self.__itemList))
+		
+		if ((itemIndex < len(self.__itemList) and (theItem.get_name() == self.__itemList[itemIndex].get_name()))):
 			retIndex = itemIndex
 			
 		return retIndex
@@ -486,12 +595,12 @@ class InventoryMgr(object):
 			isUpdate = True
 		else:
 			# something is wrong with the item's assigned index => search list for item
-			itemIndex = self.get_item_index(updatedItem.name)
+			itemIndex = self.get_item_index(updatedItem.get_name())
 			
 			if (itemIndex != INVALID_INDEX):
 				isUpdate = True
 			else:
-				print "ERROR: Unable to update inventory item - %s" % updatedItem.name
+				Show_Game_Error("Unable to update inventory item - %s" % updatedItem.get_name())
 		
 		if (isUpdate):
 			# item found in list
@@ -501,7 +610,7 @@ class InventoryMgr(object):
 				self.delete_item(updatedItem)
 				
 			if (isUpdate):
-				self.itemList[itemIndex] = updatedItem
+				self.__itemList[itemIndex] = updatedItem
 		
 		
 	def get_item(self, itemName):
@@ -510,14 +619,16 @@ class InventoryMgr(object):
 		itemIndex = self.get_item_index(itemName)
 		
 		if (itemIndex != INVALID_INDEX):
-			tmpItem = self.itemList[itemIndex]
+			tmpItem = self.__itemList[itemIndex]
 			
-			if (tmpItem.name == itemName):
+			if (tmpItem.get_name() == itemName):
 				retItem = tmpItem
 			else:
 				# Something went wrong. We got a mismatching item from query.
-				print "ERROR: get_item fail for %s" % itemName
-				print "DEBUG_JW: itemName = %s. itemIndex = %d. result name = %s\n" % (itemName, itemIndex, tmpItem.name)
+				Show_Game_Error("get_item() fail for %s" % itemName)
+				
+				if (DEBUG_MODE):
+					print "DEBUG_JW: itemName = %s. itemIndex = %d. result name = %s\n" % (itemName, itemIndex, tmpItem.get_name())
 		
 		return retItem
 		
@@ -528,8 +639,8 @@ class InventoryMgr(object):
 		retIndex = INVALID_INDEX
 		count = 0
 		
-		for item in self.itemList:
-			if (item.name == itemName):
+		for item in self.__itemList:
+			if (item.get_name() == itemName):
 				retIndex = count
 			
 			count += 1
@@ -543,53 +654,46 @@ class InventoryMgr(object):
 		if (itemIndex != INVALID_INDEX):
 			# we have a valid item
 				
-			self.itemList.remove(itemIndex)
+			self.__itemList.remove(itemIndex)
 			# After any deletion (potentially in the middle of list), 
 			# need to recalculate each item index to stay accurate.
 			self.calculate_item_indices()
 		else:
-			print "ERROR: Unable to delete inventory item - %s" % theItem.name
+			Show_Game_Error("Unable to delete inventory item - %s" % theItem.get_name())
+			#TODO: figure out why battery will not delete
 		
 		
 	def calculate_item_indices(self):
 		
-		for count in range(0, len (self.itemList)):
-			self.itemList[count].index = count
+		for count in range(0, len (self.__itemList)):
+			self.__itemList[count].index = count
 		
 	
 	def print_items(self):
 		
 		print "%s\nINVENTORY:\n\n" % AsciiArt.Separator_Line
 		
-		dictCount = len (self.utilItemDict)
-		
-		#for key, val in self.utilItemDict.items():
-		#	print "%s. %s" % (key, val.count)
-		
-		#for count in range(0, dictCount):
-		#	print self.utilItemDict[count].name
-		
 		itemNum = 1 # start label counting here (even though index starts at 0)
 		
-		for invItem in self.itemList:
+		for invItem in self.__itemList:
 			countNameStr = ""
 			invCountStr = ""
 			
-			if (invItem.typeID == Item.TYPE_ID_UTILITY):
+			if (invItem.get_typeID() == Item.TYPE_ID_UTILITY):
 				countNameStr = "Count: "
-				invCountStr = invItem.count
+				invCountStr = invItem.get_count()
 				
-			elif (invItem.typeID == Item.TYPE_ID_WEAPON):
+			elif (invItem.get_typeID() == Item.TYPE_ID_WEAPON):
 				if (invItem.ammo != INFINITE_VAL):
 					invCountStr = invItem.ammo
 					countNameStr = "Ammo: "
 					
 			else:
 				# should never get here
-				print INVALID_TYPE_ID_STR
+				Show_Game_Error(INVALID_TYPE_ID_STR)
 				
 				
-			print "%d. %s\t\t%s %s" % (itemNum, invItem.name, countNameStr, invCountStr)
+			print "%d. %s\t\t%s %s" % (itemNum, invItem.get_name(), countNameStr, invCountStr)
 			itemNum += 1
 		
 		print "\n\n%s" % AsciiArt.Separator_Line
@@ -609,14 +713,31 @@ class Item(object):
 	
 	# default common members to invalid values
 	name = ""
-	typeID = INVALID_INDEX
+	__typeID = INVALID_INDEX
 	index = INVALID_INDEX #dEBUG_JW - not sure if this is needed
-
+	
 	def __init__(self):
 		# should never get here
-		print "Item Subclasses handle implentation."
+		Show_Game_Error("Item Subclasses handle implentation.")
 		exit(1)
 
+	def get_name(self):
+		return self.__name
+		
+	def set_name(self, newNameStr):
+		if newNameStr in ITEM_STR_LIST:
+			self.__name = newNameStr
+		else:
+			Show_Game_Error("Invalid Item name to set: %s." % newNameStr)
+			
+	def get_typeID(self):
+		return self.__typeID
+		
+	def set_typeID(self, newIdNum):
+		if ((newIdNum == TYPE_ID_UTILITY) or (newIdNum == TYPE_ID_WEAPON)):
+			self.__typeID = newIdNum
+		else:
+			Show_Game_Error("Invalid Item ID to set: %d." % newIdNum)
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -626,22 +747,44 @@ class Item(object):
 class UtilityItem(Item):
 	
 	# default unique members to invalid values
-	count = INVALID_INDEX
+	__count = INVALID_INDEX
 	
 	def __init__(self, newName, newCount):
-		self.name = newName
-		self.count = newCount
-		self.typeID = self.TYPE_ID_UTILITY
+		self.set_name(newName)
+		self.__count = newCount
+		self.set_typeID(self.TYPE_ID_UTILITY)
 		
 	
 	def is_usable(self):
 	
 		retVal = False
 		
-		if (self.count > 0):
+		if (self.__count > 0):
 			retVal = True
 			
 		return retVal
+		
+	
+	def get_count(self):
+		return self.__count
+
+	def set_count(self, newCountNum):
+		
+		if (newCount > 0):
+			self.__count = newCountNum
+		else:
+			self.__count = 0
+			
+	def add_count(self, countIncrNum):
+		self.__count += countIncrNum
+		
+	def subtract_count(self, countDecrNum):
+		tmpVal = self.__count - countDecrNum
+		
+		if (tmpVal >= 0):
+			self.__count = tmpVal
+		else:
+			self.__count = 0
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -651,12 +794,12 @@ class UtilityItem(Item):
 class WeaponItem(Item):
 
 	# default unique members to invalid values
-	ammo = -1
+	ammo = INVALID_INDEX
 	
 	def __init__(self, newName, newAmmo):
-		self.name = newName
+		self.set_name(newName)
 		self.ammo = newAmmo
-		self.typeID = self.TYPE_ID_WEAPON
+		self.set_typeID(self.TYPE_ID_WEAPON)
 		
 		
 	def is_usable(self):
@@ -664,10 +807,19 @@ class WeaponItem(Item):
 		retVal = False
 		
 		if ((self.ammo > 0) or (self.ammo == INFINITE_VAL)):
+			self.ammo = newCount
 			retVal = True
 			
 		return retVal
-
+		
+		
+	def set_count(self, newCount):
+		retVal = False
+		
+		if ((newCount > 0) or (newCount == INFINITE_VAL)):
+			self.ammo = newCount
+			
+		return retVal
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -680,9 +832,10 @@ class WeaponItem(Item):
 class Engine(object):
 	
 	def __init__(self, sceneMap):
-		self.sceneMap = sceneMap
+		self.__sceneMap = sceneMap
 		
 	def play(self):
+
 		Clear_Screen()
 		# Show Title Screen with menu options
 		print "%s\n%s\n%s\n" % (AsciiArt.Separator_Line, AsciiArt.GothansGameTitle, AsciiArt.Separator_Line)
@@ -734,10 +887,10 @@ class Engine(object):
 		thePlayer = Player()
 		
 		# need while-loop here to drive game
-		result, thePlayer = self.sceneMap.opening_scene(thePlayer)
+		result, thePlayer = self.__sceneMap.opening_scene(thePlayer)
 		
 		while (result != FINISH_RESULT):
-			result, thePlayer = self.sceneMap.next_scene(result, thePlayer)
+			result, thePlayer = self.__sceneMap.next_scene(result, thePlayer)
 			
 			
 		Exit_Game(thePlayer)	
@@ -752,20 +905,22 @@ class Engine(object):
 #---------------------------------------------------
 class Scene(object):
 	
+	ThePlayer = None # DEBUG_JW - Is this needed?
+	
 	def enter(self, thePlayer):
 		# should never get here
-		print "Scene Subclasses handle implentation."
+		Show_Game_Error("Scene Subclasses handle implentation.")
 		exit(1)
 		
 
-	# Runs attack scenario of user against Gothan.
+	# Runs melee attack scenario of user against Gothan.
 	# Returns:
 	#	- thePlayer for health evaluation
-	def run_attack(self, thePlayer):
+	def run_melee_attack(self, thePlayer):
 		
 		newXP = 100
 		done = False
-		anAttack = Attack()
+		anAttack = MeleeAttack()
 		
 		while (not done):
 			answer = raw_input("%s> " % anAttack.get_option_str(thePlayer))
@@ -775,7 +930,7 @@ class Scene(object):
 			else:
 				userAttack = anAttack.translate_cmd(answer)
 				
-				if (userAttack == Attack.INVALID):
+				if (userAttack == MeleeAttack.INVALID):
 					print INVALID_ENTRY_RSP
 				else:
 					gothanAttack = anAttack.get_random_attack()
@@ -784,7 +939,7 @@ class Scene(object):
 					if (userAttack == gothanAttack):
 						# we have a tie
 						print "The two attacks cancel each other. Try again. (-5 HEALTH)"
-						thePlayer.health -= 5
+						thePlayer.subtract_health(5)
 						newXP -= 10
 					else:
 						result = anAttack.evaluate(userAttack, gothanAttack)
@@ -794,9 +949,9 @@ class Scene(object):
 							print "You defeated the Gothan! (+%d XP)" % newXP
 							retVal = True
 						else:
-							thePlayer.health = 0
-							healthDiff = 100 - thePlayer.health
-							print "The Gothan defeated you. (-%d HEALTH)" % healthDiff
+							playerHealth = thePlayer.get_health()
+							thePlayer.set_health(0)
+							print "The Gothan defeated you. (-%d HEALTH)" % playerHealth
 															
 						done = True
 		
@@ -912,7 +1067,7 @@ class Scene(object):
 				Toxic nerve gas releases, causing you to asphyxiate immediately.
 				"""
 
-			batteryItem.count -= 1
+			batteryItem.subtract_count(1)
 			thePlayer.theInventoryMgr.update_item(batteryItem)
 			
 		return retVal, thePlayer
@@ -932,9 +1087,11 @@ class Death(Scene):
 		answer = raw_input("> ")
 		
 		if (answer.lower() == 'y'):
+			# TODO: implement way to save score before resetting
+			thePlayer.reset_data()
 			retScene = CORRIDOR_KEY
 		
-		return retScene, self.ThePlayer
+		return retScene, thePlayer
 		
 
 class CentralCorridor(Scene):
@@ -948,17 +1105,25 @@ class CentralCorridor(Scene):
 		Clear_Screen()
 		print self.sceneMsgStr
 		
+		# Show_Game_Error("DEBUG_JW - This is just a TEST!!!!")
+		
 		done = False
 		
-		answer = Prompt_User_Action(thePlayer)
+		while (not done):
+			answer, thePlayer = Prompt_User_Action(thePlayer)
+			
+			if ((answer == CC_CHEAT_CMD_STR) or (answer == ATTACK_CMD_STR)):
+				done = True
+			else:
+				print INVALID_ENTRY_RSP
 		
 		if (answer == CC_CHEAT_CMD_STR):
 			retScene = ARMORY_KEY
 		else:
 			if (answer == ATTACK_CMD_STR):
-				thePlayer = self.run_attack(thePlayer)
+				thePlayer = self.run_melee_attack(thePlayer)
 				
-				if (thePlayer.health > 0):
+				if (thePlayer.get_health() > 0):
 					retScene = ARMORY_KEY
 				
 			else:
@@ -968,7 +1133,7 @@ class CentralCorridor(Scene):
 		if (retScene == ARMORY_KEY):
 			
 			# TODO - allow player to search (maybe include randomly generated item)
-			print "Moving to the Armory..."
+			print "Moving to the Armory...\n"
 			
 			
 		raw_input(PROMPT_CONTINUE_STR)	
@@ -994,7 +1159,7 @@ class Armory(Scene):
 		
 		while (not done):
 		
-			answer = Prompt_User_Action(thePlayer)
+			answer, thePlayer = Prompt_User_Action(thePlayer)
 			
 			if ((answer == ARMORY_CHEAT_CMD_STR) or (answer == KEYPAD_CMD_STR)):
 				done = True
@@ -1015,16 +1180,16 @@ class Armory(Scene):
 					# Failed door code entry scenario
 					print "A Gothan hears the alarms and moves in to attack!"
 					
-					answer = Prompt_User_Action(thePlayer)
+					answer, thePlayer = Prompt_User_Action(thePlayer)
 		
 					if (answer == ARMORY_CHEAT_CMD_STR):
 						retScene = BRIDGE_KEY
 					else:
 						if (answer == ATTACK_CMD_STR):
-							isWin = self.run_attack(thePlayer)
+							isWin = self.run_melee_attack(thePlayer)
 							
 							#DEBUG_JW - remove 'or not isWin' which is only for testing
-							if (thePlayer.health > 0):
+							if (thePlayer.get_health() > 0):
 								isWin = True
 							
 							#DEBUG_JW- remove this after testing...
@@ -1038,13 +1203,12 @@ class Armory(Scene):
 								done = False
 								
 								while (not done):
-									answer = Prompt_User_Action(thePlayer)
+									answer, thePlayer = Prompt_User_Action(thePlayer)
 
 									if (answer == ARMORY_CHEAT_CMD_STR):
 										retScene = BRIDGE_KEY
 									else:
 										if (answer == OVERRIDE_CMD_STR):
-											# user chose to override the keypad for the first time
 											isWin, thePlayer = self.run_keypad_override(thePlayer)
 											
 											if (isWin):
@@ -1064,14 +1228,14 @@ class Armory(Scene):
 			
 			else:
 				# no keypad command. We should never get here
-				print "ERROR: Invalid command."
+				Show_Game_Error("Invalid command.")
 				
 		if (retScene == BRIDGE_KEY):
 			thePlayer.theInventoryMgr.add_item(UtilityItem(ITEM_BOMB_STR, 1))
 			
 			# TODO - allow user to pick up bomb and other weapons
 			
-			print "Moving to the Bridge..."
+			print "Moving to the Bridge...\n"
 			
 		
 		raw_input(PROMPT_CONTINUE_STR)	
@@ -1092,19 +1256,22 @@ class Bridge(Scene):
 		
 		print "A Gothan is blocking you from planting the bomb."
 		
-		answer = Prompt_User_Action(thePlayer)
+		answer, thePlayer = Prompt_User_Action(thePlayer)
 		
 		if (answer == BRIDGE_CHEAT_CMD_STR):
 			retScene = ESCAPE_POD_KEY
 		else:
 			if (answer == ATTACK_CMD_STR):
-				thePlayer = self.run_attack(thePlayer)
+				thePlayer = self.run_melee_attack(thePlayer)
 				
-				if (thePlayer.health > 0):
+				if (thePlayer.get_health() > 0):
 					retScene = ESCAPE_POD_KEY
 			else:
 				# user chose not to attack
 				print "The Gothan liquifies you with his plasma rifle"
+				
+		if (retScene == ESCAPE_POD_KEY):
+			print "Moving to the Escape Pod Bay...\n"
 		
 		return retScene, thePlayer
 		pass
@@ -1137,7 +1304,7 @@ class EscapePod(Scene):
 		
 #---------------------------------------------------
 #---------------------------------------------------
-# Class: Map
+# Class: SceneMap
 #
 # Member Variables:	
 #		sceneDict		- dictionary of all game scenes
@@ -1145,16 +1312,16 @@ class EscapePod(Scene):
 #---------------------------------------------------
 #---------------------------------------------------
 		
-class Map(object):
+class SceneMap(object):
 	
 	def __init__(self, startScene):
 	
 		# declare dict for all scenes
-		self.sceneDict = {	CORRIDOR_KEY	: CentralCorridor(),
-							ARMORY_KEY 		: Armory(),
-							BRIDGE_KEY		: Bridge(),
-							ESCAPE_POD_KEY	: EscapePod(),
-							DEATH_KEY		: Death()	}
+		self.__sceneDict = {	CORRIDOR_KEY	: CentralCorridor(),
+								ARMORY_KEY 		: Armory(),
+								BRIDGE_KEY		: Bridge(),
+								ESCAPE_POD_KEY	: EscapePod(),
+								DEATH_KEY		: Death()	}
 					 
 		self.firstScene = startScene
 		
@@ -1162,16 +1329,11 @@ class Map(object):
 	def next_scene(self, sceneName, thePlayer):
 		# run the next scene and save off the result
 		retScene = ''
-		theNextScene = self.sceneDict.get(sceneName)
-		
-		if (DEBUG_MODE):
-			print "\n\n\nsceneName = "
-			print sceneName
-			print "\n\n"
+		theNextScene = self.__sceneDict.get(sceneName)
 		
 		if (not theNextScene):
 			# should never get here
-			print "ERROR: Map::next_scene() - invalid key %s" % (sceneName)
+			Show_Game_Error("Map::next_scene() - invalid key %s" % (sceneName))
 		else:
 			retScene, thePlayer = theNextScene.enter(thePlayer)
 		
@@ -1188,6 +1350,6 @@ if __name__ == '__main__':
 		# Start here when this file is being run directly (rather than being imported).
 		
         # => Start the game
-        aMap = Map(CORRIDOR_KEY) # pass in the key for the starting scene
+        aMap = SceneMap(CORRIDOR_KEY) # pass in the key for the starting scene
         aGame = Engine(aMap)
         aGame.play()
