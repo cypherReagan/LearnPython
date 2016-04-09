@@ -53,6 +53,7 @@ EP_CHEAT_CMD_STR = CHEAT_CMD_STR + ' ep'
 FULL_HEALTH_CHEAT_CMD_STR = CHEAT_CMD_STR + ' health++'
 SET_HEALTH_CHEAT_CMD_STR = CHEAT_CMD_STR + ' sethealth'
 ADD_ITEM_CHEAT_CMD_STR = CHEAT_CMD_STR + ' item++'
+DELETE_ITEM_CHEAT_CMD_STR = CHEAT_CMD_STR + ' item--'
 DEBUG_MODE_TOGGLE_CMD_STR = CHEAT_CMD_STR + ' dbg'
 				
 #TODO - make this a list of tuples (str, number) to allow menu referencing				
@@ -72,6 +73,7 @@ CMD_STR_LIST = [HELP_REQ_CMD_STR,
 				FULL_HEALTH_CHEAT_CMD_STR,
 				SET_HEALTH_CHEAT_CMD_STR,
 				ADD_ITEM_CHEAT_CMD_STR,
+				DELETE_ITEM_CHEAT_CMD_STR,
 				
 				DEBUG_MODE_TOGGLE_CMD_STR]
 
@@ -202,17 +204,38 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 				try:			
 					itemCount = int(raw_input("(Count) > "))
 					
-					isUpdatedItem = theItem.set_count(itemCount)
+					if (theItem == None):
+						print "DEBUG_JW: Invalid Item!"
 					
-					if (isUpdatedItem):
-						isGoodItem = thePlayer.theInventoryMgr.add_item(theItem)
+					theItem.set_count(itemCount)
+					
+					isGoodItem = thePlayer.theInventoryMgr.add_item(theItem) 
 
-						if (isGoodItem):
-							done = True
-					else:
-						print "Could not update item count!"
+					if (isGoodItem):
+						done = True
 				except:
 					print "Please enter a valid number!"
+					
+	elif (userCmdStr == DELETE_ITEM_CHEAT_CMD_STR):
+		
+		done = False
+		
+		while (not done):
+		
+			itemAnswer = raw_input("(Enter item name) > ")
+			
+			if (itemAnswer == 'q'):
+				done = True
+			else:
+				# TODO - put removal process inside theInventoryMgr
+				theItem = thePlayer.theInventoryMgr.get_item(itemAnswer)
+				
+				if (theItem != None):
+					theItem.subtract_count(1)
+					thePlayer.theInventoryMgr.update_item(theItem)
+					done = True
+				else:
+					print "Please enter valid item name!"
 		
 	elif (userCmdStr == DEBUG_MODE_TOGGLE_CMD_STR):
 		global DEBUG_MODE #TODO - fix warning generated here
@@ -493,7 +516,7 @@ class Player(object):
 		self.theInventoryMgr.add_item(WeaponItem(ITEM_NET_STR, INFINITE_VAL), suppressPrintMsg)
 		self.theInventoryMgr.add_item(WeaponItem(ITEM_KNIFE_STR, INFINITE_VAL), suppressPrintMsg)
 		#DEBUG_JW - this is for testing
-		#self.theInventoryMgr.add_item(UtilityItem(ITEM_BATTERY_STR, 1))
+		self.theInventoryMgr.add_item(UtilityItem(ITEM_BATTERY_STR, 1))
 		
 	def get_health(self):
 		return self.__health
@@ -562,13 +585,14 @@ class InventoryMgr(object):
 			# brand new item to add
 			
 			# Determine collection index for fast referencing
-			listIndex = len (self.__itemList) - 1
+			listIndex = len (self.__itemList)
 			newItem.index = listIndex
 			
 			self.__itemList.append(newItem) 
 			
 			if (not suppressPrintMsg):
 				print "Adding %s to Inventory..." % newItem.get_name()
+				print "DEBUG_JW:newItem.index = %d" % newItem.index
 		
 		return retVal
 		
@@ -576,7 +600,7 @@ class InventoryMgr(object):
 		retIndex = INVALID_INDEX
 		itemIndex = theItem.index
 		
-		print "DEBUG_JW: %s item index is %d and itemList len = %d" % (self.__itemList[itemIndex].get_name(), itemIndex, len(self.__itemList))
+		print "DEBUG_JW: InventoryMgr.is_item_index_valid() - item arg = %s item arg index = %d\n, %s item index is %d and itemList len = %d\n" % (theItem.get_name(), theItem.index, self.__itemList[itemIndex].get_name(), itemIndex, len(self.__itemList))
 		
 		if ((itemIndex < len(self.__itemList) and (theItem.get_name() == self.__itemList[itemIndex].get_name()))):
 			retIndex = itemIndex
@@ -640,7 +664,9 @@ class InventoryMgr(object):
 		count = 0
 		
 		for item in self.__itemList:
+			print "DEBUG_JW: InventoryMg.get_item_index() - matching %s with %s" % (item.get_name(), itemName)
 			if (item.get_name() == itemName):
+				print "DEBUG_JW: InventoryMg.get_item_index() - match made at index %d" % count
 				retIndex = count
 			
 			count += 1
@@ -654,12 +680,17 @@ class InventoryMgr(object):
 		if (itemIndex != INVALID_INDEX):
 			# we have a valid item
 				
-			self.__itemList.remove(itemIndex)
-			# After any deletion (potentially in the middle of list), 
-			# need to recalculate each item index to stay accurate.
-			self.calculate_item_indices()
+			try:	
+				#self.__itemList.remove(theItem.get_name())
+				del self.__itemList[itemIndex]
+				
+				# After any deletion (potentially in the middle of list), 
+				# need to recalculate each item index to stay accurate.
+				self.calculate_item_indices()
+			except:
+				Show_Game_Error("Unable to delete inventory item %s at index %d" % (theItem.get_name(), itemIndex))
 		else:
-			Show_Game_Error("Unable to delete inventory item - %s" % theItem.get_name())
+			Show_Game_Error("Unable to delete inventory item - %s: Invalid Index" % theItem.get_name())
 			#TODO: figure out why battery will not delete
 		
 		
@@ -734,7 +765,7 @@ class Item(object):
 		return self.__typeID
 		
 	def set_typeID(self, newIdNum):
-		if ((newIdNum == TYPE_ID_UTILITY) or (newIdNum == TYPE_ID_WEAPON)):
+		if ((newIdNum == self.TYPE_ID_UTILITY) or (newIdNum == self.TYPE_ID_WEAPON)):
 			self.__typeID = newIdNum
 		else:
 			Show_Game_Error("Invalid Item ID to set: %d." % newIdNum)
@@ -770,7 +801,7 @@ class UtilityItem(Item):
 
 	def set_count(self, newCountNum):
 		
-		if (newCount > 0):
+		if (newCountNum > 0):
 			self.__count = newCountNum
 		else:
 			self.__count = 0
