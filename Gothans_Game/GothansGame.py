@@ -14,6 +14,8 @@ import random
 import AsciiArt
 import os
 import platform
+import MapDisplay
+import GameData
 
 
 DEBUG_MODE = False
@@ -33,7 +35,6 @@ PROMPT_CONTINUE_STR = "[Press any key to continue...]> "
 INVALID_OVERRIDE_EQUIP_RSP = "You do not have the necessary equipment for an override."
 
 INFINITE_VAL = -1000
-INVALID_INDEX = -1
 
 # User Action Commands
 HELP_REQ_CMD_STR = '?'
@@ -597,7 +598,7 @@ class InventoryMgr(object):
 		return retVal
 		
 	def is_item_index_valid(self, theItem):
-		retIndex = INVALID_INDEX
+		retIndex = GameData.INVALID_INDEX
 		itemIndex = theItem.index
 		
 		print "DEBUG_JW: InventoryMgr.is_item_index_valid() - item arg = %s item arg index = %d\n, %s item index is %d and itemList len = %d\n" % (theItem.get_name(), theItem.index, self.__itemList[itemIndex].get_name(), itemIndex, len(self.__itemList))
@@ -615,13 +616,13 @@ class InventoryMgr(object):
 		
 		isUpdate = False
 		
-		if (itemIndex != INVALID_INDEX):
+		if (itemIndex != GameData.INVALID_INDEX):
 			isUpdate = True
 		else:
 			# something is wrong with the item's assigned index => search list for item
 			itemIndex = self.get_item_index(updatedItem.get_name())
 			
-			if (itemIndex != INVALID_INDEX):
+			if (itemIndex != GameData.INVALID_INDEX):
 				isUpdate = True
 			else:
 				Show_Game_Error("Unable to update inventory item - %s" % updatedItem.get_name())
@@ -642,7 +643,7 @@ class InventoryMgr(object):
 		
 		itemIndex = self.get_item_index(itemName)
 		
-		if (itemIndex != INVALID_INDEX):
+		if (itemIndex != GameData.INVALID_INDEX):
 			tmpItem = self.__itemList[itemIndex]
 			
 			if (tmpItem.get_name() == itemName):
@@ -660,7 +661,7 @@ class InventoryMgr(object):
 	# Returns item index if found in list, else INVALID_INDEX
 	def get_item_index(self, itemName):
 		
-		retIndex = INVALID_INDEX
+		retIndex = GameData.INVALID_INDEX
 		count = 0
 		
 		for item in self.__itemList:
@@ -677,7 +678,7 @@ class InventoryMgr(object):
 	def delete_item(self, theItem):
 		itemIndex = self.is_item_index_valid(theItem)
 		
-		if (itemIndex != INVALID_INDEX):
+		if (itemIndex != GameData.INVALID_INDEX):
 			# we have a valid item
 				
 			try:	
@@ -744,8 +745,8 @@ class Item(object):
 	
 	# default common members to invalid values
 	name = ""
-	__typeID = INVALID_INDEX
-	index = INVALID_INDEX #dEBUG_JW - not sure if this is needed
+	__typeID = GameData.INVALID_INDEX
+	index = GameData.INVALID_INDEX #dEBUG_JW - not sure if this is needed
 	
 	def __init__(self):
 		# should never get here
@@ -778,7 +779,7 @@ class Item(object):
 class UtilityItem(Item):
 	
 	# default unique members to invalid values
-	__count = INVALID_INDEX
+	__count = GameData.INVALID_INDEX
 	
 	def __init__(self, newName, newCount):
 		self.set_name(newName)
@@ -825,7 +826,7 @@ class UtilityItem(Item):
 class WeaponItem(Item):
 
 	# default unique members to invalid values
-	ammo = INVALID_INDEX
+	ammo = GameData.INVALID_INDEX
 	
 	def __init__(self, newName, newAmmo):
 		self.set_name(newName)
@@ -1136,7 +1137,12 @@ class CentralCorridor(Scene):
 		Clear_Screen()
 		print self.sceneMsgStr
 		
-		# Show_Game_Error("DEBUG_JW - This is just a TEST!!!!")
+		#DEBUG_JW - start debug
+		aMapDisplay = MapDisplay.MapDisplayData(GameData.MAP_BRIDGE_STR1)
+		mapStr = aMapDisplay.get_map()
+		
+		Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
+		# end debug
 		
 		done = False
 		
