@@ -1,3 +1,5 @@
+# This Python file uses the following encoding: utf-8
+
 # Name				: GothansGame.py
 # Author			: JWalker
 # Created			: 17th September 2015
@@ -14,6 +16,7 @@ import random
 import AsciiArt
 import os
 import platform
+import GameEngine
 import MapDisplay
 import GameData
 
@@ -29,8 +32,9 @@ BRIDGE_KEY = 'bridge'
 ESCAPE_POD_KEY = 'escape pod'
 DEATH_KEY = 'death'
 FINISH_RESULT = 'done'
+#START_KEY = CORRIDOR_KEY # DEBUG_JW: Put this back after testing!
+START_KEY = BRIDGE_KEY
 
-INVALID_ENTRY_RSP = 'DOES NOT COMPUTE!'
 PROMPT_CONTINUE_STR = "[Press any key to continue...]> "
 INVALID_OVERRIDE_EQUIP_RSP = "You do not have the necessary equipment for an override."
 
@@ -96,11 +100,19 @@ ITEM_STR_LIST = [ITEM_BATTERY_STR,
 def Clear_Screen():
 		
 	if (not DEBUG_MODE):
-		if (platform.system() == 'Windows'):
+		if (Is_Windows_platform()):
 			os.system('cls')
 		else:
 			os.system('clear') # Linux/Mac OS
 			
+# Utility function to query O/S platform
+def Is_Windows_platform():
+	retVal = False
+	
+	if (platform.system() == 'Windows'):
+		retVal = True
+		
+	return retVal
 			
 # Utility function to ask user for game command
 def Prompt_User_Action(thePlayer):
@@ -119,7 +131,7 @@ def Prompt_User_Action(thePlayer):
 				# not a common command so let caller handle this one
 				done = True
 		else:
-			print INVALID_ENTRY_RSP
+			print GameData.INVALID_ENTRY_RSP
 				
 	return answer, thePlayer
 
@@ -275,6 +287,8 @@ def Exit_Game(thePlayer):
 #
 # DESCRIPTION:
 # 	This is a static class used to handle attack data.
+#
+# TODO: move this to gameAI
 #---------------------------------------------------
 #---------------------------------------------------
 class MeleeAttack:
@@ -463,7 +477,7 @@ class Override(object):
 		
 		
 	# Verify that the wire menu input is valid and convert them if necessary.
-	# Returns converted wire string if valid, else INVALID_ENTRY_RSP.
+	# Returns converted wire string if valid, else GameData.INVALID_ENTRY_RSP.
 	def translate_cmd(self, wireStr):
 	
 		retStr = '' 
@@ -490,7 +504,7 @@ class Override(object):
 		if (isValid):
 			retStr = wireStr
 		else:
-			retStr = INVALID_ENTRY_RSP
+			retStr = GameData.INVALID_ENTRY_RSP
 		
 		return retStr
 		
@@ -855,13 +869,13 @@ class WeaponItem(Item):
 		
 #---------------------------------------------------
 #---------------------------------------------------
-# Class: Engine
+# Class: SceneEngine
 #
 # Member Variables:	
 #		sceneMap - Map containing all available scenes
 #--------------------------------------------------
 #---------------------------------------------------		
-class Engine(object):
+class SceneEngine(object):
 	
 	def __init__(self, sceneMap):
 		self.__sceneMap = sceneMap
@@ -912,7 +926,7 @@ class Engine(object):
 				Clear_Screen()
 				exit(1)
 			else:
-				print INVALID_ENTRY_RSP
+				print GameData.INVALID_ENTRY_RSP
 				Clear_Screen()
 
 		# Each scene returns the player to maintain game state.
@@ -963,7 +977,7 @@ class Scene(object):
 				userAttack = anAttack.translate_cmd(answer)
 				
 				if (userAttack == MeleeAttack.INVALID):
-					print INVALID_ENTRY_RSP
+					print GameData.INVALID_ENTRY_RSP
 				else:
 					gothanAttack = anAttack.get_random_attack()
 					print "\nThe Gothan attacks with %s" % anAttack.get_attack_name(gothanAttack)
@@ -1077,14 +1091,14 @@ class Scene(object):
 				wireStr1 = raw_input("\tWire 1 %s> " % Override.OVERRIDE_OPTION_STR)
 				wireStr1 = anOverride.translate_cmd(wireStr1)
 				
-				if (wireStr1 == INVALID_ENTRY_RSP):
-					print INVALID_ENTRY_RSP
+				if (wireStr1 == GameData.INVALID_ENTRY_RSP):
+					print GameData.INVALID_ENTRY_RSP
 				else:
 					wireStr2 = raw_input("\n\tWire 2 %s> " % Override.OVERRIDE_OPTION_STR)
 					wireStr2 = anOverride.translate_cmd(wireStr2)
 					
-					if (wireStr2 == INVALID_ENTRY_RSP):
-						print INVALID_ENTRY_RSP
+					if (wireStr2 == GameData.INVALID_ENTRY_RSP):
+						print GameData.INVALID_ENTRY_RSP
 					else:
 						done = True
 			
@@ -1137,13 +1151,6 @@ class CentralCorridor(Scene):
 		Clear_Screen()
 		print self.sceneMsgStr
 		
-		#DEBUG_JW - start debug
-		aMapDisplay = MapDisplay.MapDisplayData(GameData.MAP_BRIDGE_STR1)
-		mapStr = aMapDisplay.get_map()
-		
-		Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
-		# end debug
-		
 		done = False
 		
 		while (not done):
@@ -1152,7 +1159,7 @@ class CentralCorridor(Scene):
 			if ((answer == CC_CHEAT_CMD_STR) or (answer == ATTACK_CMD_STR)):
 				done = True
 			else:
-				print INVALID_ENTRY_RSP
+				print GameData.INVALID_ENTRY_RSP
 		
 		if (answer == CC_CHEAT_CMD_STR):
 			retScene = ARMORY_KEY
@@ -1201,7 +1208,7 @@ class Armory(Scene):
 			if ((answer == ARMORY_CHEAT_CMD_STR) or (answer == KEYPAD_CMD_STR)):
 				done = True
 			else:
-				print INVALID_ENTRY_RSP
+				print GameData.INVALID_ENTRY_RSP
 			
 		
 		if (answer == ARMORY_CHEAT_CMD_STR):
@@ -1257,7 +1264,7 @@ class Armory(Scene):
 											
 											thePlayer.theInventoryMgr.add_item(UtilityItem(ITEM_BATTERY_STR, 1))
 										else:
-											print INVALID_ENTRY_RSP
+											print GameData.INVALID_ENTRY_RSP
 								
 						else:
 							# user chose not to attack => Death
@@ -1291,24 +1298,63 @@ class Bridge(Scene):
 		Clear_Screen()
 		print self.sceneMsgStr
 		
-		print "A Gothan is blocking you from planting the bomb."
+		isMelee = False
 		
-		answer, thePlayer = Prompt_User_Action(thePlayer)
+		if (isMelee):
 		
-		if (answer == BRIDGE_CHEAT_CMD_STR):
-			retScene = ESCAPE_POD_KEY
-		else:
-			if (answer == ATTACK_CMD_STR):
-				thePlayer = self.run_melee_attack(thePlayer)
-				
-				if (thePlayer.get_health() > 0):
-					retScene = ESCAPE_POD_KEY
+			print "A Gothan is blocking you from planting the bomb."
+			
+			answer, thePlayer = Prompt_User_Action(thePlayer)
+			
+			if (answer == BRIDGE_CHEAT_CMD_STR):
+				retScene = ESCAPE_POD_KEY
 			else:
-				# user chose not to attack
-				print "The Gothan liquifies you with his plasma rifle"
+				if (answer == ATTACK_CMD_STR):
+					thePlayer = self.run_melee_attack(thePlayer)
+					
+					if (thePlayer.get_health() > 0):
+						retScene = ESCAPE_POD_KEY
+				else:
+					# user chose not to attack
+					print "The Gothan liquifies you with his plasma rifle"
+			
+		else:
+			# TODO: implement map scenario
+			
+			# Use game loop to send map manipulation requests.
+			# The map will return 
+			
+			#DEBUG_JW - start debug
+			if (0):
+				#print u'\u0420\u043e\u0441\u0441\u0438\u044f'
 				
+				#tmpStrU = u"➕☻↑↓→✊☠☃"
+				tmpStrU = u"░▓▐▄"
+				print tmpStrU
+				
+				#aMapDisplay = MapDisplay.MapDisplayData(GameData.MAP_BRIDGE_STR1_UCODE)
+				#mapStr = u"%s" % aMapDisplay.get_map()
+				#print mapStr
+				
+				aMapEngine = GameEngine.MapEngine(GameData.MAP_BRIDGE_STR1_UCODE)
+				thePlayer = aMapEngine.run_map(thePlayer)
+			
+				#Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
+				Show_Game_Error("DEBUG_JW - This is just a unicode string TEST!!!!\n\n")
+			# end debug
+			
+			mapStrList = [GameData.MAP_BRIDGE_STR2_UCODE]
+			
+			aMapEngine = GameEngine.MapEngine(mapStrList)
+			thePlayer = aMapEngine.run_map(thePlayer)
+			
+			retScene = ESCAPE_POD_KEY
+			
 		if (retScene == ESCAPE_POD_KEY):
 			print "Moving to the Escape Pod Bay...\n"
+			
+			
+		raw_input(PROMPT_CONTINUE_STR)	
 		
 		return retScene, thePlayer
 		pass
@@ -1387,6 +1433,6 @@ if __name__ == '__main__':
 		# Start here when this file is being run directly (rather than being imported).
 		
         # => Start the game
-        aMap = SceneMap(CORRIDOR_KEY) # pass in the key for the starting scene
-        aGame = Engine(aMap)
+        aMap = SceneMap(START_KEY) # pass in the key for the starting scene
+        aGame = SceneEngine(aMap)
         aGame.play()
