@@ -130,7 +130,7 @@ class MapDisplayData(object):
 		category = self.get_category_from_char(newChar)
 		
 		if (category == GameData.INVALID_INDEX):
-			GothansGame.Show_Game_Error("Invalid character for map tile construction: \"%s\" (%d, %d)." % (newChar, xVal, yVal))
+			Utils.Show_Game_Error("Invalid character for map tile construction: \"%s\" (%d, %d)." % (newChar, xVal, yVal))
 		else:
 			mapPos = MapPos(xVal, yVal)
 			objID = len (self.__tileList) # use list index as unique ID
@@ -172,7 +172,7 @@ class MapDisplayData(object):
 		listLen = len(self.__tileList)
 		
 		if ((index1 > listLen) or (index2 > listLen)):
-			GothansGame.Show_Game_Error("DEBUG_JW: swap_tiles_in_List() - invalid indices %d and %d!" % (index1, index2))
+			Utils.Show_Game_Error("DEBUG_JW: swap_tiles_in_List() - invalid indices %d and %d!" % (index1, index2))
 		else:
 			tmpTile = MapTile() # get new insance to avoid copy-by-reference
 			
@@ -181,14 +181,14 @@ class MapDisplayData(object):
 			tmpTile.tileChar = self.__tileList[index1].tileChar
 			tmpTile.objID = self.__tileList[index1].objID
 			
-			print u"DEBUG_JW: swap_tiles_in_List() - tmpTileChar = %s, srcTileChar = %s (%d, %d), destTileChar = %s (%d, %d)" % (tmpTile.tileChar, self.__tileList[index1].tileChar, self.__tileList[index1].pos.xPos, self.__tileList[index1].pos.yPos, self.__tileList[index2].tileChar, self.__tileList[index2].pos.xPos, self.__tileList[index2].pos.yPos)
+			#print u"DEBUG_JW: swap_tiles_in_List() - tmpTileChar = %s, srcTileChar = %s (%d, %d), destTileChar = %s (%d, %d)" % (tmpTile.tileChar, self.__tileList[index1].tileChar, self.__tileList[index1].pos.xPos, self.__tileList[index1].pos.yPos, self.__tileList[index2].tileChar, self.__tileList[index2].pos.xPos, self.__tileList[index2].pos.yPos)
 			
 			self.__tileList[index1].dir = self.__tileList[index2].dir
 			self.__tileList[index1].category = self.__tileList[index2].category
 			self.__tileList[index1].tileChar = self.__tileList[index2].tileChar
 			self.__tileList[index1].objID = self.__tileList[index2].objID
 			
-			print u"DEBUG_JW: swap_tiles_in_List() - tmpTileChar = %s, srcTileChar = %s (%d, %d), destTileChar = %s (%d, %d)" % (tmpTile.tileChar, self.__tileList[index1].tileChar, self.__tileList[index1].pos.xPos, self.__tileList[index1].pos.yPos, self.__tileList[index2].tileChar, self.__tileList[index2].pos.xPos, self.__tileList[index2].pos.yPos)
+			#print u"DEBUG_JW: swap_tiles_in_List() - tmpTileChar = %s, srcTileChar = %s (%d, %d), destTileChar = %s (%d, %d)" % (tmpTile.tileChar, self.__tileList[index1].tileChar, self.__tileList[index1].pos.xPos, self.__tileList[index1].pos.yPos, self.__tileList[index2].tileChar, self.__tileList[index2].pos.xPos, self.__tileList[index2].pos.yPos)
 			
 			self.__tileList[index2].dir = tmpTile.dir
 			self.__tileList[index2].category = tmpTile.category
@@ -220,12 +220,12 @@ class MapDisplayData(object):
 		currentTileIndex = self.get_tileIndex_from_ID(objID)
 		
 		if (currentTileIndex == GameData.INVALID_INDEX):
-			GothansGame.Show_Game_Error("move_map_item() - invalid objID %d!" % objID)
+			Utils.Show_Game_Error("move_map_item() - invalid objID %d!" % objID)
 		else:
 			currentTile = self.__tileList[currentTileIndex]
 			currentPos = currentTile.pos
 			
-			print "DEBUG_JW: move_map_item() - objID = %d, map ID = %d (%d, %d)" % (objID, currentTile.objID, currentPos.xPos, currentPos.yPos)
+			#print "DEBUG_JW: move_map_item() - objID = %d, map ID = %d (%d, %d)" % (objID, currentTile.objID, currentPos.xPos, currentPos.yPos)
 			
 			targetPos = MapPos(currentPos.xPos, currentPos.yPos) # get new instance to avoid copy-by-reference
 			isGoodCmd = True
@@ -239,25 +239,25 @@ class MapDisplayData(object):
 			elif (cmdStr == GameData.MAP_CMD_STR_MOVE_EAST):
 				targetPos.xPos += 1
 			else:
-				GothansGame.Show_Game_Error("move_map_item() - invalid cmdStr %s!" % cmdStr)
+				Utils.Show_Game_Error("move_map_item() - invalid cmdStr %s!" % cmdStr)
 				isGoodCmd = False
 				
 			if (isGoodCmd):
 				targetTileIndex = self.get_tileIndex_from_Pos(targetPos)
 				
-				print "DEBUG_JW: move_map_item() - isGoodCmd. targetTileIndex =  %d" % targetTileIndex
+				#print "DEBUG_JW: move_map_item() - isGoodCmd. targetTileIndex =  %d" % targetTileIndex
 				
 				if (targetTileIndex == GameData.INVALID_INDEX):
-					GothansGame.Show_Game_Error("move_map_item() - invalid target position (%d, %d)!" % (targetPos.xPos, targetPos.yPos))
+					Utils.Show_Game_Error("move_map_item() - invalid target position (%d, %d)!" % (targetPos.xPos, targetPos.yPos))
 				else:
 					targetTile = self.__tileList[targetTileIndex]
 					
-					print "DEBUG_JW: move_map_item() - targetTile.category = %d at (%d, %d)" % (targetTile.category, targetPos.xPos, targetPos.yPos)
+					#print "DEBUG_JW: move_map_item() - targetTile.category = %d at (%d, %d)" % (targetTile.category, targetPos.xPos, targetPos.yPos)
 					
 					if (targetTile.category == GameData.MAP_CAT_OPEN_SPACE):
 						# this is a valid move so proceed with swap
 						# TODO: force current tile dir to co=md dir
-						print "DEBUG_JW: move_map_item() - swapping tile %d with tile %d" % (currentTileIndex, targetTileIndex)
+						#print "DEBUG_JW: move_map_item() - swapping tile %d with tile %d" % (currentTileIndex, targetTileIndex)
 						self.swap_tiles_in_List(currentTileIndex, targetTileIndex)
 					else:
 						pass #print "DEBUG_JW: target tile is not open. Target Tile Category = %d" % targetTile.category

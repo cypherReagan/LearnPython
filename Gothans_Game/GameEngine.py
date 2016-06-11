@@ -1,6 +1,7 @@
 import GothansGame
 import MapDisplay
 import GameData
+import Utils
 import signal
 import msvcrt
 import time
@@ -23,7 +24,7 @@ def Get_Key_Input():
 
 	retStr = ""
 	
-	if (not GothansGame.Is_Windows_platform()):
+	if (not Utils.Is_Windows_platform()):
 		# Linux implementation
 		retStr = nonBlockingRawInput("Enter Action:>")
 	else:
@@ -33,7 +34,7 @@ def Get_Key_Input():
 		
 		while ((not msvcrt.kbhit()) and not inputTimeout):
 			# do something else while we're waiting
-			time.sleep(3.0)
+			time.sleep(1.0)
 			inputTimeout = True
 			
 		# clear the keyboard buffer
@@ -42,7 +43,8 @@ def Get_Key_Input():
 			inChar = msvcrt.getch()
 			retStr += inChar
 	
-		print "DEBUG_JW: Get_Key_Input() - You entered %s" % retStr
+		#if (retStr != ""):
+		#	print "DEBUG_JW: Get_Key_Input() - You entered %s" % retStr
 		
 	return retStr
 
@@ -98,6 +100,8 @@ class MapEngine(object):
 	
 		done = False
 		
+		gameMsgStr = "Once again it's on"
+		
 		# DEBUG_JW: this is a hack for now!
 		playerID = self.__theMapDisplay.get_ID(GameData.MAP_CAT_PLAYER)
 		
@@ -106,8 +110,14 @@ class MapEngine(object):
 			del self.__theMapCmdList[:]
 			
 			# update user display
-			#GothansGame.Clear_Screen()
+			Utils.Clear_Screen()
 			self.print_map_str()
+			print "\nPLAYER HEALTH: %d\t\tCURRENT ITEM: %s" % (thePlayer.get_health(), thePlayer.get_current_itemStr())
+			
+			if (gameMsgStr != ""):
+				print "\n\n%s\n%s\n%s\n" % (GameData.Separator_Line, gameMsgStr, GameData.Separator_Line)
+			
+			
 			
 			# TODO: 
 			# use separate thread for keyboard input
@@ -133,7 +143,7 @@ class MapEngine(object):
 					
 					if (answer == GameData.MAP_CMD_STR_QUIT):
 						done = True
-				else:
+				elif (answer != ""):
 					print GameData.INVALID_ENTRY_RSP
 				
 			if (isGoodInput and not done):

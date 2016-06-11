@@ -13,15 +13,13 @@
 from sys import exit
 from random import randint
 import random
-import AsciiArt
 import os
-import platform
+import AsciiArt
 import GameEngine
 import MapDisplay
 import GameData
+import Utils
 
-
-DEBUG_MODE = False
 
 #---------------------------- Globals ----------------------------
 
@@ -96,190 +94,7 @@ ITEM_STR_LIST = [ITEM_BATTERY_STR,
 				 ITEM_KNIFE_STR]
 #-------------------------- End Globals --------------------------
 
-# Utility function to clear shell
-def Clear_Screen():
-		
-	if (not DEBUG_MODE):
-		if (Is_Windows_platform()):
-			os.system('cls')
-		else:
-			os.system('clear') # Linux/Mac OS
-			
-# Utility function to query O/S platform
-def Is_Windows_platform():
-	retVal = False
 	
-	if (platform.system() == 'Windows'):
-		retVal = True
-		
-	return retVal
-			
-# Utility function to ask user for game command
-def Prompt_User_Action(thePlayer):
-	answer = ''
-	done = False
-	
-	while (not done):
-		answer = raw_input("[Action]> ")
-		answer = answer.lower()
-		
-		if answer in CMD_STR_LIST:
-			# we have a good command
-			isCmdHandled, thePlayer = Process_Common_Actions(answer, thePlayer)
-			
-			if (not isCmdHandled):
-				# not a common command so let caller handle this one
-				done = True
-		else:
-			print GameData.INVALID_ENTRY_RSP
-				
-	return answer, thePlayer
-
-# Process any common user commands.
-# Returns True if command is handled, else False
-def Process_Common_Actions(userCmdStr, thePlayer):
-
-	retVal = True
-	
-	if (userCmdStr == HELP_REQ_CMD_STR):
-		
-		print AsciiArt.Separator_Line
-		print "GAME COMMANDS:\n"
-
-		for entry in CMD_STR_LIST:
-			isDbgPrint = False
-			if (DEBUG_MODE):
-				isDbgPrint = True
-				
-			if (isDbgPrint or (CHEAT_CMD_STR not in entry)):
-				print entry
-		
-		print AsciiArt.Separator_Line
-	
-	elif (userCmdStr == QUIT_CMD_STR):
-		print "Are you sure want to quit?"
-		answer = raw_input("(y/n)> ")
-		
-		if (answer.lower() == 'y'):
-			Exit_Game(thePlayer)
-	
-	elif (userCmdStr == PLAYER_STATS_CMD_STR):
-		thePlayer.print_stats()
-		
-	elif (userCmdStr == PLAYER_INV_CMD_STR):
-		thePlayer.theInventoryMgr.print_items()
-		
-	elif (userCmdStr == FULL_HEALTH_CHEAT_CMD_STR):
-		thePlayer.set_health(100)
-		
-	elif (userCmdStr == SET_HEALTH_CHEAT_CMD_STR):
-		
-		done = False
-		
-		while (not done):
-			try:
-				answerNum = int(raw_input("(Enter new health value) > "))
-		
-				thePlayer.set_health(answerNum)
-				done = True
-			except:
-				print "Please enter a valid number!"
-				
-	elif (userCmdStr == ADD_ITEM_CHEAT_CMD_STR):
-		
-		done = False
-		
-		while (not done):
-			typeAnswer = raw_input("(Enter item type (u/w/q)) > ")
-			
-			theItem = None
-			isGoodItem = False
-			
-			if (typeAnswer == "u"):
-				# utility item
-				itemAnswer = raw_input("(Enter item name) > ")
-				theItem = UtilityItem(itemAnswer, 1)
-				isGoodItem = True
-				
-			elif (typeAnswer == "w"):
-				# weapon item
-				itemAnswer = raw_input("(Enter item name) > ")
-				theItem = WeaponItem(itemAnswer, INFINITE_VAL)
-				isGoodItem = True
-				
-			elif (typeAnswer == "q"):
-				# quit
-				done = True
-			else:
-				print "Please enter a valid item type!"
-			
-			if (isGoodItem):
-				try:			
-					itemCount = int(raw_input("(Count) > "))
-					
-					if (theItem == None):
-						print "DEBUG_JW: Invalid Item!"
-					
-					theItem.set_count(itemCount)
-					
-					isGoodItem = thePlayer.theInventoryMgr.add_item(theItem) 
-
-					if (isGoodItem):
-						done = True
-				except:
-					print "Please enter a valid number!"
-					
-	elif (userCmdStr == DELETE_ITEM_CHEAT_CMD_STR):
-		
-		done = False
-		
-		while (not done):
-		
-			itemAnswer = raw_input("(Enter item name) > ")
-			
-			if (itemAnswer == 'q'):
-				done = True
-			else:
-				# TODO - put removal process inside theInventoryMgr
-				theItem = thePlayer.theInventoryMgr.get_item(itemAnswer)
-				
-				if (theItem != None):
-					theItem.subtract_count(1)
-					thePlayer.theInventoryMgr.update_item(theItem)
-					done = True
-				else:
-					print "Please enter valid item name!"
-		
-	elif (userCmdStr == DEBUG_MODE_TOGGLE_CMD_STR):
-		global DEBUG_MODE #TODO - fix warning generated here
-		
-		if (not DEBUG_MODE):
-			DEBUG_MODE = True
-			print "DEBUG_MODE = True"
-		else:
-			DEBUG_MODE = False
-			print "DEBUG_MODE = False"
-
-	else:
-		retVal = False
-
-		
-	return retVal, thePlayer
-
-	
-def Show_Game_Error(errMsgStr):
-	
-	errMsgStr = "GAME ERROR: " + errMsgStr
-	errorSeparator = '************************************************************'
-	
-	printMsgStr = "%s\n***  %s  ***\n%s\n%s\n" % (errorSeparator, errMsgStr, errorSeparator, PROMPT_CONTINUE_STR)
-	raw_input(printMsgStr)	
-	
-	
-def Exit_Game(thePlayer):
-	Clear_Screen()
-	print "%s\nFINAL SCORE: %d\n\n%s\n%s" % (AsciiArt.Separator_Line, thePlayer.xp, AsciiArt.GameOverMsg, AsciiArt.Separator_Line)
-	exit(1)
 	
 #---------------------------------------------------
 #---------------------------------------------------
@@ -524,6 +339,7 @@ class Player(object):
 		self.__health = 100
 		self.xp = 0
 		self.theInventoryMgr = InventoryMgr()
+		self.__currentItemStr = GameData.EMPTY_ITEM_STR
 		
 		# start with default melee weapons
 		suppressPrintMsg = True
@@ -551,6 +367,12 @@ class Player(object):
 			self.__health = 0
 		else:
 			self.__health -= healthVal
+			
+	def get_current_itemStr(self):
+		return self.__currentItemStr
+		
+	def equip_item(self):
+		pass # TODO: implement
 		
 	def print_stats(self):
 		print "%s\n\nPLAYER STATS:\n\nHEALTH = %d\nXP = %d\n\n%s" % (AsciiArt.Separator_Line, self.get_health(), self.xp, AsciiArt.Separator_Line)
@@ -594,7 +416,7 @@ class InventoryMgr(object):
 				theItem.ammo += newItem.ammo
 			else:
 				# should never get here
-				Show_Game_Error(INVALID_TYPE_ID_STR)
+				Utils.Utils.Show_Game_Error(INVALID_TYPE_ID_STR)
 				retVal = False
 		else:
 			# brand new item to add
@@ -639,7 +461,7 @@ class InventoryMgr(object):
 			if (itemIndex != GameData.INVALID_INDEX):
 				isUpdate = True
 			else:
-				Show_Game_Error("Unable to update inventory item - %s" % updatedItem.get_name())
+				Utils.Show_Game_Error("Unable to update inventory item - %s" % updatedItem.get_name())
 		
 		if (isUpdate):
 			# item found in list
@@ -664,7 +486,7 @@ class InventoryMgr(object):
 				retItem = tmpItem
 			else:
 				# Something went wrong. We got a mismatching item from query.
-				Show_Game_Error("get_item() fail for %s" % itemName)
+				Utils.Show_Game_Error("get_item() fail for %s" % itemName)
 				
 				if (DEBUG_MODE):
 					print "DEBUG_JW: itemName = %s. itemIndex = %d. result name = %s\n" % (itemName, itemIndex, tmpItem.get_name())
@@ -703,9 +525,9 @@ class InventoryMgr(object):
 				# need to recalculate each item index to stay accurate.
 				self.calculate_item_indices()
 			except:
-				Show_Game_Error("Unable to delete inventory item %s at index %d" % (theItem.get_name(), itemIndex))
+				Utils.Show_Game_Error("Unable to delete inventory item %s at index %d" % (theItem.get_name(), itemIndex))
 		else:
-			Show_Game_Error("Unable to delete inventory item - %s: Invalid Index" % theItem.get_name())
+			Utils.Show_Game_Error("Unable to delete inventory item - %s: Invalid Index" % theItem.get_name())
 			#TODO: figure out why battery will not delete
 		
 		
@@ -736,7 +558,7 @@ class InventoryMgr(object):
 					
 			else:
 				# should never get here
-				Show_Game_Error(INVALID_TYPE_ID_STR)
+				Utils.Show_Game_Error(INVALID_TYPE_ID_STR)
 				
 				
 			print "%d. %s\t\t%s %s" % (itemNum, invItem.get_name(), countNameStr, invCountStr)
@@ -764,7 +586,7 @@ class Item(object):
 	
 	def __init__(self):
 		# should never get here
-		Show_Game_Error("Item Subclasses handle implentation.")
+		Utils.Show_Game_Error("Item Subclasses handle implentation.")
 		exit(1)
 
 	def get_name(self):
@@ -774,7 +596,7 @@ class Item(object):
 		if newNameStr in ITEM_STR_LIST:
 			self.__name = newNameStr
 		else:
-			Show_Game_Error("Invalid Item name to set: %s." % newNameStr)
+			Utils.Show_Game_Error("Invalid Item name to set: %s." % newNameStr)
 			
 	def get_typeID(self):
 		return self.__typeID
@@ -783,7 +605,7 @@ class Item(object):
 		if ((newIdNum == self.TYPE_ID_UTILITY) or (newIdNum == self.TYPE_ID_WEAPON)):
 			self.__typeID = newIdNum
 		else:
-			Show_Game_Error("Invalid Item ID to set: %d." % newIdNum)
+			Utils.Show_Game_Error("Invalid Item ID to set: %d." % newIdNum)
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -882,7 +704,7 @@ class SceneEngine(object):
 		
 	def play(self):
 
-		Clear_Screen()
+		Utils.Clear_Screen()
 		# Show Title Screen with menu options
 		print "%s\n%s\n%s\n" % (AsciiArt.Separator_Line, AsciiArt.GothansGameTitle, AsciiArt.Separator_Line)
 		
@@ -910,24 +732,24 @@ class SceneEngine(object):
 			
 			if (answer == '1'):
 				# Start Game
-				Clear_Screen()
+				Utils.Clear_Screen()
 				print openingMsgStr
 				raw_input("\t\t\t%s" % PROMPT_CONTINUE_STR)
-				Clear_Screen()
+				Utils.Clear_Screen()
 				done = True
 			elif (answer == '2'):
 				# Show Help
-				Clear_Screen()
+				Utils.Clear_Screen()
 				print helpStr
 				raw_input(PROMPT_CONTINUE_STR)
-				Clear_Screen()
+				Utils.Clear_Screen()
 			elif (answer == '3'):
 				# Quit
-				Clear_Screen()
+				Utils.Clear_Screen()
 				exit(1)
 			else:
 				print GameData.INVALID_ENTRY_RSP
-				Clear_Screen()
+				Utils.Clear_Screen()
 
 		# Each scene returns the player to maintain game state.
 		thePlayer = Player()
@@ -939,7 +761,7 @@ class SceneEngine(object):
 			result, thePlayer = self.__sceneMap.next_scene(result, thePlayer)
 			
 			
-		Exit_Game(thePlayer)	
+		Utils.Exit_Game(thePlayer)	
 
 
 #---------------------------------------------------
@@ -955,7 +777,7 @@ class Scene(object):
 	
 	def enter(self, thePlayer):
 		# should never get here
-		Show_Game_Error("Scene Subclasses handle implentation.")
+		Utils.Show_Game_Error("Scene Subclasses handle implentation.")
 		exit(1)
 		
 
@@ -1078,7 +900,7 @@ class Scene(object):
 		if (batteryItem == None):
 			print INVALID_OVERRIDE_EQUIP_RSP
 		else:
-			Clear_Screen()
+			Utils.Clear_Screen()
 			print AsciiArt.OverrideDiagram3Wire
 			print AsciiArt.OverrideDiagram3Wire_Seed % (keypadWire, doorWire, batteryWire) 
 		
@@ -1125,7 +947,7 @@ class Death(Scene):
 		retScene = FINISH_RESULT
 		self.ThePlayer = thePlayer
 		
-		Clear_Screen()
+		Utils.Clear_Screen()
 		print AsciiArt.Skull
 		print "You died in a really horrifying way!"
 
@@ -1148,13 +970,13 @@ class CentralCorridor(Scene):
 		retScene = DEATH_KEY
 		self.ThePlayer = thePlayer
 		
-		Clear_Screen()
+		Utils.Clear_Screen()
 		print self.sceneMsgStr
 		
 		done = False
 		
 		while (not done):
-			answer, thePlayer = Prompt_User_Action(thePlayer)
+			answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 			
 			if ((answer == CC_CHEAT_CMD_STR) or (answer == ATTACK_CMD_STR)):
 				done = True
@@ -1195,7 +1017,7 @@ class Armory(Scene):
 		retScene = DEATH_KEY
 		self.ThePlayer = thePlayer
 		
-		Clear_Screen()
+		Utils.Clear_Screen()
 		print self.sceneMsgStr
 		
 		answer = ""
@@ -1203,7 +1025,7 @@ class Armory(Scene):
 		
 		while (not done):
 		
-			answer, thePlayer = Prompt_User_Action(thePlayer)
+			answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 			
 			if ((answer == ARMORY_CHEAT_CMD_STR) or (answer == KEYPAD_CMD_STR)):
 				done = True
@@ -1224,7 +1046,7 @@ class Armory(Scene):
 					# Failed door code entry scenario
 					print "A Gothan hears the alarms and moves in to attack!"
 					
-					answer, thePlayer = Prompt_User_Action(thePlayer)
+					answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 		
 					if (answer == ARMORY_CHEAT_CMD_STR):
 						retScene = BRIDGE_KEY
@@ -1247,7 +1069,7 @@ class Armory(Scene):
 								done = False
 								
 								while (not done):
-									answer, thePlayer = Prompt_User_Action(thePlayer)
+									answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 
 									if (answer == ARMORY_CHEAT_CMD_STR):
 										retScene = BRIDGE_KEY
@@ -1272,7 +1094,7 @@ class Armory(Scene):
 			
 			else:
 				# no keypad command. We should never get here
-				Show_Game_Error("Invalid command.")
+				Utils.Show_Game_Error("Invalid command.")
 				
 		if (retScene == BRIDGE_KEY):
 			thePlayer.theInventoryMgr.add_item(UtilityItem(ITEM_BOMB_STR, 1))
@@ -1295,7 +1117,7 @@ class Bridge(Scene):
 		retScene = DEATH_KEY
 		self.ThePlayer = thePlayer
 		
-		Clear_Screen()
+		Utils.Clear_Screen()
 		print self.sceneMsgStr
 		
 		isMelee = False
@@ -1304,7 +1126,7 @@ class Bridge(Scene):
 		
 			print "A Gothan is blocking you from planting the bomb."
 			
-			answer, thePlayer = Prompt_User_Action(thePlayer)
+			answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 			
 			if (answer == BRIDGE_CHEAT_CMD_STR):
 				retScene = ESCAPE_POD_KEY
@@ -1339,8 +1161,8 @@ class Bridge(Scene):
 				aMapEngine = GameEngine.MapEngine(GameData.MAP_BRIDGE_STR1_UCODE)
 				thePlayer = aMapEngine.run_map(thePlayer)
 			
-				#Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
-				Show_Game_Error("DEBUG_JW - This is just a unicode string TEST!!!!\n\n")
+				#Utils.Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
+				Utils.Show_Game_Error("DEBUG_JW - This is just a unicode string TEST!!!!\n\n")
 			# end debug
 			
 			mapStrList = [GameData.MAP_BRIDGE_STR2_UCODE]
@@ -1368,7 +1190,7 @@ class EscapePod(Scene):
 		retScene = DEATH_KEY
 		self.ThePlayer = thePlayer
 		
-		Clear_Screen()
+		Utils.Clear_Screen()
 		print self.sceneMsgStr
 		
 		escapeNumStr = '5' # TODO: implemnent random number
@@ -1416,7 +1238,7 @@ class SceneMap(object):
 		
 		if (not theNextScene):
 			# should never get here
-			Show_Game_Error("Map::next_scene() - invalid key %s" % (sceneName))
+			Utils.Show_Game_Error("Map::next_scene() - invalid key %s" % (sceneName))
 		else:
 			retScene, thePlayer = theNextScene.enter(thePlayer)
 		
@@ -1430,9 +1252,20 @@ class SceneMap(object):
 			
 			
 if __name__ == '__main__':	
-		# Start here when this file is being run directly (rather than being imported).
-		
-        # => Start the game
-        aMap = SceneMap(START_KEY) # pass in the key for the starting scene
-        aGame = SceneEngine(aMap)
-        aGame.play()
+	# Start here when this file is being run directly (rather than being imported).
+	gameLogFileStr = os.getcwd() + '\\' + GameData.GAME_LOG_STR
+	Utils.Init_Game_Log(gameLogFileStr)
+	
+	# => Start the game
+	Utils.Log_Event("Game start")
+	aMap = SceneMap(START_KEY) # pass in the key for the starting scene
+	aGame = SceneEngine(aMap)
+	
+	aGame.play()
+	
+	
+	
+	
+	
+	
+	
