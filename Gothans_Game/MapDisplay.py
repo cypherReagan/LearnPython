@@ -1,5 +1,5 @@
-import GothansGame
 import GameData
+import Utils
 
 
 #---------------------------------------------------
@@ -198,7 +198,6 @@ class MapDisplayData(object):
 			
 	def get_ID(self, objCategory):
 		retID = GameData.INVALID_INDEX
-		count = 0
 		
 		for mapItem in self.__tileList:
 			if (mapItem.category == objCategory):
@@ -208,12 +207,17 @@ class MapDisplayData(object):
 		return retID
 		
 	def process_map_cmd(self, cmdStr, objID):
+		
+		retActionItem = None
+		
 		if ((cmdStr == GameData.MAP_CMD_STR_MOVE_NORTH) or (cmdStr == GameData.MAP_CMD_STR_MOVE_EAST) or (cmdStr == GameData.MAP_CMD_STR_MOVE_SOUTH) or (cmdStr == GameData.MAP_CMD_STR_MOVE_WEST)):
 			self.move_map_item(cmdStr, objID)
-		elif(cmdStr == GameData.MAP_CMD_DUMP_DATA):
+		elif(cmdStr == GameData.MAP_CMD_STR_DUMP_DATA):
 			self.dump_map_data()
 		else:
 			pass
+			
+		return retActionItem
 	
 	
 	def move_map_item(self, cmdStr, objID):
@@ -263,3 +267,5 @@ class MapDisplayData(object):
 						pass #print "DEBUG_JW: target tile is not open. Target Tile Category = %d" % targetTile.category
 					
 					
+	def use_map_item(self, objDir, objID):		
+		x =1 

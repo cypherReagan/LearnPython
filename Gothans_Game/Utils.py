@@ -6,6 +6,10 @@ import platform
 import datetime
 import GothansGame
 import GameData
+import GameState
+import signal
+import msvcrt
+import time	
 
 __GameLog = None
 
@@ -50,8 +54,10 @@ def Is_Windows_platform():
 	return retVal
 	
 # Gracefully exit the game
-def Exit_Game(thePlayer):
+def Exit_Game():
 	global __GameLog 
+	
+	thePlayer = GameState.Get_Player()
 	
 	if (__GameLog != None):
 		__GameLog.close()
@@ -116,7 +122,8 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 		answer = raw_input("(y/n)> ")
 		
 		if (answer.lower() == 'y'):
-			Exit_Game(thePlayer)
+			GameState.Set_Player(thePlayer)
+			Exit_Game()
 	
 	elif (userCmdStr == GameData.PLAYER_STATS_CMD_STR):
 		thePlayer.print_stats()
@@ -195,7 +202,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 			if (itemAnswer == 'q'):
 				done = True
 			else:
-				# TODO - put removal process inside theInventoryMgr
+				# TODO: put removal process inside theInventoryMgr
 				theItem = thePlayer.theInventoryMgr.get_item(itemAnswer)
 				
 				if (theItem != None):
@@ -206,7 +213,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 					print "Please enter valid item name!"
 		
 	elif (userCmdStr == GameData.DEBUG_MODE_TOGGLE_CMD_STR):
-		global DEBUG_MODE #TODO - fix warning generated here
+		global DEBUG_MODE #TODO: fix warning generated here
 		
 		if (not GameData.DEBUG_MODE):
 			DEBUG_MODE = True
@@ -220,6 +227,68 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 
 		
 	return retVal, thePlayer
+	
+# ------------------------ Start Linux code ------------------------
+# ------------------------------------------------------------------
+
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: AlarmException
+#---------------------------------------------------
+#---------------------------------------------------
+class AlarmException(Exception):
+# http://www.garyrobinson.net/2009/10/non-blocking-raw_input-for-python.html
+	pass
+
+def alarmHandler(signum, frame):
+	raise AlarmException
+	
+def NonBlockingRawInput(prompt='', timeout=20):
+	signal.signal(signal.SIGALRM, alarmHandler)
+	signal.alarm(timeout)
+	
+	try:
+		text = raw_input(prompt)
+		signal.alarm(0)
+		return text
+	except AlarmException:
+		print '\nPrompt timeout. Continuing...'
+		
+	signal.signal(signal.SIGALRM, signal.SIG_IGN)
+	return ''
+	
+# ------------------------- End Linux code -------------------------
+# ------------------------------------------------------------------
+	
+# Gets single char from keyboard with non-blocking input
+# NOTE: Only works on Windows platform.
+def Get_Key_Input(prompStr):
+
+	retStr = ""
+	
+	if (not Is_Windows_platform()):
+		# Linux implementation
+		retStr = nonBlockingRawInput("Enter Action:>")
+	else:
+		print "%s" % prompStr
+		
+		inputTimeout = False
+		
+		while ((not msvcrt.kbhit()) and not inputTimeout):
+			# do something else while we're waiting
+			time.sleep(1.0)
+			inputTimeout = True
+			
+		# clear the keyboard buffer
+		inChar = ''
+		while msvcrt.kbhit():
+			inChar = msvcrt.getch()
+			retStr += inChar
+	
+		#if (retStr != ""):
+		#	print "DEBUG_JW: Get_Key_Input() - You entered %s" % retStr
+		
+	return retStr
 	
 #---------------------------------------------------
 #---------------------------------------------------
@@ -266,7 +335,6 @@ class EventLog:
 		
 			timeStampStr = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
 			self.__LogFile.write(timeStampStr + "\t---\t" + eventStr + "\n")
-	
 	
 	
 	

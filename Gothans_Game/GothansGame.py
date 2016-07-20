@@ -18,6 +18,7 @@ import AsciiArt
 import GameEngine
 import MapDisplay
 import GameData
+import GameState
 import Utils
 
 
@@ -339,7 +340,7 @@ class Player(object):
 		self.__health = 100
 		self.xp = 0
 		self.theInventoryMgr = InventoryMgr()
-		self.__currentItemStr = GameData.EMPTY_ITEM_STR
+		self.dir = GameData.DIR_NORTH
 		
 		# start with default melee weapons
 		suppressPrintMsg = True
@@ -359,6 +360,28 @@ class Player(object):
 		elif (healthVal < 0):
 			self.__health = 0
 			
+	def get_dir_num(self):
+		return self.dir
+		
+	def get_dir_str(self):
+		dirStr = GameData.DIR_DICT.get(self.dir)
+		return dirStr
+	
+	# Updates player's direction.
+	# Returns True if successful, else False
+	def set_dir(self, newDir):
+		retVal = False
+		
+		if ((newDir >= 0) and (newDir < len(GameData.DIR_STR_LIST))):
+			self.Dir = newDir
+			retVal = True
+			Utils.Log_Event("Changing Player Dir to %d" % self.dir)
+			
+		else:
+			Utils.Log_Event("Invalid change attempt of Player Dir to %d" % newDir)
+			
+			return retVal
+			
 	def add_health(self, healthVal):
 		self.__health += healthVal
 		
@@ -368,11 +391,21 @@ class Player(object):
 		else:
 			self.__health -= healthVal
 			
+			
 	def get_current_itemStr(self):
-		return self.__currentItemStr
 		
-	def equip_item(self):
-		pass # TODO: implement
+		currentItem = self.theInventoryMgr.get_current_item()
+		if (currentItem != None):
+			retStr = currentItem.get_name()
+		
+		return retStr
+		
+		
+	def equip_item(self,  itemNameStr):
+		
+		return self.theInventoryMgr.set_current_item(itemNameStr)
+		
+
 		
 	def print_stats(self):
 		print "%s\n\nPLAYER STATS:\n\nHEALTH = %d\nXP = %d\n\n%s" % (AsciiArt.Separator_Line, self.get_health(), self.xp, AsciiArt.Separator_Line)
@@ -389,16 +422,43 @@ class Player(object):
 #	-> InventoryMgr__updateItem()
 #
 # Member Variables:	
-#		__itemList - list of all inventory items
+#		__itemList			- list of all inventory items
+#		__currentItemIndex	- pointer to currently equipped item
 #--------------------------------------------------
 #---------------------------------------------------		
 class InventoryMgr(object):
 	
 	# TODO - determine why these cannot go in init()
 	__itemList = []
+	__currentItemIndex = GameData.INVALID_INDEX
 		
 	INVALID_TYPE_ID_STR = "Invalid Item Type ID"
 		
+	# Accessors for current item
+	def get_current_item(self):
+		retItem = None
+		
+		maxLimit = len(self.__itemList) -1
+		
+		if ((self.__currentItemIndex >=0) and (self.__currentItemIndex <= maxLimit)):
+			retItem = self.__itemList[self.__currentItemIndex]
+		
+		return retItem
+		
+	# Sets the current inv item.
+	# Returns True if item exists, else False
+	def set_current_item(self,  itemNameStr):
+		retVal = False
+		
+		tmpIndex = self.get_item_index(itemNameStr)	
+		if (tmpIndex != GameData.INVALID_INDEX):
+			# successful assignement
+			self.__currentItemIndex = tmpIndex
+			retVal = True
+		
+		return retVal
+		
+	# Add new item to inventory list
 	def add_item(self, newItem, suppressPrintMsg = False):
 		
 		retVal = True
@@ -416,7 +476,7 @@ class InventoryMgr(object):
 				theItem.ammo += newItem.ammo
 			else:
 				# should never get here
-				Utils.Utils.Show_Game_Error(INVALID_TYPE_ID_STR)
+				Utils.Utils.Show_Game_Error(self.INVALID_TYPE_ID_STR)
 				retVal = False
 		else:
 			# brand new item to add
@@ -474,22 +534,23 @@ class InventoryMgr(object):
 				self.__itemList[itemIndex] = updatedItem
 		
 		
-	def get_item(self, itemName):
+	def get_item(self, itemNameStr):
 		retItem = None
 		
-		itemIndex = self.get_item_index(itemName)
+		itemIndex = self.get_item_index(itemNameStr)
 		
 		if (itemIndex != GameData.INVALID_INDEX):
 			tmpItem = self.__itemList[itemIndex]
 			
-			if (tmpItem.get_name() == itemName):
+			if (tmpItem.get_name() == itemNameStr):
 				retItem = tmpItem
 			else:
 				# Something went wrong. We got a mismatching item from query.
-				Utils.Show_Game_Error("get_item() fail for %s" % itemName)
+				Utils.Show_Game_Error("get_item() fail for %s" % itemNameStr)
 				
+				# TODO: address undefined name 'DEBUG_MODE'
 				if (DEBUG_MODE):
-					print "DEBUG_JW: itemName = %s. itemIndex = %d. result name = %s\n" % (itemName, itemIndex, tmpItem.get_name())
+					print "DEBUG_JW: itemNameStr = %s. itemIndex = %d. result name = %s\n" % (itemNameStr, itemIndex, tmpItem.get_name())
 		
 		return retItem
 		
@@ -580,7 +641,7 @@ class Item(object):
 	TYPE_ID_WEAPON = 1
 	
 	# default common members to invalid values
-	name = ""
+	__name = ""
 	__typeID = GameData.INVALID_INDEX
 	index = GameData.INVALID_INDEX #dEBUG_JW - not sure if this is needed
 	
@@ -760,8 +821,8 @@ class SceneEngine(object):
 		while (result != FINISH_RESULT):
 			result, thePlayer = self.__sceneMap.next_scene(result, thePlayer)
 			
-			
-		Utils.Exit_Game(thePlayer)	
+		GameState.Set_Player(thePlayer)
+		Utils.Exit_Game()	
 
 
 #---------------------------------------------------
@@ -1165,10 +1226,12 @@ class Bridge(Scene):
 				Utils.Show_Game_Error("DEBUG_JW - This is just a unicode string TEST!!!!\n\n")
 			# end debug
 			
-			mapStrList = [GameData.MAP_BRIDGE_STR2_UCODE]
+			GameState.Set_Player(thePlayer)
 			
-			aMapEngine = GameEngine.MapEngine(mapStrList)
-			thePlayer = aMapEngine.run_map(thePlayer)
+			mapStrList = [GameData.MAP_CC_STR1_UCODE]
+			
+			aMapEngine = GameEngine.MapEngine("Bridge", mapStrList)
+			aMapEngine.execute()
 			
 			retScene = ESCAPE_POD_KEY
 			
@@ -1253,15 +1316,21 @@ class SceneMap(object):
 			
 if __name__ == '__main__':	
 	# Start here when this file is being run directly (rather than being imported).
+	
+	# Housekeeping items
 	gameLogFileStr = os.getcwd() + '\\' + GameData.GAME_LOG_STR
 	Utils.Init_Game_Log(gameLogFileStr)
+	goodState = GameState.Init()
 	
-	# => Start the game
-	Utils.Log_Event("Game start")
-	aMap = SceneMap(START_KEY) # pass in the key for the starting scene
-	aGame = SceneEngine(aMap)
-	
-	aGame.play()
+	if (not goodState):
+		Utils.Exit_Game()
+	else:
+		# => Start the game
+		Utils.Log_Event("Game start")
+		aMap = SceneMap(START_KEY) # pass in the key for the starting scene
+		aGame = SceneEngine(aMap)
+		
+		aGame.play()
 	
 	
 	

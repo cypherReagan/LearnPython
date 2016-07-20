@@ -61,43 +61,88 @@ CMD_STR_LIST = [HELP_REQ_CMD_STR,
 				DEBUG_MODE_TOGGLE_CMD_STR]
 
 # Item Strings
-ITEM_BATTERY_STR = 'battery'
-ITEM_BOMB_STR = 'bomb'
 ITEM_SLEDGEHAMMER_STR = 'sledgehammer'
 ITEM_NET_STR = 'net'
 ITEM_KNIFE_STR = 'knife'
+ITEM_BLASTER_PISTOL = 'pistol'
+ITEM_PLASMA_RIFLE = 'rifle'
+ITEM_BATTERY_STR = 'battery'
+ITEM_BOMB_STR = 'bomb'
 
-ITEM_STR_LIST = [ITEM_BATTERY_STR,
-				 ITEM_BOMB_STR,
+ITEM_STR_LIST = [
 				 ITEM_SLEDGEHAMMER_STR,
 				 ITEM_NET_STR,
-				 ITEM_KNIFE_STR]
+				 ITEM_KNIFE_STR, 
+				 ITEM_BLASTER_PISTOL, 
+				 ITEM_PLASMA_RIFLE, 
+				 ITEM_BATTERY_STR,
+				 ITEM_BOMB_STR]
+				 
+
+MAX_GAME_LOG_ENTRIES = 5
 
 # Map command strings
 MAP_CMD_STR_QUIT = 'q'
 MAP_CMD_STR_PAUSE = 'p'
-MAP_CMD_DUMP_DATA = 'l'
+MAP_CMD_STR_CMD_PROMPT = 'y'
+MAP_CMD_STR_DUMP_DATA = 'l'
+MAP_CMD_STR_USE = 'e'
 MAP_CMD_STR_MOVE_NORTH = 'w'
 MAP_CMD_STR_MOVE_WEST = 'a'
 MAP_CMD_STR_MOVE_SOUTH = 's'
 MAP_CMD_STR_MOVE_EAST = 'd'
+MAP_CMD_STR_SLEDGEHAMMER = '1'
+MAP_CMD_STR_NET = '2'
+MAP_CMD_STR_KNIFE = '3'
+MAP_CMD_STR_PISTOL = '4'
+MAP_CMD_STR_RIFLE = '5'
+MAP_CMD_STR_BATTERY = '6'
+MAP_CMD_STR_BOMB = '7'
 
 MAP_CMD_STR_LIST = [
 					MAP_CMD_STR_QUIT,
-					MAP_CMD_DUMP_DATA,
+					MAP_CMD_STR_DUMP_DATA,
+					MAP_CMD_STR_USE,
 					
 					MAP_CMD_STR_MOVE_NORTH,
 					MAP_CMD_STR_MOVE_WEST,
 					MAP_CMD_STR_MOVE_SOUTH,
-					MAP_CMD_STR_MOVE_EAST
+					MAP_CMD_STR_MOVE_EAST, 
+					
+					MAP_CMD_STR_SLEDGEHAMMER, 
+					MAP_CMD_STR_NET, 
+					MAP_CMD_STR_KNIFE, 
+					MAP_CMD_STR_PISTOL, 
+					MAP_CMD_STR_RIFLE, 
+					MAP_CMD_STR_BATTERY, 
+					MAP_CMD_STR_BOMB
 					]
 
+#TODO: find a better way to accomplish this without duplicates in the lists
+ITEM_CMD_STR_LIST = [
+				MAP_CMD_STR_SLEDGEHAMMER, 
+				MAP_CMD_STR_NET, 
+				MAP_CMD_STR_KNIFE, 
+				MAP_CMD_STR_PISTOL, 
+				MAP_CMD_STR_RIFLE, 
+				MAP_CMD_STR_BATTERY, 
+				MAP_CMD_STR_BOMB]
+
+
 # Map Obj directions
-DIR_INVALID = 0
-DIR_NORTH = 1
-DIR_SOUTH = 2
-DIR_EAST = 3
-DIR_WEST = 4
+DIR_INVALID = INVALID_INDEX
+DIR_NORTH = 0
+DIR_SOUTH = 1
+DIR_EAST = 2
+DIR_WEST = 3
+
+DIR_STR_LIST = ["North", "South", "East", "West"]
+
+#DEBUG_JW - might not need this
+DIR_DICT = {DIR_NORTH	: "North",
+			DIR_SOUTH 	: "South",
+			DIR_EAST	: "East",
+			DIR_WEST	: "West"}
 
 # Map Obj categories
 MAP_CAT_WALL = 0
@@ -168,8 +213,8 @@ MAP_BRIDGE_STR1_UCODE = u"""
 ▐▄▄▄==▄▄▄▄▄▄▐
 """
 
-MAP_BRIDGE_STR2_UCODE = u"""
-▐▄▄▄▄▄▄▄====▄
+MAP_CC_STR1_UCODE = u"""
+▐▄▄▄▄▄▄▄=▄▄=▄
 ▐░░░░░░░░@░░▐
 ▐▄▄▄▄▄▄▄░░░░▐
 ▐▓▓▓▓▓▓▐░░░░▐
