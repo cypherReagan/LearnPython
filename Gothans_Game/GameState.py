@@ -1,5 +1,5 @@
-import GothansGame
-import GameData
+import Entity
+import Utils
 
 
 __TheGameState = None
@@ -70,7 +70,7 @@ class StateData(object):
 		self.reset_state()
 		
 	def reset_state(self):
-		self.thePlayer = GothansGame.Player()
+		self.thePlayer = Entity.Player()
 		
 	def clear(self):
 		pass

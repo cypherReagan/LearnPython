@@ -6,6 +6,16 @@
 DEBUG_MODE = False
 GAME_LOG_STR = "GameLog.txt"
 
+# Map Keys
+CORRIDOR_KEY = 'central corridor'
+ARMORY_KEY = 'armory'
+BRIDGE_KEY = 'bridge'
+ESCAPE_POD_KEY = 'escape pod'
+DEATH_KEY = 'death'
+FINISH_RESULT_KEY = 'done'
+#START_KEY = CORRIDOR_KEY # DEBUG_JW: Put this back after testing!
+START_KEY = BRIDGE_KEY
+
 # Game String Msgs
 INVALID_ENTRY_RSP = 'DOES NOT COMPUTE!'
 EMPTY_ITEM_STR = '<EMPTY>'
@@ -14,7 +24,7 @@ PROMPT_CONTINUE_STR = "[Press any key to continue...]> "
 
 INVALID_INDEX = -1
 
-Separator_Line = '------------------------------------------------------------------------------------------------'
+SEPARATOR_LINE_STR = '------------------------------------------------------------------------------------------------'
 
 INFINITE_VAL = -1000
 
@@ -251,6 +261,53 @@ ________====_
 |___==______|
 """
 
+# ASCII art
+
+# http://www.network-science.de/ascii/
+ART_STR_GAME_TITLE = """
+		  ________        __  .__                          
+		 /  _____/  _____/  |_|  |__ _____    ____   ______
+		/   \  ___ /  _ \   __\  |  \\__  \  /    \ /  ___/
+		\    \_\  (  <_> )  | |   Y  \/ __ \|   |  \\___ \ 
+		 \________/\____/|__| |___|  (______/___|  /______>
+		   _____   __    __                 __    
+		  /  _  \_/  |__/  |______    ____ |  | __
+		 /  /_\  \   __\   __\__  \ _/ ___\|  |/ /
+		/    |    \  |  |  |  / __ \\  \___|    < 
+		\____|____/__|  |__| (______/\_____>__|__\\
+		
+		"""
+
+# http://www.incredibleart.org/links/ascii/ScarecrowGifGalle.html
+# From: pirillc2770_cobra_uni_edu
+# TODO: fix the shift
+ART_STR_SKULL =  """
+		
+		      .... NO! ...                 ... MNO! ...
+		    ..... MNO!! ...................... MNNOO! ...
+		 ..... MMNO! ......................... MNNOO!! .
+		.... MNOONNOO!   MMMMMMMMMMPPPOII!   MNNO!!!! .
+		 ... !O! NNO! MMMMMMMMMMMMMPPPOOOII!! NO! ....
+		    ...... ! MMMMMMMMMMMMMPPPPOOOOIII! ! ...
+		   ........ MMMMMMMMMMMMPPPPPOOOOOOII!! .....
+		   ........ MMMMMOOOOOOPPPPPPPPOOOOMII! ...
+		    ....... MMMMM..    OPPMMP    .,OMI! ....
+                     ...... MMMM::   o.,OPMP,.o ::I!!   ...
+                         .... NNM:::.,,OOPM!P,.::::!! ....
+                          .. MMNNNNNOOOOPMO!!IIPPO!!O! .....
+                         ... MMMMMNNNNOO:!!:!!IPPPPOO! ....
+                           .. MMMMMNNOOMMNNIIIPPPOO!! ......
+                          ...... MMMONNMMNNNIIIOO!..........
+                       ....... MN MOMMMNNNIIIIIO! OO ..........
+                    ......... MNO! IiiiiiiiiiiiI OOOO ...........
+		  ...... NNN.MNO! . O!!!!!!!!!O . OONO NO! ........
+		   .... MNNNNNO! ...OOOOOOOOOOO . MMNNON!........
+		   ...... MNNNNO! .. PPPPPPPPP .. MMNON!........
+		      ...... OO! ................. ON! .......
+                            ...............................
+		
+		"""
+
 GameOverMsg = """
   ________    _____      _____  ___________
  /  _____/   /  _  \    /     \ \_   _____/
@@ -265,3 +322,34 @@ ____________   _________________________
 \_______  /\___/   /_______  / |____|_  /
         \/                 \/         \/ 
 """
+
+OverrideDiagram2Wire = """
+		-------------   -------------   
+		|  Keypad   |   |   Door    |   
+		|  Output   |   |   Input   | 
+		-------------   -------------   
+		    | |             | |             
+		    | |             | |            
+		    | |             | |             
+		    | |             | |            
+		    | |             | |             
+		   -----           -----           
+		"""
+		
+OverrideDiagram2Wire_Seed = '\t\t    %s          %s'
+		
+OverrideDiagram3Wire = """
+		-------------   -------------   -------------
+		|  Keypad   |   |   Door    |   |  Battery  |
+		|  Output   |   |   Input   |   |           |
+		-------------   -------------   -------------
+		     | |             | |             | |
+		     | |             | |             | |
+		     | |             | |             | |
+		     | |             | |             | |
+		     | |             | |             | |
+		    -----           -----           -----
+		
+		"""
+		
+OverrideDiagram3Wire_Seed = '\t\t    %s          %s          %s'

@@ -269,3 +269,4 @@ class MapDisplayData(object):
 					
 	def use_map_item(self, objDir, objID):		
 		x =1 
+		return x

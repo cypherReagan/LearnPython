@@ -11,7 +11,9 @@ import signal
 import msvcrt
 import time	
 
+# Globals because we need to log events from anywhere in the game
 __GameLog = None
+__MapLog = None # Global because we need to log map events from anywhere in the game
 
 # Sets up the global GameLog for logging
 def Init_Game_Log(fileNameStr):
@@ -24,6 +26,14 @@ def Init_Game_Log(fileNameStr):
 	
 	__GameLog = EventLog(fileNameStr)
 	
+# Sets up the global MapLog for logging
+def Init_Map_Log(theMapLog=None):
+	global __MapLog
+	
+	if (theMapLog == None):
+		__MapLog = MapLog()
+	else:
+		__MapLog = theMapLog # use reference from some local map engine
 
 # Write to global GameLog
 def Log_Event(logStr):
@@ -34,7 +44,19 @@ def Log_Event(logStr):
 	else:
 		Show_Game_Error("Could not log event...")
 		
-
+def Write_Map_Log(logStr):
+	global __MapLog
+	
+	if (__MapLog != None):
+		__MapLog.add(logStr)
+	
+def Print_Map_Log():
+	global __GameLog
+	
+	if (__MapLog != None):
+		__MapLog.print_events()
+	
+	
 # Utility function to clear shell
 def Clear_Screen():
 		
@@ -62,7 +84,7 @@ def Exit_Game():
 	if (__GameLog != None):
 		__GameLog.close()
 	Clear_Screen()
-	print "%s\nFINAL SCORE: %d\n\n%s\n%s" % (GameData.Separator_Line, thePlayer.xp, GameData.GameOverMsg, GameData.Separator_Line)
+	print "%s\nFINAL SCORE: %d\n\n%s\n%s" % (GameData.SEPARATOR_LINE_STR, thePlayer.xp, GameData.GameOverMsg, GameData.SEPARATOR_LINE_STR)
 	exit(1)
 	
 	
@@ -104,7 +126,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 	
 	if (userCmdStr == GameData.HELP_REQ_CMD_STR):
 		
-		print GameData.Separator_Line
+		print GameData.GameData.SEPARATOR_LINE_STR
 		print "GAME COMMANDS:\n"
 
 		for entry in GameData.CMD_STR_LIST:
@@ -115,7 +137,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 			if (isDbgPrint or (GameData.CHEAT_CMD_STR not in entry)):
 				print entry
 		
-		print GameData.Separator_Line
+		print GameData.GameData.SEPARATOR_LINE_STR
 	
 	elif (userCmdStr == GameData.QUIT_CMD_STR):
 		print "Are you sure want to quit?"
@@ -130,6 +152,17 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 		
 	elif (userCmdStr == GameData.PLAYER_INV_CMD_STR):
 		thePlayer.theInventoryMgr.print_items()
+		
+		# give user option to equip inventory item from this menu
+		print "Press Enter to exit, otherwise enter item number to equip"
+		
+		try:
+			answerNum = int(raw_input("Input>"))
+		except:
+			answerNum = GameData.INVALID_INDEX
+		
+		if (answerNum != GameData.INVALID_INDEX):
+			thePlayer = Equip_Player_From_Cmd(answerNum,  thePlayer)
 		
 	elif (userCmdStr == GameData.FULL_HEALTH_CHEAT_CMD_STR):
 		thePlayer.set_health(100)
@@ -228,6 +261,21 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 		
 	return retVal, thePlayer
 	
+	
+def Equip_Player_From_Cmd(itemIndex,  thePlayer):
+	# Cmd is 1-based while the item list is 0-based-> we must normalize the index
+	if (itemIndex == 0):
+		itemIndex = 10
+	else:
+		itemIndex = itemIndex - 1
+	
+	if (len(GameData.ITEM_STR_LIST) > itemIndex):
+		itemStr = GameData.ITEM_STR_LIST[itemIndex]
+		if (thePlayer.equip_item(itemStr)):
+			Write_Map_Log("Equipped %s" % itemStr)
+	
+	return thePlayer
+	
 # ------------------------ Start Linux code ------------------------
 # ------------------------------------------------------------------
 
@@ -268,7 +316,7 @@ def Get_Key_Input(prompStr):
 	
 	if (not Is_Windows_platform()):
 		# Linux implementation
-		retStr = nonBlockingRawInput("Enter Action:>")
+		retStr = NonBlockingRawInput("Enter Action:>")
 	else:
 		print "%s" % prompStr
 		
@@ -337,4 +385,62 @@ class EventLog:
 			self.__LogFile.write(timeStampStr + "\t---\t" + eventStr + "\n")
 	
 	
+	#---------------------------------------------------
+#---------------------------------------------------
+# Class: MapLog
+#
+# Purpose:
+#		Maintains list of map events for user display.
+#
+# Member Variables:	
+#
+#	Private:
+#		mapLogStrList 	- FIFO queue to store game msg strings
+#		logCount			- number of msgs in queue
+#---------------------------------------------------
+#---------------------------------------------------
+class MapLog(object):
 	
+	__gameLogStrList = []
+	
+	def __init__(self):
+		
+		self.clear()
+			
+	
+	def clear(self):
+		self.__logCount = 0
+		del self.__gameLogStrList[:]
+		
+		for count in range(0, GameData.MAX_GAME_LOG_ENTRIES):
+			self.__gameLogStrList.append("")
+		
+	
+	def add(self,  newStr):
+		
+		listSize = len (self.__gameLogStrList)
+		#Utils.Show_Game_Error("DEBUG_JW: GameLog.add(%s) - listSize = %d" % (newStr,  listSize))
+		
+		# Timestamp each entry
+		timeStampStr = '{:%H:%M:%S}'.format(datetime.datetime.now())
+		newStr = "\n%s\t---\t%s" % (timeStampStr, newStr)
+		
+		if (self.__logCount < listSize):
+			# add to empty end slot 
+			self.__gameLogStrList[self.__logCount] = newStr
+			self.__logCount = self.__logCount + 1
+		else:
+			# add latest event to end of queue while maintaining max size
+			del self.__gameLogStrList[0]
+			self.__gameLogStrList.append(newStr)
+	
+	
+	def print_events(self):
+		
+		gameLogStr =""
+		
+		for logStr in self.__gameLogStrList:
+			gameLogStr = gameLogStr + logStr + "\n"
+			
+		print "\n\n%s\n%s\n%s\n\n" % (GameData.SEPARATOR_LINE_STR,  gameLogStr,  GameData.SEPARATOR_LINE_STR)
+

@@ -1,10 +1,9 @@
-import GothansGame
 import MapDisplay
 import GameData
 import GameState
 import Utils
 import datetime
-
+import Scene
 	
 #---------------------------------------------------
 #---------------------------------------------------
@@ -67,6 +66,10 @@ class MapLog(object):
 		listSize = len (self.__gameLogStrList)
 		#Utils.Show_Game_Error("DEBUG_JW: GameLog.add(%s) - listSize = %d" % (newStr,  listSize))
 		
+		# Timestamp each entry
+		timeStampStr = '{:%H:%M:%S}'.format(datetime.datetime.now())
+		newStr = "\n%s\t---\t%s" % (timeStampStr, newStr)
+		
 		if (self.__logCount < listSize):
 			# add to empty end slot 
 			self.__gameLogStrList[self.__logCount] = newStr
@@ -82,10 +85,9 @@ class MapLog(object):
 		gameLogStr =""
 		
 		for logStr in self.__gameLogStrList:
-			timeStampStr = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
-			gameLogStr = gameLogStr + "\n%s\t---\t%s" % (timeStampStr, logStr)
+			gameLogStr = gameLogStr + logStr + "\n"
 			
-		print "\n\n%s\n%s\n%s\n\n" % (GameData.Separator_Line,  gameLogStr,  GameData.Separator_Line)
+		print "\n\n%s\n%s\n%s\n\n" % (GameData.SEPARATOR_LINE_STR,  gameLogStr,  GameData.SEPARATOR_LINE_STR)
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -105,7 +107,10 @@ class MapEngine(object):
 	def __init__(self, newMapNameStr, newMapStrList):
 		self.__theMapNameStr = newMapNameStr
 		self.__theMapStrList = newMapStrList
-		self.__mapLog = MapLog()
+		
+		# assign our map log to global log
+		self.__mapLog = Utils.MapLog()
+		Utils.Init_Map_Log(self.__mapLog) # pass ref to global
 		# TODO: ensure newMapStrList has at least 1 str
 		
 		
@@ -131,7 +136,7 @@ class MapEngine(object):
 				done = True
 				
 	# Determine next map based on user exit of previous map
-	def calc_next_map_index(): 
+	def calc_next_map_index(self): 
 		retIndex = GameData.INVALID_INDEX
 		
 		# TODO: implementation
@@ -148,8 +153,6 @@ class MapEngine(object):
 	
 		done = False
 		
-		gameMsgNum = 0 # DEBUG_JW - testing game log
-		
 		# Call utility function to iterate over map str and create list of game objs
 		# DEBUG_JW: this is a hack for now!
 		playerID = self.__theMapDisplay.get_ID(GameData.MAP_CAT_PLAYER)
@@ -164,15 +167,8 @@ class MapEngine(object):
 			# update user display
 			Utils.Clear_Screen()
 			
-			gameStr = "%d" % gameMsgNum #DEBUG_JW
-			#self.__mapLog.add(gameStr)
-			
 			print "LOCATION: %s" % self.__theMapNameStr
-			self.__mapLog.print_events()
-			
-			#DEBUG_JW
-			gameStr = "%d" % gameMsgNum
-			gameMsgNum =gameMsgNum + 1
+			Utils.Print_Map_Log()
 			
 			self.print_map_str()
 			print "\nPLAYER HEALTH:\t%d\t\tCURRENT ITEM:\t%s\nDIRECTION:\t%s" % (thePlayer.get_health(), thePlayer.get_current_itemStr(), thePlayer.get_dir_str())
@@ -212,15 +208,7 @@ class MapEngine(object):
 					if (answer in GameData.ITEM_CMD_STR_LIST):
 						# we have item hotkey equip cmd for player
 						itemIndex = int(answer)
-						# item list is 0-based so we must normalize the index
-						if (itemIndex == 0):
-							itemIndex = 10
-						else:
-							itemIndex = itemIndex - 1
-						
-						itemStr = GameData.ITEM_STR_LIST[itemIndex]
-						if (thePlayer.equip_item(itemStr)):
-							self.write_map_log("Equipped %s" % itemStr)
+						thePlayer = Utils.Equip_Player_From_Cmd(itemIndex,  thePlayer)
 					else:
 						# we might have cmd that needs to go to map UI
 						isGoodInput = True
@@ -271,4 +259,77 @@ class MapEngine(object):
 		self.__mapLog.add(gameStr)
 		
 		
-# TODO: move scene engine here
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: SceneEngine
+#
+# Member Variables:	
+#		sceneMap - Map containing all available scenes
+#--------------------------------------------------
+#---------------------------------------------------		
+class SceneEngine(object):
+	
+	def __init__(self, sceneMap):
+		self.__sceneMap = Scene.SceneMap(GameData.START_KEY)
+		
+	def play(self):
+
+		Utils.Clear_Screen()
+		# Show Title Screen with menu options
+		print "%s\n%s\n%s\n" % (GameData.SEPARATOR_LINE_STR, GameData.ART_STR_GAME_TITLE, GameData.SEPARATOR_LINE_STR)
+		
+		# TODO - possibly store all game msgs in separate file
+		startMenuStr = """
+			1. Start Game
+			2. Help
+			3. Quit
+		"""
+		
+		#TODO - update this with more game details
+		helpStr = """
+			 Use the '?' in action prompts for hints on how to proceed.
+		""" 
+		
+		openingMsgStr =  """
+			Gothans have invaded your spaceship and killed everyone else on board. 
+			Time to blow this baby and escape to the planet below!\n\n
+		"""
+		
+		done = False
+		
+		while (not done):
+			answer = raw_input("%s\n\t\t> " % startMenuStr)
+			
+			if (answer == '1'):
+				# Start Game
+				Utils.Clear_Screen()
+				print openingMsgStr
+				raw_input("\t\t\t%s" % GameData.PROMPT_CONTINUE_STR)
+				Utils.Clear_Screen()
+				done = True
+			elif (answer == '2'):
+				# Show Help
+				Utils.Clear_Screen()
+				print helpStr
+				raw_input(GameData.PROMPT_CONTINUE_STR)
+				Utils.Clear_Screen()
+			elif (answer == '3'):
+				# Quit
+				Utils.Clear_Screen()
+				exit(1)
+			else:
+				print GameData.INVALID_ENTRY_RSP
+				Utils.Clear_Screen()
+
+		# Each scene returns the player to maintain game state.
+		thePlayer = GameState.Get_Player()
+		
+		# need while-loop here to drive game
+		result, thePlayer = self.__sceneMap.opening_scene(thePlayer)
+		
+		while (result != GameData.FINISH_RESULT_KEY):
+			result, thePlayer = self.__sceneMap.next_scene(result, thePlayer)
+			
+		GameState.Set_Player(thePlayer)
+		Utils.Exit_Game()	
+		
