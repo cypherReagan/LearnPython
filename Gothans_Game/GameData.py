@@ -89,7 +89,7 @@ ITEM_STR_LIST = [
 				 ITEM_BOMB_STR]
 				 
 
-MAX_GAME_LOG_ENTRIES = 5
+MAX_MAP_LOG_ENTRIES = 5
 
 # Map command strings
 MAP_CMD_STR_QUIT = 'q'
@@ -97,6 +97,7 @@ MAP_CMD_STR_PAUSE = 'p'
 MAP_CMD_STR_CMD_PROMPT = 'y'
 MAP_CMD_STR_DUMP_DATA = 'l'
 MAP_CMD_STR_USE = 'e'
+MAP_CMD_STR_OBJV = 'o'
 MAP_CMD_STR_MOVE_NORTH = 'w'
 MAP_CMD_STR_MOVE_WEST = 'a'
 MAP_CMD_STR_MOVE_SOUTH = 's'
@@ -113,6 +114,7 @@ MAP_CMD_STR_LIST = [
 					MAP_CMD_STR_QUIT,
 					MAP_CMD_STR_DUMP_DATA,
 					MAP_CMD_STR_USE,
+					MAP_CMD_STR_OBJV,
 					
 					MAP_CMD_STR_MOVE_NORTH,
 					MAP_CMD_STR_MOVE_WEST,
@@ -226,6 +228,7 @@ MAP_BRIDGE_STR1_UCODE = u"""
 MAP_CC_STR1_UCODE = u"""
 ▐▄▄▄▄▄▄▄=▄▄=▄
 ▐░░░░░░░░@░░▐
+▐░░░░░░░░░░░▐
 ▐▄▄▄▄▄▄▄░░░░▐
 ▐▓▓▓▓▓▓▐░░░░▐
 ▐▓▓▓▓▓▓▐░░░░▐
@@ -234,7 +237,21 @@ MAP_CC_STR1_UCODE = u"""
 ▐░░░░░░▐▄▄▄▄▐
 ▐░░░░░░▐▄▄▄▄▐
 ▐░░░░+░░░░░░▐
-▐▄▄▄==▄▄▄▄▄▄▐
+▐▄▄▄▄=▄▄▄▄▄▄▐
+"""
+
+MAP_TEST_STR1_UCODE = u"""
+▐▄▄▄▄▄▄▄▄▄▄▄▄
+▐░░░░░░░░ ░░▐
+▐░░░░+░░░░░░▐
+▐▄▄▄▄=▄▄▄▄▄▄▐
+"""
+
+MAP_TEST_STR2_UCODE = u"""
+▐▄▄▄▄▄▄▄▄▄▄▄▄
+▐▓▓▓▓▓▓▐    ▐
+▐▓▓▓▓▓▓▐░░░+▐
+▐▄▄▄▄▄▄▄▄▄▄=▐
 """
 
 MAP_BRIDGE_STR1_ASCII = """

@@ -24,14 +24,14 @@ if __name__ == '__main__':
 	
 	# Housekeeping items
 	gameLogFileStr = os.getcwd() + '\\' + GameData.GAME_LOG_STR
-	Utils.Init_Game_Log(gameLogFileStr)
+	Utils.Init_Game_Log(gameLogFileStr, "Starting Game")
 	goodState = GameState.Init()
 	
 	if (not goodState):
+		Utils.Log_Event("Could not init game state!")
 		Utils.Exit_Game()
 	else:
 		# => Start the game
-		Utils.Log_Event("Game start")
 		aMap = Scene.SceneMap(GameData.START_KEY) # pass in the key for the starting scene
 		aGame = Engine.SceneEngine(aMap)
 		

@@ -7,6 +7,7 @@ import datetime
 import GothansGame
 import GameData
 import GameState
+import Entity
 import signal
 import msvcrt
 import time	
@@ -16,7 +17,7 @@ __GameLog = None
 __MapLog = None # Global because we need to log map events from anywhere in the game
 
 # Sets up the global GameLog for logging
-def Init_Game_Log(fileNameStr):
+def Init_Game_Log(fileNameStr, initMsgStr=""):
 	global __GameLog
 
 	if (__GameLog != None):
@@ -24,7 +25,7 @@ def Init_Game_Log(fileNameStr):
 		__GameLog.close()
 		__GameLog = None
 	
-	__GameLog = EventLog(fileNameStr)
+	__GameLog = EventLog(fileNameStr, initMsgStr)
 	
 # Sets up the global MapLog for logging
 def Init_Map_Log(theMapLog=None):
@@ -79,6 +80,8 @@ def Is_Windows_platform():
 def Exit_Game():
 	global __GameLog 
 	
+	Log_Event("Exiting Game")
+	
 	thePlayer = GameState.Get_Player()
 	
 	if (__GameLog != None):
@@ -94,6 +97,7 @@ def Show_Game_Error(errMsgStr):
 	errorSeparator = '************************************************************'
 	
 	printMsgStr = "%s\n***  %s  ***\n%s\n%s\n" % (errorSeparator, errMsgStr, errorSeparator, GameData.PROMPT_CONTINUE_STR)
+	Log_Event(printMsgStr)
 	raw_input(printMsgStr)	
 	
 	
@@ -126,7 +130,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 	
 	if (userCmdStr == GameData.HELP_REQ_CMD_STR):
 		
-		print GameData.GameData.SEPARATOR_LINE_STR
+		print GameData.SEPARATOR_LINE_STR
 		print "GAME COMMANDS:\n"
 
 		for entry in GameData.CMD_STR_LIST:
@@ -137,7 +141,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 			if (isDbgPrint or (GameData.CHEAT_CMD_STR not in entry)):
 				print entry
 		
-		print GameData.GameData.SEPARATOR_LINE_STR
+		print GameData.SEPARATOR_LINE_STR
 	
 	elif (userCmdStr == GameData.QUIT_CMD_STR):
 		print "Are you sure want to quit?"
@@ -193,13 +197,13 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 			if (typeAnswer == "u"):
 				# utility item
 				itemAnswer = raw_input("(Enter item name) > ")
-				theItem = GothansGame.UtilityItem(itemAnswer, 1)
+				theItem = Entity.UtilityItem(itemAnswer, 1)
 				isGoodItem = True
 				
 			elif (typeAnswer == "w"):
 				# weapon item
 				itemAnswer = raw_input("(Enter item name) > ")
-				theItem = GothansGame.WeaponItem(itemAnswer, INFINITE_VAL)
+				theItem = Entity.WeaponItem(itemAnswer, GameData.INFINITE_VAL)
 				isGoodItem = True
 				
 			elif (typeAnswer == "q"):
@@ -351,14 +355,14 @@ class EventLog:
 
 	__LogFile = None
 
-	def __init__(self, fileNameStr=""):
+	def __init__(self, fileNameStr="", initMsgStr=""):
 	
 		if (fileNameStr != ""):
-			self.open_for_write(fileNameStr)
+			self.open_for_write(fileNameStr, initMsgStr)
 		
 	# Sets up LogFile for event writes. 
 	# Assumes file is not already open.
-	def open_for_write(self, fileNameStr):
+	def open_for_write(self, fileNameStr, initMsgStr):
 		
 		try:
 			# clear any existing txt
@@ -367,6 +371,10 @@ class EventLog:
 			
 			# start new log file session
 			self.__LogFile = open(fileNameStr, 'w')
+			
+			# Log any initialization msg
+			if (initMsgStr != ""):
+				self.write(initMsgStr)
 		except:
 			Show_Game_Error("Could not create log file \"%s\"" % fileNameStr)
 		
@@ -412,7 +420,7 @@ class MapLog(object):
 		self.__logCount = 0
 		del self.__gameLogStrList[:]
 		
-		for count in range(0, GameData.MAX_GAME_LOG_ENTRIES):
+		for count in range(0, GameData.MAX_MAP_LOG_ENTRIES):
 			self.__gameLogStrList.append("")
 		
 	

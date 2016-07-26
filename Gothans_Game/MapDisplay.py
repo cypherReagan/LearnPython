@@ -136,7 +136,10 @@ class MapDisplayData(object):
 			objID = len (self.__tileList) # use list index as unique ID
 			mapTile = MapTile(mapPos, GameData.DIR_INVALID, category, newChar, objID)
 			
-			print "DEBUG_JW: make_tile() - \'%s\' , category = %d, ID = %d at (%d, %d)" % (newChar, category, objID, mapPos.xPos, mapPos.yPos)
+			dbg_showCreation = True
+			
+			if (dbg_showCreation):
+				print "DEBUG_JW: make_tile() - \'%s\' , category = %d, ID = %d at (%d, %d)" % (newChar, category, objID, mapPos.xPos, mapPos.yPos)
 		
 		return mapTile
 		

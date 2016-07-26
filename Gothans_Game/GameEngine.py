@@ -101,23 +101,36 @@ class MapEngine(object):
 	__theMapCmdList = []
 	__theMapStrList = []
 	__theMapNameStr = ""
+	__theMapObjvStr = ""
 	__mapIndex = 0
 	__mapLog = None
 	
-	def __init__(self, newMapNameStr, newMapStrList):
+	def __init__(self, newMapNameStr, newMapObjvStr, newMapStrList):
 		self.__theMapNameStr = newMapNameStr
+		self.__theMapObjvStr = newMapObjvStr
 		self.__theMapStrList = newMapStrList
-		
+				
 		# assign our map log to global log
 		self.__mapLog = Utils.MapLog()
 		Utils.Init_Map_Log(self.__mapLog) # pass ref to global
-		# TODO: ensure newMapStrList has at least 1 str
 		
+		if (len(newMapStrList) == 0):
+			Utils.Show_Game_Error("MapEngine::init() - invalid newMapStrList!")
+
 		
 	def __update_map(self, listIndex):
-		newMapStr = u""
-		newMapStr = self.__theMapStrList[listIndex]
-		self.__theMapDisplay = MapDisplay.MapDisplayData(newMapStr)
+		
+		retVal = False
+	
+		if (listIndex < len (self.__theMapStrList)):
+			Utils.Log_Event("MapEngine::__update_map() - showing map %d" % listIndex)
+		
+			newMapStr = u""
+			newMapStr = self.__theMapStrList[listIndex]
+			self.__theMapDisplay = MapDisplay.MapDisplayData(newMapStr)
+			retVal = True
+			
+		return retVal
 	
 	# Executes series of maps in list
 	def execute(self):
@@ -125,15 +138,18 @@ class MapEngine(object):
 		done = False
 		
 		while (not done):
-			self.__update_map(self.__mapIndex)
-			exitNum = self.run_map()
-			# TODO: process exitNum
-			tmpIndex = self.calc_next_map_index()
-			
-			if (tmpIndex != GameData.INVALID_INDEX):
-				self.__mapIndex = tmpIndex
-			else:
+			if (not self.__update_map(self.__mapIndex)):
+				Utils.Show_Game_Error("MapEngine::execute() - could not update map at index %d" % self.__mapIndex)
 				done = True
+			else:
+				exitNum = self.run_map()
+				# TODO: process exitNum
+				tmpIndex = self.calc_next_map_index()
+				
+				if (tmpIndex != GameData.INVALID_INDEX):
+					self.__mapIndex = tmpIndex
+				else:
+					done = True
 				
 	# Determine next map based on user exit of previous map
 	def calc_next_map_index(self): 
@@ -164,6 +180,10 @@ class MapEngine(object):
 			# process any UI msgs from mapDisplay
 			pass
 			
+			# TODO: implement DisplayPrint thread and use list to pass display strings.
+			#		Set list values here.
+			# http://www.tutorialspoint.com/python/python_multithreading.htm
+			
 			# update user display
 			Utils.Clear_Screen()
 			
@@ -192,6 +212,9 @@ class MapEngine(object):
 			
 			if (answer == GameData.MAP_CMD_STR_PAUSE):
 				raw_input("****** GAME PAUSED ******\n%s" % GameData.PROMPT_CONTINUE_STR)
+				
+			if (answer == GameData.MAP_CMD_STR_OBJV):
+				raw_input("****** GAME PAUSED ******\n\nOBJECTIVE:\n%s\n\n%s" % (self.__theMapObjvStr, GameData.PROMPT_CONTINUE_STR))
 				
 			elif (answer == GameData.MAP_CMD_STR_CMD_PROMPT):
 				print "****** GAME PAUSED ******"
@@ -242,16 +265,21 @@ class MapEngine(object):
 					if (engineActionItem != None):
 						self.process_engine_action(engineActionItem)
 				
+		GameState.Set_Player(thePlayer)
 				
-		return exitNum, thePlayer
+		return exitNum
 		
 		
 	def process_engine_action(self, engineActionItem):
 		# TODO: process player move + dir rotate
 		pass
 		
-	def print_map_str(self):
-		mapStr = u"%s" % self.__theMapDisplay.get_map()
+	def print_map_str(self, isUCode=True):
+		if (isUCode):
+			mapStr = u"%s" % self.__theMapDisplay.get_map()
+		else:
+			mapStr = "%s" % self.__theMapDisplay.get_map()
+			
 		print mapStr
 		
 		

@@ -431,6 +431,7 @@ class SceneMap(object):
 			# should never get here
 			Utils.Show_Game_Error("Map::next_scene() - invalid key %s" % (sceneName))
 		else:
+			Utils.Log_Event("Entering scene: %s" % sceneName)
 			retScene, thePlayer = theNextScene.enter(thePlayer)
 		
 		return retScene, thePlayer
@@ -634,6 +635,7 @@ class Bridge(Scene):
 		
 		Utils.Clear_Screen()
 		print self.sceneMsgStr
+		raw_input(GameData.PROMPT_CONTINUE_STR)
 		
 		isMelee = False
 		
@@ -682,9 +684,9 @@ class Bridge(Scene):
 			
 			GameState.Set_Player(thePlayer)
 			
-			mapStrList = [GameData.MAP_CC_STR1_UCODE]
+			mapStrList = [GameData.MAP_CC_STR1_UCODE, GameData.MAP_TEST_STR1_UCODE, GameData.MAP_TEST_STR2_UCODE]
 			
-			aMapEngine = GameEngine.MapEngine("Bridge", mapStrList)
+			aMapEngine = GameEngine.MapEngine("Bridge", self.sceneMsgStr, mapStrList)
 			aMapEngine.execute()
 			
 			retScene = GameData.ESCAPE_POD_KEY

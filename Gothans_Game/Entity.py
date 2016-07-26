@@ -169,8 +169,8 @@ class InventoryMgr(object):
 			self.__itemList.append(newItem) 
 			
 			if (not suppressPrintMsg):
-				print "Adding %s to Inventory..." % newItem.get_name()
-				print "DEBUG_JW:newItem.index = %d" % newItem.index
+				Utils.Log_Event("Adding %s to Inventory..." % newItem.get_name())
+				Utils.Log_Event("DEBUG_JW:newItem.index = %d" % newItem.index)
 		
 		return retVal
 		
@@ -178,7 +178,7 @@ class InventoryMgr(object):
 		retIndex = GameData.INVALID_INDEX
 		itemIndex = theItem.index
 		
-		print "DEBUG_JW: InventoryMgr.is_item_index_valid() - item arg = %s item arg index = %d\n, %s item index is %d and itemList len = %d\n" % (theItem.get_name(), theItem.index, self.__itemList[itemIndex].get_name(), itemIndex, len(self.__itemList))
+		Utils.Log_Event("DEBUG_JW: InventoryMgr.is_item_index_valid() - item arg = %s item arg index = %d\n, %s item index is %d and itemList len = %d\n" % (theItem.get_name(), theItem.index, self.__itemList[itemIndex].get_name(), itemIndex, len(self.__itemList)))
 		
 		if ((itemIndex < len(self.__itemList) and (theItem.get_name() == self.__itemList[itemIndex].get_name()))):
 			retIndex = itemIndex
@@ -231,7 +231,7 @@ class InventoryMgr(object):
 				
 				# TODO: address undefined name 'DEBUG_MODE'
 				if (GameData.DEBUG_MODE):
-					print "DEBUG_JW: itemNameStr = %s. itemIndex = %d. result name = %s\n" % (itemNameStr, itemIndex, tmpItem.get_name())
+					Utils.Log_Event("DEBUG_JW: itemNameStr = %s. itemIndex = %d. result name = %s\n" % (itemNameStr, itemIndex, tmpItem.get_name()))
 		
 		return retItem
 		
@@ -243,9 +243,9 @@ class InventoryMgr(object):
 		count = 0
 		
 		for item in self.__itemList:
-			print "DEBUG_JW: InventoryMg.get_item_index() - matching %s with %s" % (item.get_name(), itemName)
+			Utils.Log_Event("DEBUG_JW: InventoryMg.get_item_index() - matching %s with %s" % (item.get_name(), itemName))
 			if (item.get_name() == itemName):
-				print "DEBUG_JW: InventoryMg.get_item_index() - match made at index %d" % count
+				Utils.Log_Event("DEBUG_JW: InventoryMg.get_item_index() - match made at index %d" % count)
 				retIndex = count
 			
 			count += 1
@@ -284,6 +284,7 @@ class InventoryMgr(object):
 		print "%s\nINVENTORY:\n\n" % GameData.SEPARATOR_LINE_STR
 		
 		itemNum = 1 # start label counting here (even though index starts at 0)
+		itemNameListLen = len(GameData.ITEM_STR_LIST)
 		
 		for invItem in self.__itemList:
 			countNameStr = ""
@@ -302,6 +303,17 @@ class InventoryMgr(object):
 				# should never get here
 				Utils.Show_Game_Error(GameData.INVALID_TYPE_ID_STR)
 				
+			# Calculate the correct item index corresponding to hotkeys.
+			# This allows the user to use this number to equip item from menu.
+			lowIndex = itemNum-1
+			highIndex = itemNameListLen-1
+				
+			for itemIndex in range(lowIndex,highIndex):
+	
+				if (invItem.get_name() == GameData.ITEM_STR_LIST[itemIndex]):
+					itemNum = itemIndex + 1 
+					# done looking so quit
+					break
 				
 			print "%d. %s\t\t%s %s" % (itemNum, invItem.get_name(), countNameStr, invCountStr)
 			itemNum += 1
