@@ -3,7 +3,7 @@
 # Global Game Data
 # This Python file uses the following encoding: utf-8
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 GAME_LOG_STR = "GameLog.txt"
 
 # Map Keys
@@ -19,7 +19,7 @@ START_KEY = BRIDGE_KEY
 # Game String Msgs
 INVALID_ENTRY_RSP = 'DOES NOT COMPUTE!'
 EMPTY_ITEM_STR = '<EMPTY>'
-PROMPT_CONTINUE_STR = "[Press any key to continue...]> "
+PROMPT_CONTINUE_STR = "[Press ENTER to continue...]> "
 
 
 INVALID_INDEX = -1
@@ -89,7 +89,7 @@ ITEM_STR_LIST = [
 				 ITEM_BOMB_STR]
 				 
 
-MAX_MAP_LOG_ENTRIES = 5
+MAX_MAP_LOG_ENTRIES = 10
 
 # Map command strings
 MAP_CMD_STR_QUIT = 'q'
@@ -110,12 +110,19 @@ MAP_CMD_STR_RIFLE = '5'
 MAP_CMD_STR_BATTERY = '6'
 MAP_CMD_STR_BOMB = '7'
 
+# Special cmd not entered in the map UI but used to 
+# summarize all move cmds in the MapDisplay cmd processing.
+MAP_CMD_STR_MOVE = 'mv' 
+
 MAP_CMD_STR_LIST = [
 					MAP_CMD_STR_QUIT,
+					MAP_CMD_STR_PAUSE,
+					MAP_CMD_STR_CMD_PROMPT,
 					MAP_CMD_STR_DUMP_DATA,
 					MAP_CMD_STR_USE,
 					MAP_CMD_STR_OBJV,
 					
+					MAP_CMD_STR_MOVE,
 					MAP_CMD_STR_MOVE_NORTH,
 					MAP_CMD_STR_MOVE_WEST,
 					MAP_CMD_STR_MOVE_SOUTH,
@@ -131,6 +138,13 @@ MAP_CMD_STR_LIST = [
 					]
 
 #TODO: find a better way to accomplish this without duplicates in the lists
+MOVE_CMD_STR_LIST = [
+					MAP_CMD_STR_MOVE_NORTH,
+					MAP_CMD_STR_MOVE_WEST,
+					MAP_CMD_STR_MOVE_SOUTH,
+					MAP_CMD_STR_MOVE_EAST, 
+					]
+
 ITEM_CMD_STR_LIST = [
 				MAP_CMD_STR_SLEDGEHAMMER, 
 				MAP_CMD_STR_NET, 
@@ -161,7 +175,7 @@ MAP_CAT_WALL = 0
 MAP_CAT_OPEN_SPACE = 1
 MAP_CAT_PLAYER = 2
 MAP_CAT_ENEMY = 3
-MAP_CAT_DOOR = 4
+MAP_CAT_EXIT = 4
 MAP_CAT_SOLID_SPACE = 5
 MAP_CAT_LINE_FEED = 6
 
@@ -227,7 +241,7 @@ MAP_BRIDGE_STR1_UCODE = u"""
 
 MAP_CC_STR1_UCODE = u"""
 ▐▄▄▄▄▄▄▄=▄▄=▄
-▐░░░░░░░░@░░▐
+▐░░░░░░░░@░+▐
 ▐░░░░░░░░░░░▐
 ▐▄▄▄▄▄▄▄░░░░▐
 ▐▓▓▓▓▓▓▐░░░░▐
@@ -236,20 +250,20 @@ MAP_CC_STR1_UCODE = u"""
 ▐░░░░░░░░░░░▐
 ▐░░░░░░▐▄▄▄▄▐
 ▐░░░░░░▐▄▄▄▄▐
-▐░░░░+░░░░░░▐
+▐░░░░░░░░░░░▐
 ▐▄▄▄▄=▄▄▄▄▄▄▐
 """
 
 MAP_TEST_STR1_UCODE = u"""
 ▐▄▄▄▄▄▄▄▄▄▄▄▄
-▐░░░░░░░░ ░░▐
+▐░░░░░░░░░░░▐
 ▐░░░░+░░░░░░▐
 ▐▄▄▄▄=▄▄▄▄▄▄▐
 """
 
 MAP_TEST_STR2_UCODE = u"""
 ▐▄▄▄▄▄▄▄▄▄▄▄▄
-▐▓▓▓▓▓▓▐    ▐
+▐▓▓▓▓▓▓▐░░░░▐
 ▐▓▓▓▓▓▓▐░░░+▐
 ▐▄▄▄▄▄▄▄▄▄▄=▐
 """

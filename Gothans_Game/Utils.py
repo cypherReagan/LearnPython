@@ -61,11 +61,10 @@ def Print_Map_Log():
 # Utility function to clear shell
 def Clear_Screen():
 		
-	if (not GameData.DEBUG_MODE):
-		if (Is_Windows_platform()):
-			os.system('cls')
-		else:
-			os.system('clear') # Linux/Mac OS
+	if (Is_Windows_platform()):
+		os.system('cls')
+	else:
+		os.system('clear') # Linux/Mac OS
 			
 # Query O/S platform
 def Is_Windows_platform():
@@ -97,7 +96,7 @@ def Show_Game_Error(errMsgStr):
 	errorSeparator = '************************************************************'
 	
 	printMsgStr = "%s\n***  %s  ***\n%s\n%s\n" % (errorSeparator, errMsgStr, errorSeparator, GameData.PROMPT_CONTINUE_STR)
-	Log_Event(printMsgStr)
+	Log_Event("\n" + printMsgStr)
 	raw_input(printMsgStr)	
 	
 	
@@ -250,20 +249,31 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 					print "Please enter valid item name!"
 		
 	elif (userCmdStr == GameData.DEBUG_MODE_TOGGLE_CMD_STR):
-		global DEBUG_MODE #TODO: fix warning generated here
-		
-		if (not GameData.DEBUG_MODE):
-			DEBUG_MODE = True
-			print "DEBUG_MODE = True"
-		else:
-			GameData.DEBUG_MODE = False
-			print "DEBUG_MODE = False"
+		Toggle_DEBUG_MODE()
 
 	else:
+		# action not processed
 		retVal = False
 
 		
 	return retVal, thePlayer
+	# end Process_Common_Actions()
+	
+	
+def Toggle_DEBUG_MODE():
+	global DEBUG_MODE #TODO: fix warning generated here
+		
+	msgStr = ""
+	
+	if (not GameData.DEBUG_MODE):
+		DEBUG_MODE = True
+		msgStr = "DEBUG_MODE = True"
+	else:
+		GameData.DEBUG_MODE = False
+		msgStr = "DEBUG_MODE = False"
+		
+	print msgStr
+	Log_Event(msgStr)	
 	
 	
 def Equip_Player_From_Cmd(itemIndex,  thePlayer):
@@ -391,6 +401,10 @@ class EventLog:
 		
 			timeStampStr = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
 			self.__LogFile.write(timeStampStr + "\t---\t" + eventStr + "\n")
+			
+			if (GameData.DEBUG_MODE):
+				# pipe log to map UI
+				Write_Map_Log(eventStr)
 	
 	
 	#---------------------------------------------------
@@ -441,7 +455,7 @@ class MapLog(object):
 			# add latest event to end of queue while maintaining max size
 			del self.__gameLogStrList[0]
 			self.__gameLogStrList.append(newStr)
-	
+			
 	
 	def print_events(self):
 		

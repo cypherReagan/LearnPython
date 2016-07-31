@@ -65,6 +65,7 @@ def Set_Player(newPlayer):
 class StateData(object):
 	
 	thePlayer = None
+	mapExitDict = {}
 	
 	def __init__(self):
 		self.reset_state()

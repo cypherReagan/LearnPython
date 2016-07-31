@@ -4,10 +4,13 @@ import GameState
 import Utils
 import datetime
 import Scene
+import Entity
 	
 #---------------------------------------------------
 #---------------------------------------------------
 # Class: MapActionItem
+#
+#	Base class for action items.
 #
 # Member Variables:	
 #
@@ -23,12 +26,32 @@ class MapActionItem(object):
 
 	def __init__(self, newCmdStr, newTargetID, newDir=GameData.DIR_INVALID):
 		self.cmdStr = newCmdStr
-		self.targetID = newTargetID
+		self.objID = newTargetID
 		self.dir = newDir
 		
-	def dump_item_data(self):
-		retStr = "Action: cmdStr = %s, targetID = %d, dir = %d" % (self.cmdStr, self.targetID, self.dir)
+	def dump_data(self):
+		retStr = "Action: cmdStr = %s, objID = %d, dir = %d" % (self.cmdStr, self.objID, self.dir)
 		return retStr
+	
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: UseActionItem
+#
+# Member Variables:	
+#
+#	Required:
+#		itemType	- item type being used
+#
+#	Optional:
+#		exitNum		- number of exit door order
+#---------------------------------------------------
+#---------------------------------------------------	
+class UseActionItem(MapActionItem):
+
+	def __init__(self, newItemType, newExitNum=GameData.INVALID_INDEX):
+		self.itemType = newItemType
+		self.exitnum = newExitNum
+		
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -123,11 +146,11 @@ class MapEngine(object):
 		retVal = False
 	
 		if (listIndex < len (self.__theMapStrList)):
-			Utils.Log_Event("MapEngine::__update_map() - showing map %d" % listIndex)
 		
 			newMapStr = u""
 			newMapStr = self.__theMapStrList[listIndex]
 			self.__theMapDisplay = MapDisplay.MapDisplayData(newMapStr)
+
 			retVal = True
 			
 		return retVal
@@ -142,14 +165,13 @@ class MapEngine(object):
 				Utils.Show_Game_Error("MapEngine::execute() - could not update map at index %d" % self.__mapIndex)
 				done = True
 			else:
-				exitNum = self.run_map()
-				# TODO: process exitNum
-				tmpIndex = self.calc_next_map_index()
+				exitNum = self.__run_map()
 				
-				if (tmpIndex != GameData.INVALID_INDEX):
-					self.__mapIndex = tmpIndex
+				if (exitNum != GameData.INVALID_INDEX):
+					self.__mapIndex = exitNum
 				else:
 					done = True
+					Utils.Log_Event("MapEngine::execute() - done")
 				
 	# Determine next map based on user exit of previous map
 	def calc_next_map_index(self): 
@@ -161,7 +183,7 @@ class MapEngine(object):
 		return retIndex
 		
 	# Runs current map specified by __mapIndex
-	def run_map(self):
+	def __run_map(self):
 	
 		thePlayer = GameState.Get_Player()
 	
@@ -169,16 +191,48 @@ class MapEngine(object):
 	
 		done = False
 		
+		Utils.Log_Event("MapEngine::run_map() - running map %d" % self.__mapIndex)
+		
 		# Call utility function to iterate over map str and create list of game objs
 		# DEBUG_JW: this is a hack for now!
-		playerID = self.__theMapDisplay.get_ID(GameData.MAP_CAT_PLAYER)
+		playerIdList = self.__theMapDisplay.get_obj_mapID_list(GameData.MAP_CAT_PLAYER)
+		playerID = playerIdList[0]
+		
+		exitIdList = self.__theMapDisplay.get_obj_mapID_list(GameData.MAP_CAT_EXIT)
+		exitDict = {}
+		for exitID in exitIdList:
+			exitLink = GameData.INVALID_INDEX
+			
+			if (self.__mapIndex == 0):
+				# map 0
+				if (exitID == 9):
+					exitLink = 1
+				elif (exitID == 12):
+					exitLink = 2
+				elif (exitID == 160):
+					exitLink = -1 # no link from first entry
+					
+			elif (self.__mapIndex == 1):
+				# map 1
+				if (exitID == 48):
+					exitLink = 0
+					
+			elif (self.__mapIndex == 2):
+				# map 2
+				if (exitID == 54):
+					exitLink = 0
+				
+			exitDict[exitID] = Entity.MapExitItem(exitLink)
+		# end hack
+			
+		stateData = GameState.Get_State()
+		stateData.mapExitDict = exitDict
+		GameState.Set_State(stateData)
+		# end hacked code
 		
 		while (not done):
 			# clear all old map actions
 			del self.__theMapCmdList[:]
-			
-			# process any UI msgs from mapDisplay
-			pass
 			
 			# TODO: implement DisplayPrint thread and use list to pass display strings.
 			#		Set list values here.
@@ -194,8 +248,7 @@ class MapEngine(object):
 			print "\nPLAYER HEALTH:\t%d\t\tCURRENT ITEM:\t%s\nDIRECTION:\t%s" % (thePlayer.get_health(), thePlayer.get_current_itemStr(), thePlayer.get_dir_str())
 			
 			
-			
-			# TODO: 
+			# Possible TODO: 
 			# use separate thread for keyboard input
 			# https://bytes.com/topic/python/answers/43936-canceling-interrupting-raw_input
 			
@@ -208,47 +261,65 @@ class MapEngine(object):
 			answer = Utils.Get_Key_Input("Enter Action:>")
 			#answer = nonBlockingRawInput("Enter Action:>")
 			
-			isGoodInput = False
+			sendCmd = False
 			
-			if (answer == GameData.MAP_CMD_STR_PAUSE):
-				raw_input("****** GAME PAUSED ******\n%s" % GameData.PROMPT_CONTINUE_STR)
-				
-			if (answer == GameData.MAP_CMD_STR_OBJV):
-				raw_input("****** GAME PAUSED ******\n\nOBJECTIVE:\n%s\n\n%s" % (self.__theMapObjvStr, GameData.PROMPT_CONTINUE_STR))
-				
-			elif (answer == GameData.MAP_CMD_STR_CMD_PROMPT):
-				print "****** GAME PAUSED ******"
-				cmdStr = raw_input("CMD>")
-				isHandled = Utils.Process_Common_Actions(cmdStr, thePlayer)
-				if (not isHandled):
+			if (not answer in GameData.MAP_CMD_STR_LIST):
+				if (answer != ""):
 					print GameData.INVALID_ENTRY_RSP
-				else:
-					raw_input(GameData.PROMPT_CONTINUE_STR)
 			else:
-			
-				if (answer in GameData.MAP_CMD_STR_LIST):
-					# valid cmd
-					if (answer in GameData.ITEM_CMD_STR_LIST):
-						# we have item hotkey equip cmd for player
-						itemIndex = int(answer)
-						thePlayer = Utils.Equip_Player_From_Cmd(itemIndex,  thePlayer)
-					else:
-						# we might have cmd that needs to go to map UI
-						isGoodInput = True
-						
-						if (answer == GameData.MAP_CMD_STR_QUIT):
-							# We're done here. No need to send cmd to map UI
-							done = True
-				elif (answer != ""):
-					print GameData.INVALID_ENTRY_RSP
+				# valid cmd
+				if (answer == GameData.MAP_CMD_STR_PAUSE):
+					raw_input("****** GAME PAUSED ******\n%s" % GameData.PROMPT_CONTINUE_STR)
 				
-			if (isGoodInput and not done):
+				elif (answer == GameData.MAP_CMD_STR_OBJV):
+					raw_input("****** GAME PAUSED ******\n\nOBJECTIVE:\n%s\n\n%s" % (self.__theMapObjvStr, GameData.PROMPT_CONTINUE_STR))
+					
+				elif (answer == GameData.MAP_CMD_STR_CMD_PROMPT):
+					print "****** GAME PAUSED ******"
+					cmdStr = raw_input("CMD>")
+					isHandled = Utils.Process_Common_Actions(cmdStr, thePlayer)
+					if (not isHandled):
+						print GameData.INVALID_ENTRY_RSP
+					else:
+						raw_input(GameData.PROMPT_CONTINUE_STR)
+						
+				elif (answer in GameData.ITEM_CMD_STR_LIST):
+					# we have item hotkey equip cmd for player
+					itemIndex = int(answer)
+					thePlayer = Utils.Equip_Player_From_Cmd(itemIndex,  thePlayer)
+					
+				elif (answer == GameData.MAP_CMD_STR_QUIT):
+						# We're done here. No need to send cmd to map UI
+						done = True
+				else:
+					# we have cmd that needs to go to map UI
+					sendCmd = True
+				
+			if (sendCmd and not done):
+				# passing cmd to UI
+				playerDir = GameData.DIR_INVALID
+				
+				if (answer in GameData.MOVE_CMD_STR_LIST):
+					# translating move cmd to direction to simplify UI processing
+					if (answer == GameData.MAP_CMD_STR_MOVE_NORTH):
+						playerDir = GameData.DIR_NORTH
+					elif (answer == GameData.MAP_CMD_STR_MOVE_WEST):
+						playerDir = GameData.DIR_WEST
+					elif (answer == GameData.MAP_CMD_STR_MOVE_SOUTH):
+						playerDir = GameData.DIR_SOUTH
+					elif (answer == GameData.MAP_CMD_STR_MOVE_EAST):
+						playerDir = GameData.DIR_EAST
+						
+					if (thePlayer.dir != playerDir):
+						Utils.Log_Event("Changing player dir to %d" % playerDir)
+						thePlayer.dir = playerDir
+					
+					# send general move cmd to UI
+					answer = GameData.MAP_CMD_STR_MOVE
+			
 				# construct player action
 				playerAction = MapActionItem(answer, playerID, thePlayer.get_dir_num())
 				self.__theMapCmdList.append(playerAction)
-				
-				# update direction based on movement
-				#TODO: move this to Utils
 
 				
 				# get enemy AI input
@@ -259,19 +330,44 @@ class MapEngine(object):
 			
 				# send actionList to map
 				for cmdItem in self.__theMapCmdList:
-					engineActionItem = self.__theMapDisplay.process_map_cmd(cmdItem.cmdStr, cmdItem.targetID)
+					#Utils.Log_Event("DEBUG_JW: Map Engine sending UI cmd - %s" % cmdItem.dump_data())
+					engineActionItem = self.__theMapDisplay.process_map_cmd(cmdItem)
 					
 					# process any return map engine action from the UI
 					if (engineActionItem != None):
-						self.process_engine_action(engineActionItem)
+						Utils.Log_Event("Map Engine receiving UI cmd - %s" % engineActionItem.dump_data())
+						
+						# check for exit to see if we are done with current map
+						exitNum = self.get_map_exit_action(engineActionItem)
+						
+						if (exitNum != GameData.INVALID_INDEX):
+							done =True
+						else:
+							# process any other return action
+							self.process_engine_action(engineActionItem)
 				
 		GameState.Set_Player(thePlayer)
 				
 		return exitNum
 		
 		
+	def get_map_exit_action(self, engineActionItem):
+
+		exitNum = GameData.INVALID_INDEX
+		
+		if (engineActionItem.cmdStr == GameData.MAP_CMD_STR_USE):
+			stateData = GameState.Get_State()
+			exitItem = stateData.mapExitDict.get(engineActionItem.objID)
+
+			if (not exitItem):
+				Utils.Show_Game_Error("MapEngine::process_engine_action() - invalid exit objID %d!" % objID)
+			else:
+				exitNum = exitItem.linkIndex
+		pass
+		
+		return exitNum
+		
 	def process_engine_action(self, engineActionItem):
-		# TODO: process player move + dir rotate
 		pass
 		
 	def print_map_str(self, isUCode=True):

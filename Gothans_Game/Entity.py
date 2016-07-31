@@ -441,3 +441,18 @@ class WeaponItem(Item):
 			self.ammo = newCount
 			
 		return retVal
+
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: MapExitItem
+#
+# Member Variables:	
+#		linkIndex	- pointer to next map
+#--------------------------------------------------
+#---------------------------------------------------		
+class MapExitItem(object):
+
+	def __init__(self, newMapIndex=GameData.INVALID_INDEX):
+		self.linkIndex = newMapIndex
+		Utils.Log_Event("Creating MapExitItem with linkIndex = %d" % self.linkIndex)
+

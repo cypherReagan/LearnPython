@@ -1,4 +1,5 @@
 import GameData
+import GameEngine
 import Utils
 
 
@@ -104,6 +105,8 @@ class MapDisplayData(object):
 		for mapItem in self.__tileList:
 			print "\'%s\' , category = %d, ID = %d at (%d, %d)" % (mapItem.tileChar, mapItem.category, mapItem.objID, mapItem.pos.xPos, mapItem.pos.yPos)
 		
+		raw_input(GameData.PROMPT_CONTINUE_STR)
+		
 	def get_category_from_char(self, mapChar):
 		
 		mapCategory = 0 # categories are 0-based
@@ -122,7 +125,8 @@ class MapDisplayData(object):
 			
 		return mapCategory
 			
-		
+	# Creates tile obj from map data
+	# Post-Cond: __exitPosList updated with any map exit positions
 	def make_tile(self, xVal, yVal, newChar):
 		
 		mapTile = None
@@ -136,7 +140,7 @@ class MapDisplayData(object):
 			objID = len (self.__tileList) # use list index as unique ID
 			mapTile = MapTile(mapPos, GameData.DIR_INVALID, category, newChar, objID)
 			
-			dbg_showCreation = True
+			dbg_showCreation = False
 			
 			if (dbg_showCreation):
 				print "DEBUG_JW: make_tile() - \'%s\' , category = %d, ID = %d at (%d, %d)" % (newChar, category, objID, mapPos.xPos, mapPos.yPos)
@@ -199,77 +203,104 @@ class MapDisplayData(object):
 			self.__tileList[index2].objID = tmpTile.objID
 			
 			
-	def get_ID(self, objCategory):
-		retID = GameData.INVALID_INDEX
+	def get_obj_mapID_list(self, objCategory):
+		retIdList = []
 		
 		for mapItem in self.__tileList:
 			if (mapItem.category == objCategory):
-				retID = mapItem.objID
-				break
+				retIdList.append(mapItem.objID)
 		
-		return retID
+		return retIdList
 		
-	def process_map_cmd(self, cmdStr, objID):
-		
-		retActionItem = None
-		
-		if ((cmdStr == GameData.MAP_CMD_STR_MOVE_NORTH) or (cmdStr == GameData.MAP_CMD_STR_MOVE_EAST) or (cmdStr == GameData.MAP_CMD_STR_MOVE_SOUTH) or (cmdStr == GameData.MAP_CMD_STR_MOVE_WEST)):
-			self.move_map_item(cmdStr, objID)
-		elif(cmdStr == GameData.MAP_CMD_STR_DUMP_DATA):
-			self.dump_map_data()
-		else:
-			pass
-			
-		return retActionItem
 	
+	def get_target_tile_from_Dir(self, objID, objDir):
 	
-	def move_map_item(self, cmdStr, objID):
+		retTile = None
+		
 		currentTileIndex = self.get_tileIndex_from_ID(objID)
 		
 		if (currentTileIndex == GameData.INVALID_INDEX):
-			Utils.Show_Game_Error("move_map_item() - invalid objID %d!" % objID)
+			Utils.Show_Game_Error("MapDisplay::get_target_tile_from_Dir() - invalid objID %d!" % objID)
 		else:
 			currentTile = self.__tileList[currentTileIndex]
 			currentPos = currentTile.pos
 			
-			#print "DEBUG_JW: move_map_item() - objID = %d, map ID = %d (%d, %d)" % (objID, currentTile.objID, currentPos.xPos, currentPos.yPos)
-			
 			targetPos = MapPos(currentPos.xPos, currentPos.yPos) # get new instance to avoid copy-by-reference
-			isGoodCmd = True
+			isGoodDir = True
 			
-			if (cmdStr == GameData.MAP_CMD_STR_MOVE_NORTH):
+			if (objDir == GameData.DIR_NORTH):
 				targetPos.yPos -= 1 # y-axis is inverted in map str
-			elif (cmdStr == GameData.MAP_CMD_STR_MOVE_WEST):
+			elif (objDir == GameData.DIR_WEST):
 				targetPos.xPos -= 1
-			elif (cmdStr == GameData.MAP_CMD_STR_MOVE_SOUTH):
+			elif (objDir == GameData.DIR_SOUTH):
 				targetPos.yPos += 1 # y-axis is inverted in map str
-			elif (cmdStr == GameData.MAP_CMD_STR_MOVE_EAST):
+			elif (objDir == GameData.DIR_EAST):
 				targetPos.xPos += 1
 			else:
-				Utils.Show_Game_Error("move_map_item() - invalid cmdStr %s!" % cmdStr)
-				isGoodCmd = False
-				
-			if (isGoodCmd):
+				isGoodDir = False
+			
+			if (not isGoodDir):
+				Utils.Show_Game_Error("MapDisplay::get_target_tile_from_Dir() - invalid objDir %s!" % objDir)
+			else:
 				targetTileIndex = self.get_tileIndex_from_Pos(targetPos)
 				
-				#print "DEBUG_JW: move_map_item() - isGoodCmd. targetTileIndex =  %d" % targetTileIndex
-				
 				if (targetTileIndex == GameData.INVALID_INDEX):
-					Utils.Show_Game_Error("move_map_item() - invalid target position (%d, %d)!" % (targetPos.xPos, targetPos.yPos))
+					Utils.Show_Game_Error("MapDisplay::get_target_tile_from_Dir() - invalid target position (%d, %d)!" % (targetPos.xPos, targetPos.yPos))
 				else:
-					targetTile = self.__tileList[targetTileIndex]
+					# get target
+					retTile = self.__tileList[targetTileIndex]
+					retTileIndex = targetTileIndex
 					
-					#print "DEBUG_JW: move_map_item() - targetTile.category = %d at (%d, %d)" % (targetTile.category, targetPos.xPos, targetPos.yPos)
+		return retTile, retTileIndex
+	
+	
+	def process_map_cmd(self, mapActionItem):
+		
+		retActionItem = None
+		
+		if (mapActionItem != None):
+			Utils.Log_Event("Map Display receiving cmd - %s" % mapActionItem.dump_data())
+		
+			if (mapActionItem.cmdStr == GameData.MAP_CMD_STR_MOVE):
+				self.move_map_item(mapActionItem.objID, mapActionItem.dir)
+			elif(mapActionItem.cmdStr == GameData.MAP_CMD_STR_DUMP_DATA):
+				self.dump_map_data()
+			elif(mapActionItem.cmdStr == GameData.MAP_CMD_STR_USE):
+				retActionItem = self.use_map_item(mapActionItem.objID, mapActionItem.dir)
+			else:
+				pass
+			
+		return retActionItem
+	
+	
+	def move_map_item(self, objID, objDir):
+	
+		targetTile, targetTileIndex = self.get_target_tile_from_Dir(objID, objDir)
+			
+		if (targetTile != None):
+			currentTileIndex = self.get_tileIndex_from_ID(objID)
+			
+			if (currentTileIndex == GameData.INVALID_INDEX):
+				# should never get here since currentTileIndex was already used to calculate targetTile
+				Utils.Show_Game_Error("MapDisplay::move_map_item() - invalid objID %d!" % objID)
+			else:
+				if (targetTile.category == GameData.MAP_CAT_OPEN_SPACE):
+					# this is a valid move so proceed with swap
+					self.swap_tiles_in_List(currentTileIndex, targetTileIndex)
 					
-					if (targetTile.category == GameData.MAP_CAT_OPEN_SPACE):
-						# this is a valid move so proceed with swap
-						# TODO: force current tile dir to co=md dir
-						#print "DEBUG_JW: move_map_item() - swapping tile %d with tile %d" % (currentTileIndex, targetTileIndex)
-						self.swap_tiles_in_List(currentTileIndex, targetTileIndex)
-					else:
-						pass #print "DEBUG_JW: target tile is not open. Target Tile Category = %d" % targetTile.category
 					
-					
-	def use_map_item(self, objDir, objID):		
-		x =1 
-		return x
+	def use_map_item(self, objID, objDir):		
+		retActionItem = None
+			
+		targetTile, targetTileIndex = self.get_target_tile_from_Dir(objID, objDir)
+			
+		if (targetTile != None):
+			if (targetTile.category == GameData.MAP_CAT_EXIT):
+				# send back the exit obj ID for engine processing
+				retID = targetTile.objID
+				retActionItem = GameEngine.MapActionItem(GameData.MAP_CMD_STR_USE, retID)
+				
+				Utils.Log_Event("MapDisplay::use_map_item() - returning exit event retID = %d" % retID)
+				Utils.Log_Event(retActionItem.dump_data())
+		
+		return retActionItem
