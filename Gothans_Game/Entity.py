@@ -229,7 +229,6 @@ class InventoryMgr(object):
 				# Something went wrong. We got a mismatching item from query.
 				Utils.Show_Game_Error("get_item() fail for %s" % itemNameStr)
 				
-				# TODO: address undefined name 'DEBUG_MODE'
 				if (GameData.DEBUG_MODE):
 					Utils.Log_Event("DEBUG_JW: itemNameStr = %s. itemIndex = %d. result name = %s\n" % (itemNameStr, itemIndex, tmpItem.get_name()))
 		
@@ -244,6 +243,7 @@ class InventoryMgr(object):
 		
 		for item in self.__itemList:
 			Utils.Log_Event("DEBUG_JW: InventoryMg.get_item_index() - matching %s with %s" % (item.get_name(), itemName))
+			
 			if (item.get_name() == itemName):
 				Utils.Log_Event("DEBUG_JW: InventoryMg.get_item_index() - match made at index %d" % count)
 				retIndex = count
@@ -336,12 +336,11 @@ class Item(object):
 	# default common members to invalid values
 	__name = ""
 	__typeID = GameData.INVALID_INDEX
-	index = GameData.INVALID_INDEX #dEBUG_JW - not sure if this is needed
 	
 	def __init__(self):
 		# should never get here
 		Utils.Show_Game_Error("Item Subclasses handle implentation.")
-		exit(1)
+		Utils.Exit_Game()
 
 	def get_name(self):
 		return self.__name

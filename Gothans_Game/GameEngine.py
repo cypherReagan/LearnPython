@@ -167,11 +167,12 @@ class MapEngine(object):
 			else:
 				exitNum = self.__run_map()
 				
-				if (exitNum != GameData.INVALID_INDEX):
-					self.__mapIndex = exitNum
-				else:
+				if (exitNum == GameData.MAP_EXIT_NUM):
 					done = True
 					Utils.Log_Event("MapEngine::execute() - done")
+				else:
+					# we're going to another map in level
+					self.__mapIndex = exitNum
 				
 	# Determine next map based on user exit of previous map
 	def calc_next_map_index(self): 
@@ -210,7 +211,7 @@ class MapEngine(object):
 				elif (exitID == 12):
 					exitLink = 2
 				elif (exitID == 160):
-					exitLink = -1 # no link from first entry
+					exitLink = 0 # stay here when using first entry
 					
 			elif (self.__mapIndex == 1):
 				# map 1
@@ -219,6 +220,8 @@ class MapEngine(object):
 					
 			elif (self.__mapIndex == 2):
 				# map 2
+				if (exitID == 12):
+					exitLink = GameData.MAP_EXIT_NUM # flag the level exit using unique num ( len(__theMapStrList)? )
 				if (exitID == 54):
 					exitLink = 0
 				
@@ -341,7 +344,7 @@ class MapEngine(object):
 						exitNum = self.get_map_exit_action(engineActionItem)
 						
 						if (exitNum != GameData.INVALID_INDEX):
-							done =True
+							done = True
 						else:
 							# process any other return action
 							self.process_engine_action(engineActionItem)
@@ -360,10 +363,9 @@ class MapEngine(object):
 			exitItem = stateData.mapExitDict.get(engineActionItem.objID)
 
 			if (not exitItem):
-				Utils.Show_Game_Error("MapEngine::process_engine_action() - invalid exit objID %d!" % objID)
+				Utils.Show_Game_Error("MapEngine::process_engine_action() - invalid exit objID %d!" % engineActionItem.objID)
 			else:
 				exitNum = exitItem.linkIndex
-		pass
 		
 		return exitNum
 		

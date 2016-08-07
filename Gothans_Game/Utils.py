@@ -4,7 +4,6 @@ from sys import exit
 import os
 import platform
 import datetime
-import GothansGame
 import GameData
 import GameState
 import Entity
@@ -261,12 +260,10 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 	
 	
 def Toggle_DEBUG_MODE():
-	global DEBUG_MODE #TODO: fix warning generated here
-		
 	msgStr = ""
 	
 	if (not GameData.DEBUG_MODE):
-		DEBUG_MODE = True
+		GameData.DEBUG_MODE = True
 		msgStr = "DEBUG_MODE = True"
 	else:
 		GameData.DEBUG_MODE = False

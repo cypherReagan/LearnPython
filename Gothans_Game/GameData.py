@@ -74,10 +74,11 @@ CMD_STR_LIST = [HELP_REQ_CMD_STR,
 ITEM_SLEDGEHAMMER_STR = 'sledgehammer'
 ITEM_NET_STR = 'net'
 ITEM_KNIFE_STR = 'knife'
-ITEM_BLASTER_PISTOL = 'pistol'
-ITEM_PLASMA_RIFLE = 'rifle'
+ITEM_BLASTER_PISTOL_STR = 'pistol'
+ITEM_PLASMA_RIFLE_STR = 'rifle'
 ITEM_BATTERY_STR = 'battery'
 ITEM_BOMB_STR = 'bomb'
+
 
 ITEM_STR_LIST = [
 				 ITEM_SLEDGEHAMMER_STR,
@@ -89,6 +90,8 @@ ITEM_STR_LIST = [
 				 ITEM_BOMB_STR]
 				 
 
+				 
+				 
 MAX_MAP_LOG_ENTRIES = 10
 
 # Map command strings
@@ -153,6 +156,8 @@ ITEM_CMD_STR_LIST = [
 				MAP_CMD_STR_RIFLE, 
 				MAP_CMD_STR_BATTERY, 
 				MAP_CMD_STR_BOMB]
+
+MAP_EXIT_NUM = 9999
 
 
 # Map Obj directions
@@ -262,7 +267,7 @@ MAP_TEST_STR1_UCODE = u"""
 """
 
 MAP_TEST_STR2_UCODE = u"""
-▐▄▄▄▄▄▄▄▄▄▄▄▄
+▐▄▄▄▄▄▄▄▄▄▄=▄
 ▐▓▓▓▓▓▓▐░░░░▐
 ▐▓▓▓▓▓▓▐░░░+▐
 ▐▄▄▄▄▄▄▄▄▄▄=▐
