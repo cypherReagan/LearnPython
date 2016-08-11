@@ -126,6 +126,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 
 	retVal = True
 	
+	# HELP
 	if (userCmdStr == GameData.HELP_REQ_CMD_STR):
 		
 		print GameData.SEPARATOR_LINE_STR
@@ -141,6 +142,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 		
 		print GameData.SEPARATOR_LINE_STR
 	
+	# QUIT
 	elif (userCmdStr == GameData.QUIT_CMD_STR):
 		print "Are you sure want to quit?"
 		answer = raw_input("(y/n)> ")
@@ -149,9 +151,11 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 			GameState.Set_Player(thePlayer)
 			Exit_Game()
 	
+	# PLAYER STATISTICS
 	elif (userCmdStr == GameData.PLAYER_STATS_CMD_STR):
 		thePlayer.print_stats()
 		
+	# INVENTORY
 	elif (userCmdStr == GameData.PLAYER_INV_CMD_STR):
 		thePlayer.theInventoryMgr.print_items()
 		
@@ -166,9 +170,11 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 		if (answerNum != GameData.INVALID_INDEX):
 			thePlayer = Equip_Player_From_Cmd(answerNum,  thePlayer)
 		
+	# CHEAT: FULL HEALTH 
 	elif (userCmdStr == GameData.FULL_HEALTH_CHEAT_CMD_STR):
 		thePlayer.set_health(100)
 		
+	# CHEAT: SET HEALTH
 	elif (userCmdStr == GameData.SET_HEALTH_CHEAT_CMD_STR):
 		
 		done = False
@@ -182,71 +188,27 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 			except:
 				print "Please enter a valid number!"
 				
+	# CHEAT: ADD ITEM
 	elif (userCmdStr == GameData.ADD_ITEM_CHEAT_CMD_STR):
 		
-		done = False
+		theItem = Prompt_User_For_Item_Add()
 		
-		while (not done):
-			typeAnswer = raw_input("(Enter item type (u/w/q)) > ")
-			
-			theItem = None
-			isGoodItem = False
-			
-			if (typeAnswer == "u"):
-				# utility item
-				itemAnswer = raw_input("(Enter item name) > ")
-				theItem = Entity.UtilityItem(itemAnswer, 1)
-				isGoodItem = True
-				
-			elif (typeAnswer == "w"):
-				# weapon item
-				itemAnswer = raw_input("(Enter item name) > ")
-				theItem = Entity.WeaponItem(itemAnswer, GameData.INFINITE_VAL)
-				isGoodItem = True
-				
-			elif (typeAnswer == "q"):
-				# quit
-				done = True
-			else:
-				print "Please enter a valid item type!"
-			
-			if (isGoodItem):
-				try:			
-					itemCount = int(raw_input("(Count) > "))
-					
-					if (theItem == None):
-						print "DEBUG_JW: Invalid Item!"
-					
-					theItem.set_count(itemCount)
-					
-					isGoodItem = thePlayer.theInventoryMgr.add_item(theItem) 
+		if (theItem != None):
 
-					if (isGoodItem):
-						done = True
-				except:
-					print "Please enter a valid number!"
-					
+			isGoodItem = thePlayer.theInventoryMgr.add_item(theItem) 
+			
+			if (not isGoodItem):
+				Show_Game_Error("Could not add item to player!")
+			
+	# CHEAT: DELETE ITEM				
 	elif (userCmdStr == GameData.DELETE_ITEM_CHEAT_CMD_STR):
 		
-		done = False
+		theItem = Prompt_User_For_Item_Delete()
 		
-		while (not done):
+		if (theItem != None):
+			thePlayer.theInventoryMgr.update_item(theItem)
 		
-			itemAnswer = raw_input("(Enter item name) > ")
-			
-			if (itemAnswer == 'q'):
-				done = True
-			else:
-				# TODO: put removal process inside theInventoryMgr
-				theItem = thePlayer.theInventoryMgr.get_item(itemAnswer)
-				
-				if (theItem != None):
-					theItem.subtract_count(1)
-					thePlayer.theInventoryMgr.update_item(theItem)
-					done = True
-				else:
-					print "Please enter valid item name!"
-		
+	# TOGGLE DEBUG MODE
 	elif (userCmdStr == GameData.DEBUG_MODE_TOGGLE_CMD_STR):
 		Toggle_DEBUG_MODE()
 
@@ -273,19 +235,86 @@ def Toggle_DEBUG_MODE():
 	Log_Event(msgStr)	
 	
 	
-def Equip_Player_From_Cmd(itemIndex,  thePlayer):
+def Equip_Player_From_Cmd(itemIndex, thePlayer):
 	# Cmd is 1-based while the item list is 0-based-> we must normalize the index
 	if (itemIndex == 0):
 		itemIndex = 10
 	else:
 		itemIndex = itemIndex - 1
 	
-	if (len(GameData.ITEM_STR_LIST) > itemIndex):
-		itemStr = GameData.ITEM_STR_LIST[itemIndex]
+	if (len(GameData.ITEM_DATA_LIST) > itemIndex):
+		item = GameData.ITEM_DATA_LIST[itemIndex]
+		itemStr = item[GameData.ITEM_DATA_NAME_INDEX]
 		if (thePlayer.equip_item(itemStr)):
 			Write_Map_Log("Equipped %s" % itemStr)
 	
 	return thePlayer
+	
+
+def Prompt_User_For_Item_Add():
+	theItem = None
+	
+	done = False
+		
+	while (not done):
+		typeAnswer = raw_input("(Enter item type (u/w/q)) > ")
+		
+		isGoodItem = False
+		
+		if (typeAnswer == "u"):
+			# utility item
+			# TODO: translate itemName into itemIndex
+			theItem = Entity.UtilityItem(itemAnswer, 1)
+			isGoodItem = True
+			
+		elif (typeAnswer == "w"):
+			# weapon item
+			itemAnswer = raw_input("(Enter item name) > ")
+			theItem = Entity.WeaponItem(itemAnswer, GameData.INFINITE_VAL)
+			isGoodItem = True
+			
+		elif (typeAnswer == "q"):
+			# quit
+			done = True
+		else:
+			print "Please enter a valid item type!"
+		
+		if (theItem != None):
+			try:			
+				itemCount = int(raw_input("(Count) > "))
+				
+				theItem.set_count(itemCount)
+
+				done = True
+			except:
+				print "Please enter a valid number!"
+	
+	return theItem
+	
+	def Prompt_User_For_Item_Delete():
+		
+		theItem = None
+		
+		done = False
+		
+		while (not done):
+		
+			itemAnswer = raw_input("(Enter item name) > ")
+			
+			if (itemAnswer == 'q'):
+				done = True
+			else:
+				# TODO: put removal process inside theInventoryMgr
+				theItem = thePlayer.theInventoryMgr.get_item(itemAnswer)
+				
+				if (theItem != None):
+					theItem.subtract_count(1)
+					
+					done = True
+				else:
+					print "Please enter valid item name!"
+		
+		return theItem
 	
 # ------------------------ Start Linux code ------------------------
 # ------------------------------------------------------------------

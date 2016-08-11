@@ -293,7 +293,9 @@ class MapEngine(object):
 					
 				elif (answer == GameData.MAP_CMD_STR_QUIT):
 						# We're done here. No need to send cmd to map UI
-						done = True
+						#done = True
+						# TODO: create method to get back to the main menu
+						Utils.Exit_Game()
 				else:
 					# we have cmd that needs to go to map UI
 					sendCmd = True

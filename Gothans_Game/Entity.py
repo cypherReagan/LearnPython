@@ -128,7 +128,7 @@ class InventoryMgr(object):
 		
 	# Sets the current inv item.
 	# Returns True if item exists, else False
-	def set_current_item(self,  itemNameStr):
+	def set_current_item(self, itemNameStr):
 		retVal = False
 		
 		tmpIndex = self.get_item_index(itemNameStr)	
@@ -284,7 +284,7 @@ class InventoryMgr(object):
 		print "%s\nINVENTORY:\n\n" % GameData.SEPARATOR_LINE_STR
 		
 		itemNum = 1 # start label counting here (even though index starts at 0)
-		itemNameListLen = len(GameData.ITEM_STR_LIST)
+		itemListLen = len(GameData.ITEM_DATA_LIST)
 		
 		for invItem in self.__itemList:
 			countNameStr = ""
@@ -306,11 +306,13 @@ class InventoryMgr(object):
 			# Calculate the correct item index corresponding to hotkeys.
 			# This allows the user to use this number to equip item from menu.
 			lowIndex = itemNum-1
-			highIndex = itemNameListLen-1
+			highIndex = itemListLen-1
 				
 			for itemIndex in range(lowIndex,highIndex):
 	
-				if (invItem.get_name() == GameData.ITEM_STR_LIST[itemIndex]):
+				item = GameData.ITEM_DATA_LIST[itemIndex]
+				
+				if (invItem.get_name() == item[GameData.ITEM_DATA_NAME_INDEX]):
 					itemNum = itemIndex + 1 
 					# done looking so quit
 					break
@@ -329,24 +331,51 @@ class InventoryMgr(object):
 #---------------------------------------------------		
 class Item(object):
 
+	# TODO: remove all these and use itemData!
 	# Item type IDs
 	TYPE_ID_UTILITY = 0
 	TYPE_ID_WEAPON = 1
-	
 	# default common members to invalid values
 	__name = ""
 	__typeID = GameData.INVALID_INDEX
 	
 	def __init__(self):
 		# should never get here
-		Utils.Show_Game_Error("Item Subclasses handle implentation.")
+		Utils.Show_Game_Error("Item Subclasses handle init implentation.")
 		Utils.Exit_Game()
+		
+	
+	# Static item method to determine item data index validity
+	@staticmethod
+	def is_itemDataIndex_valid(itemDataIndex):
+		
+		retVal = False
+		
+		if ((itemDataIndex >= 0) and (itemDataIndex <= GameData.ITEM_DATA_MAX_INDEX)):
+			retVal = True
+		
+		return retVal
+	
+	# Static item method to determine item validity based on name
+	@staticmethod
+	def is_itemStr_valid(itemStr):
+		
+		retVal = False
+		
+		for item in GameData.ITEM_DATA_LIST:
+			if (itemStr == item[GameData.ITEM_DATA_NAME_INDEX]):
+				retVal = True
+				# we have a match so quit looking
+				break
+		
+		return retVal
 
 	def get_name(self):
 		return self.__name
 		
 	def set_name(self, newNameStr):
-		if newNameStr in GameData.ITEM_STR_LIST:
+	
+		if (self.is_itemStr_valid(newNameStr)):
 			self.__name = newNameStr
 		else:
 			Utils.Show_Game_Error("Invalid Item name to set: %s." % newNameStr)
@@ -359,6 +388,9 @@ class Item(object):
 			self.__typeID = newIdNum
 		else:
 			Utils.Show_Game_Error("Invalid Item ID to set: %d." % newIdNum)
+			
+		
+		
 		
 #---------------------------------------------------
 #---------------------------------------------------
