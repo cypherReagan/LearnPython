@@ -74,6 +74,9 @@ CMD_STR_LIST = [HELP_REQ_CMD_STR,
 # 				ITEM DATA
 # ############################################				
 	
+# Error Msgs
+INVALID_TYPE_ID_STR = "Invalid Item Type ID"
+	
 # Item Strings
 ITEM_SLEDGEHAMMER_STR = 'sledgehammer'
 ITEM_NET_STR = 'net'

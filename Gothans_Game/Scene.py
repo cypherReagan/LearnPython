@@ -600,7 +600,7 @@ class Armory(Scene):
 										elif (answer == GameData.SEARCH_CMD_STR):
 											print "You search the Gothans dead body and find a battery pack!"
 											
-											thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(GameData.ITEM_BATTERY_STR, 1))
+											thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(GameData.ITEM_BATTERY_INDEX, 1))
 										else:
 											print GameData.INVALID_ENTRY_RSP
 								
@@ -613,7 +613,7 @@ class Armory(Scene):
 				Utils.Show_Game_Error("Invalid command.")
 				
 		if (retScene == GameData.BRIDGE_KEY):
-			thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(GameData.ITEM_BOMB_STR, 1))
+			thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(GameData.ITEM_BOMB_ITEM, 1))
 			
 			# TODO - allow user to pick up bomb and other weapons
 			

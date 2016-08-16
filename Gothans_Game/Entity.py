@@ -23,12 +23,11 @@ class Player(object):
 		
 		# start with default melee weapons
 		# TODO: ultimately allow player to find these in map
-		suppressPrintMsg = True
-		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_SLEDGEHAMMER_STR, GameData.INFINITE_VAL), suppressPrintMsg)
-		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_NET_STR, GameData.INFINITE_VAL), suppressPrintMsg)
-		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_KNIFE_STR, GameData.INFINITE_VAL), suppressPrintMsg)
+		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_SLEDGEHAMMER_INDEX, GameData.INFINITE_VAL))
+		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_NET_INDEX, GameData.INFINITE_VAL))
+		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_KNIFE_INDEX, GameData.INFINITE_VAL))
 		#DEBUG_JW - this is for testing
-		self.theInventoryMgr.add_item(UtilityItem(GameData.ITEM_BATTERY_STR, 1))
+		self.theInventoryMgr.add_item(UtilityItem(GameData.ITEM_BATTERY_INDEX, 1))
 		
 	def get_health(self):
 		return self.__health
@@ -82,9 +81,9 @@ class Player(object):
 		return retStr
 		
 		
-	def equip_item(self,  itemNameStr):
+	def equip_item(self,  itemDataIndex):
 		
-		return self.theInventoryMgr.set_current_item(itemNameStr)
+		return self.theInventoryMgr.set_current_item(itemDataIndex)
 		
 
 		
@@ -113,8 +112,6 @@ class InventoryMgr(object):
 	__itemList = []
 	__currentItemIndex = GameData.INVALID_INDEX
 		
-	INVALID_TYPE_ID_STR = "Invalid Item Type ID"
-		
 	# Accessors for current item
 	def get_current_item(self):
 		retItem = None
@@ -128,19 +125,26 @@ class InventoryMgr(object):
 		
 	# Sets the current inv item.
 	# Returns True if item exists, else False
-	def set_current_item(self, itemNameStr):
+	def set_current_item(self, itemDataIndex):
 		retVal = False
 		
-		tmpIndex = self.get_item_index(itemNameStr)	
-		if (tmpIndex != GameData.INVALID_INDEX):
-			# successful assignement
-			self.__currentItemIndex = tmpIndex
-			retVal = True
+		if (Item.is_itemDataIndex_valid(itemDataIndex)):
+		
+			# Convert data index into inv list index for updating
+			# the current inv list index.
+			itemData = GameData.ITEM_DATA_LIST[itemDataIndex]
+			itemNameStr = itemData[GameData.ITEM_DATA_NAME_INDEX]
+			invListIndex = self.get_item_index(itemNameStr)	
+			
+			if (invListIndex != GameData.INVALID_INDEX):
+				# successful assignement
+				self.__currentItemIndex = invListIndex
+				retVal = True
 		
 		return retVal
 		
 	# Add new item to inventory list
-	def add_item(self, newItem, suppressPrintMsg = False):
+	def add_item(self, newItem):
 		
 		retVal = True
 		
@@ -151,13 +155,14 @@ class InventoryMgr(object):
 			# item already exists in list => update existing item counts
 			theItem = self.__itemList[itemIndex]
 			
-			if (theItem.get_typeID() == Item.TYPE_ID_UTILITY):
+			if (theItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
 				theItem.add_count(1)
-			elif (theItem.get_typeID() == Item.TYPE_ID_WEAPON):
+				
+			elif (theItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
 				theItem.ammo += newItem.ammo
 			else:
 				# should never get here
-				Utils.Utils.Show_Game_Error(self.INVALID_TYPE_ID_STR)
+				Utils.Show_Game_Error(GameData.INVALID_TYPE_ID_STR)
 				retVal = False
 		else:
 			# brand new item to add
@@ -168,9 +173,8 @@ class InventoryMgr(object):
 			
 			self.__itemList.append(newItem) 
 			
-			if (not suppressPrintMsg):
-				Utils.Log_Event("Adding %s to Inventory..." % newItem.get_name())
-				Utils.Log_Event("DEBUG_JW:newItem.index = %d" % newItem.index)
+			Utils.Log_Event("Adding %s to Inventory..." % newItem.get_name())
+			Utils.Log_Event("DEBUG_JW:newItem.index = %d" % newItem.index)
 		
 		return retVal
 		
@@ -230,22 +234,20 @@ class InventoryMgr(object):
 				Utils.Show_Game_Error("get_item() fail for %s" % itemNameStr)
 				
 				if (GameData.DEBUG_MODE):
-					Utils.Log_Event("DEBUG_JW: itemNameStr = %s. itemIndex = %d. result name = %s\n" % (itemNameStr, itemIndex, tmpItem.get_name()))
+					Utils.Log_Event("get_item(): itemNameStr = %s. itemIndex = %d. result name = %s\n" % (itemNameStr, itemIndex, tmpItem.get_name()))
 		
 		return retItem
 		
 		
-	# Returns item index if found in list, else INVALID_INDEX
+	# Returns item index if found in the inv list, else INVALID_INDEX
 	def get_item_index(self, itemName):
 		
 		retIndex = GameData.INVALID_INDEX
 		count = 0
 		
 		for item in self.__itemList:
-			Utils.Log_Event("DEBUG_JW: InventoryMg.get_item_index() - matching %s with %s" % (item.get_name(), itemName))
 			
 			if (item.get_name() == itemName):
-				Utils.Log_Event("DEBUG_JW: InventoryMg.get_item_index() - match made at index %d" % count)
 				retIndex = count
 			
 			count += 1
@@ -290,11 +292,11 @@ class InventoryMgr(object):
 			countNameStr = ""
 			invCountStr = ""
 			
-			if (invItem.get_typeID() == Item.TYPE_ID_UTILITY):
+			if (invItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
 				countNameStr = "Count: "
 				invCountStr = invItem.get_count()
 				
-			elif (invItem.get_typeID() == Item.TYPE_ID_WEAPON):
+			elif (invItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
 				if (invItem.ammo != GameData.INFINITE_VAL):
 					invCountStr = invItem.ammo
 					countNameStr = "Ammo: "
@@ -330,14 +332,8 @@ class InventoryMgr(object):
 #--------------------------------------------------
 #---------------------------------------------------		
 class Item(object):
-
-	# TODO: remove all these and use itemData!
-	# Item type IDs
-	TYPE_ID_UTILITY = 0
-	TYPE_ID_WEAPON = 1
-	# default common members to invalid values
-	__name = ""
-	__typeID = GameData.INVALID_INDEX
+	
+	__constData = None
 	
 	def __init__(self):
 		# should never get here
@@ -351,7 +347,7 @@ class Item(object):
 		
 		retVal = False
 		
-		if ((itemDataIndex >= 0) and (itemDataIndex <= GameData.ITEM_DATA_MAX_INDEX)):
+		if ((itemDataIndex >= 0) and (itemDataIndex < len(GameData.ITEM_DATA_LIST))):
 			retVal = True
 		
 		return retVal
@@ -369,25 +365,71 @@ class Item(object):
 				break
 		
 		return retVal
-
-	def get_name(self):
-		return self.__name
 		
-	def set_name(self, newNameStr):
+	# Static item method to obtain an item's dataList index based on name
+	# Returns INVALID_INDEX if no match was found.
+	@staticmethod
+	def get_itemIndex_from_itemStr(itemStr):
+		retIndex = GameData.INVALID_INDEX
+		
+		count = 0
+		
+		for dataItem in GameData.ITEM_DATA_LIST:
+			if (dataItem[GameData.ITEM_DATA_NAME_INDEX] == itemStr):
+				retIndex = count
+				break
+			else:
+				count = count + 1
+		
+		return retIndex
 	
-		if (self.is_itemStr_valid(newNameStr)):
-			self.__name = newNameStr
-		else:
-			Utils.Show_Game_Error("Invalid Item name to set: %s." % newNameStr)
+
+	# Static method retrieves itemData from table based on index.
+	# NOTE: Always returns a valid itemData obj
+	@staticmethod
+	def get_itemData_from_index(itemDataIndex):
+	
+		itemData = None
+	
+		if (not Item.is_itemDataIndex_valid(itemDataIndex)):
+			defaultIndex = 0
+			Utils.Show_Game_Error("Cannot get item data from index %d... defaulting index to %d!" % (itemIndex, defaultIndex))
+			itemDataIndex = defaultIndex
 			
-	def get_typeID(self):
-		return self.__typeID
+		itemData = GameData.ITEM_DATA_LIST[itemDataIndex]
 		
-	def set_typeID(self, newIdNum):
-		if ((newIdNum == self.TYPE_ID_UTILITY) or (newIdNum == self.TYPE_ID_WEAPON)):
-			self.__typeID = newIdNum
-		else:
-			Utils.Show_Game_Error("Invalid Item ID to set: %d." % newIdNum)
+		return itemData
+		
+	# Set constData from index
+	def populate_constData(self, itemDataIndex):
+	
+		self.__constData = self.get_itemData_from_index(itemDataIndex)
+		
+		if (self.__constData == None):
+			Utils.Show_Game_Error("Could not get itemData from index %d!" % itemDataIndex)
+			
+	
+	# Accessor for item name
+	# Returns empty string if name could not be accessed
+	def get_name(self):
+		
+		retStr = "" 
+		
+		if (self.__constData != None):
+			retStr = self.__constData[GameData.ITEM_DATA_NAME_INDEX]
+		
+		return retStr
+		
+	# Accessor for item typeID
+	# Returns INVALID_INDEX if ID could not be accessed
+	def get_typeID(self):
+		
+		retIndex = GameData.INVALID_INDEX
+		
+		if (self.__constData != None):
+			retIndex = self.__constData[GameData.ITEM_DATA_TYPE_INDEX]
+		
+		return retIndex
 			
 		
 		
@@ -401,11 +443,12 @@ class UtilityItem(Item):
 	
 	# default unique members to invalid values
 	__count = GameData.INVALID_INDEX
-	
-	def __init__(self, newName, newCount):
-		self.set_name(newName)
+		
+	def __init__(self, newDataIndex, newCount):
+
+		self.populate_constData(newDataIndex)
 		self.__count = newCount
-		self.set_typeID(self.TYPE_ID_UTILITY)
+
 		
 	
 	def is_usable(self):
@@ -449,10 +492,10 @@ class WeaponItem(Item):
 	# default unique members to invalid values
 	ammo = GameData.INVALID_INDEX
 	
-	def __init__(self, newName, newAmmo):
-		self.set_name(newName)
+	def __init__(self, newDataIndex, newAmmo):
+		
+		self.populate_constData(newDataIndex)
 		self.ammo = newAmmo
-		self.set_typeID(self.TYPE_ID_WEAPON)
 		
 		
 	def is_usable(self):

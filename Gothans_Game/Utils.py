@@ -235,6 +235,8 @@ def Toggle_DEBUG_MODE():
 	Log_Event(msgStr)	
 	
 	
+# Equips given player using the cmd index.
+# NOTE: cmd index corresponds to the data list index.
 def Equip_Player_From_Cmd(itemIndex, thePlayer):
 	# Cmd is 1-based while the item list is 0-based-> we must normalize the index
 	if (itemIndex == 0):
@@ -243,9 +245,10 @@ def Equip_Player_From_Cmd(itemIndex, thePlayer):
 		itemIndex = itemIndex - 1
 	
 	if (len(GameData.ITEM_DATA_LIST) > itemIndex):
-		item = GameData.ITEM_DATA_LIST[itemIndex]
-		itemStr = item[GameData.ITEM_DATA_NAME_INDEX]
-		if (thePlayer.equip_item(itemStr)):
+		
+		if (thePlayer.equip_item(itemIndex)):
+			item = GameData.ITEM_DATA_LIST[itemIndex]
+			itemStr = item[GameData.ITEM_DATA_NAME_INDEX]
 			Write_Map_Log("Equipped %s" % itemStr)
 	
 	return thePlayer
@@ -259,19 +262,21 @@ def Prompt_User_For_Item_Add():
 	while (not done):
 		typeAnswer = raw_input("(Enter item type (u/w/q)) > ")
 		
-		isGoodItem = False
+		if ((typeAnswer == "u") or (typeAnswer == "w")):
 		
-		if (typeAnswer == "u"):
-			# utility item
-			# TODO: translate itemName into itemIndex
-			theItem = Entity.UtilityItem(itemAnswer, 1)
-			isGoodItem = True
-			
-		elif (typeAnswer == "w"):
-			# weapon item
 			itemAnswer = raw_input("(Enter item name) > ")
-			theItem = Entity.WeaponItem(itemAnswer, GameData.INFINITE_VAL)
-			isGoodItem = True
+		
+			if (itemIndex == GameData.INVALID_INDEX):
+				print "Please enter valid item name!"
+			else:
+		
+				if (typeAnswer == "u"):
+					# utility item
+					theItem = Entity.UtilityItem(itemIndex, 1)
+					
+				elif (typeAnswer == "w"):
+					# weapon item
+					theItem = Entity.WeaponItem(itemIndex, GameData.INFINITE_VAL)
 			
 		elif (typeAnswer == "q"):
 			# quit
