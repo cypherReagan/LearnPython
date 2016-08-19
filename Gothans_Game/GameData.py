@@ -169,7 +169,7 @@ ITEM_DATA_BOMB = (	ITEM_BOMB_STR,
 					ITEM_BOMB_DAMAGE_NUM,
 					ITEM_BOMB_RANGE_NUM)
 
-# Item Indices
+# Item Indices used as look-up for data list
 ITEM_SLEDGEHAMMER_INDEX = 0
 ITEM_NET_INDEX = 1
 ITEM_KNIFE_INDEX = 2

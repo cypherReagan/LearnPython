@@ -203,10 +203,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 	# CHEAT: DELETE ITEM				
 	elif (userCmdStr == GameData.DELETE_ITEM_CHEAT_CMD_STR):
 		
-		theItem = Prompt_User_For_Item_Delete()
-		
-		if (theItem != None):
-			thePlayer.theInventoryMgr.update_item(theItem)
+		thePlayer = Prompt_User_For_Item_Delete(thePlayer)
 		
 	# TOGGLE DEBUG MODE
 	elif (userCmdStr == GameData.DEBUG_MODE_TOGGLE_CMD_STR):
@@ -265,6 +262,7 @@ def Prompt_User_For_Item_Add():
 		if ((typeAnswer == "u") or (typeAnswer == "w")):
 		
 			itemAnswer = raw_input("(Enter item name) > ")
+			itemIndex = Entity.Item.get_itemIndex_from_itemStr(itemAnswer)
 		
 			if (itemIndex == GameData.INVALID_INDEX):
 				print "Please enter valid item name!"
@@ -296,21 +294,24 @@ def Prompt_User_For_Item_Add():
 	
 	return theItem
 	
-	def Prompt_User_For_Item_Delete():
+def Prompt_User_For_Item_Delete(thePlayer):
 		
-		theItem = None
+	done = False
+	
+	while (not done):
+	
+		itemAnswer = raw_input("(Enter item name) > ")
 		
-		done = False
-		
-		while (not done):
-		
-			itemAnswer = raw_input("(Enter item name) > ")
+		if (itemAnswer == 'q'):
+			done = True
+		else:
+			isDelete = thePlayer.theInventoryMgr.delete_named_item(itemAnswer)
 			
-			if (itemAnswer == 'q'):
+			if (isDelete):
+				print "Successfully deleted item: %s" % itemAnswer
 				done = True
 			else:
-				# TODO: put removal process inside theInventoryMgr
-				theItem = thePlayer.theInventoryMgr.get_item(itemAnswer)
+				print "Unable to delete item: %s" % itemAnswer
 				
 				if (theItem != None):
 					theItem.subtract_count(1)

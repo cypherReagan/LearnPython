@@ -156,7 +156,7 @@ class InventoryMgr(object):
 			theItem = self.__itemList[itemIndex]
 			
 			if (theItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
-				theItem.add_count(1)
+				theItem.add_count(newItem.get_count())
 				
 			elif (theItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
 				theItem.ammo += newItem.ammo
@@ -190,7 +190,12 @@ class InventoryMgr(object):
 		return retIndex
 	
 	
+	# Updates corresponding list item with given item.
+	# Removes any depleted items.
+	# Returns True if successful, else False
 	def update_item(self, updatedItem):
+	
+		retVal = True
 	
 		# first try fast indexing
 		itemIndex = self.is_item_index_valid(updatedItem)
@@ -213,11 +218,13 @@ class InventoryMgr(object):
 			if (not updatedItem.is_usable()):
 				# we have a depleted item => get rid of it
 				isUpdate = False
-				self.delete_item(updatedItem)
+				retVal = self.delete_item(updatedItem)
 				
 			if (isUpdate):
 				self.__itemList[itemIndex] = updatedItem
+				retVal = True
 		
+		return retVal
 		
 	def get_item(self, itemNameStr):
 		retItem = None
@@ -255,25 +262,60 @@ class InventoryMgr(object):
 		return retIndex
 	
 	
+	# Delete given item from itemList.
+	# Returns True if successful, else False
 	def delete_item(self, theItem):
+	
+		retVal = False
+	
 		itemIndex = self.is_item_index_valid(theItem)
 		
 		if (itemIndex != GameData.INVALID_INDEX):
 			# we have a valid item
 				
 			try:	
-				#self.__itemList.remove(theItem.get_name())
 				del self.__itemList[itemIndex]
 				
 				# After any deletion (potentially in the middle of list), 
 				# need to recalculate each item index to stay accurate.
 				self.calculate_item_indices()
+				
+				Utils.Log_Event("Deleting %s from Inventory..." % theItem.get_name())
+				retVal = True
+				
 			except:
 				Utils.Show_Game_Error("Unable to delete inventory item %s at index %d" % (theItem.get_name(), itemIndex))
 		else:
 			Utils.Show_Game_Error("Unable to delete inventory item - %s: Invalid Index" % theItem.get_name())
 			#TODO: figure out why battery will not delete
+			
+		return retVal
 		
+	
+	# Delete given item based on name.
+	# Returns True if successful, else False
+	def delete_named_item(self, itemNameStr):
+	
+		retVal = False
+	
+		theItem = self.get_item(itemNameStr)
+		
+		if (theItem == None):
+			Utils.Log_Event("InventoryMgr::delete_named_item() - could not get item: %s" % itemNameStr)
+		else:
+		
+			if (theItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
+				theItem.subtract_count(1)
+				retVal = self.update_item(theItem)
+				
+			elif (theItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
+				# remove weapon entirely from list
+				retVal = self.delete_item(theItem)
+				
+				
+		return retVal
+			
+			
 		
 	def calculate_item_indices(self):
 		
@@ -424,12 +466,12 @@ class Item(object):
 	# Returns INVALID_INDEX if ID could not be accessed
 	def get_typeID(self):
 		
-		retIndex = GameData.INVALID_INDEX
+		retID = GameData.INVALID_INDEX
 		
 		if (self.__constData != None):
-			retIndex = self.__constData[GameData.ITEM_DATA_TYPE_INDEX]
+			retID = self.__constData[GameData.ITEM_DATA_TYPE_INDEX]
 		
-		return retIndex
+		return retID
 			
 		
 		
