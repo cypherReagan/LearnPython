@@ -144,9 +144,13 @@ class InventoryMgr(object):
 		return retVal
 		
 	# Add new item to inventory list
+	# Returns:
+	#	RT_SUCCESS 			- item added successfully
+	#	RT_OUT_OF_INV_SPACE	- inventory does not have space for item
+	#	RT_FAILURE			- any other failure in adding item
 	def add_item(self, newItem):
 		
-		retVal = True
+		retStat = GameData.RT_SUCCESS
 		
 		# we have valid item name
 		itemIndex = self.get_item_index(newItem.get_name())
@@ -156,27 +160,60 @@ class InventoryMgr(object):
 			theItem = self.__itemList[itemIndex]
 			
 			if (theItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
-				theItem.add_count(newItem.get_count())
 				
+				retStat = self.check_capacity_for_item(newItem)
+				
+				if (retStat == GameData.RT_SUCCESS):
+				
+					theItem.add_count(newItem.get_count())
+					
 			elif (theItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
 				theItem.ammo += newItem.ammo
 			else:
 				# should never get here
 				Utils.Show_Game_Error(GameData.INVALID_TYPE_ID_STR)
-				retVal = False
+				retStat = Utils.RT_FAILURE
 		else:
 			# brand new item to add
+			retStat = self.check_capacity_for_item(newItem)
 			
-			# Determine collection index for fast referencing
-			listIndex = len (self.__itemList)
-			newItem.index = listIndex
-			
-			self.__itemList.append(newItem) 
-			
-			Utils.Log_Event("Adding %s to Inventory..." % newItem.get_name())
-			Utils.Log_Event("DEBUG_JW:newItem.index = %d" % newItem.index)
+			if (retStat == GameData.RT_SUCCESS):		
+				# we are good to add item to list
+				
+				# Determine collection index for fast referencing
+				listIndex = len (self.__itemList)
+				newItem.index = listIndex
+				
+				self.__itemList.append(newItem) 
+				
+				Utils.Log_Event("Adding %s to Inventory..." % newItem.get_name())
+				Utils.Log_Event("DEBUG_JW:newItem.index = %d" % newItem.index)
 		
-		return retVal
+		return retStat
+		
+		
+	# Determine if inventory has capacity for given item
+	# Returns:
+	#	RT_SUCCESS 			- inventory has space to add item
+	#	RT_OUT_OF_INV_SPACE	- inventory does not have space for item
+	#	RT_FAILURE			- item size cannot be determined
+	def check_capacity_for_item(self, theItem):
+		
+		retStat = GameData.RT_SUCCESS
+		
+		itemSize = theItem.get_size()
+			
+		if (itemSize == GameData.INVALID_INDEX): 
+			Utils.Show_Game_Error("InventoryMgr::is_capacity_for_item() - could not get size from item: %s" % theItem.get_name())
+			retStat = Utils.RT_FAILURE
+		else: 
+			invSize = itemSize + self.get_total_size()
+			
+			if (invSize > GameData.INV_SIZE_MAX):
+				retStat = GameData.RT_OUT_OF_INV_SPACE
+		
+		return retStat
+		
 		
 	def is_item_index_valid(self, theItem):
 		retIndex = GameData.INVALID_INDEX
@@ -326,6 +363,7 @@ class InventoryMgr(object):
 	def print_items(self):
 		
 		print "%s\nINVENTORY:\n\n" % GameData.SEPARATOR_LINE_STR
+		print "SIZE: %d\n\n" % self.get_total_size()
 		
 		itemNum = 1 # start label counting here (even though index starts at 0)
 		itemListLen = len(GameData.ITEM_DATA_LIST)
@@ -361,12 +399,21 @@ class InventoryMgr(object):
 					# done looking so quit
 					break
 				
-			print "%d. %s\t\t%s %s" % (itemNum, invItem.get_name(), countNameStr, invCountStr)
+			print "%d. %s\t\t%s %s\tSize: %d" % (itemNum, invItem.get_name(), countNameStr, invCountStr, invItem.get_size())
 			itemNum += 1
 		
 		print "\n\n%s" % GameData.SEPARATOR_LINE_STR
 		
 		
+	# Returns size of current item collection
+	def get_total_size(self):
+		
+		retSize = 0
+		
+		for item in self.__itemList:
+			retSize += item.get_size()
+		
+		return retSize
 		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -474,6 +521,25 @@ class Item(object):
 		return retID
 			
 		
+	# Accessor for item size
+	# Returns INVALID_INDEX if size could not be accessed
+	def get_size(self):
+	
+		retSize = GameData.INVALID_INDEX
+		
+		if (self.__constData != None):
+		
+			itemType = self.__constData[GameData.ITEM_DATA_TYPE_INDEX]
+		
+			if (itemType == GameData.ITEM_UTILITY_TYPE_ID):
+				retSize = self.get_count() * self.__constData[GameData.ITEM_DATA_SIZE_INDEX]
+			elif (itemType == GameData.ITEM_WEAPON_TYPE_ID):
+				retSize = self.__constData[GameData.ITEM_DATA_SIZE_INDEX]
+			else:
+				# Should never get here
+				Utils.Show_Game_Error("Item::get_size() - invalid item type %d" % itemType)
+		
+		return retSize
 		
 		
 #---------------------------------------------------

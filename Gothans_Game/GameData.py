@@ -28,6 +28,14 @@ SEPARATOR_LINE_STR = '----------------------------------------------------------
 
 INFINITE_VAL = -1000
 
+# Return Status
+RT_SUCCESS = 0
+RT_FAILURE = 1
+
+RT_OUT_OF_INV_SPACE = 2
+# End Status
+
+
 # User Action Commands
 HELP_REQ_CMD_STR = '?'
 QUIT_CMD_STR = 'quit'

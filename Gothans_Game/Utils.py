@@ -195,10 +195,14 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 		
 		if (theItem != None):
 
-			isGoodItem = thePlayer.theInventoryMgr.add_item(theItem) 
+			stat = thePlayer.theInventoryMgr.add_item(theItem) 
 			
-			if (not isGoodItem):
-				Show_Game_Error("Could not add item to player!")
+			if (stat <> GameData.RT_SUCCESS):
+				errMsg = "Could not add %s to player!\n" % theItem.get_name()
+				if (stat == GameData.RT_OUT_OF_INV_SPACE):
+					errMsg += "\t\tNot enough space in the inventory to add item"
+
+				Show_Game_Error(errMsg)
 			
 	# CHEAT: DELETE ITEM				
 	elif (userCmdStr == GameData.DELETE_ITEM_CHEAT_CMD_STR):
@@ -313,14 +317,8 @@ def Prompt_User_For_Item_Delete(thePlayer):
 			else:
 				print "Unable to delete item: %s" % itemAnswer
 				
-				if (theItem != None):
-					theItem.subtract_count(1)
-					
-					done = True
-				else:
-					print "Please enter valid item name!"
-		
-		return theItem
+	return thePlayer
+
 	
 # ------------------------ Start Linux code ------------------------
 # ------------------------------------------------------------------
