@@ -209,6 +209,7 @@ MAP_CMD_STR_QUIT = 'q'
 MAP_CMD_STR_PAUSE = 'p'
 MAP_CMD_STR_CMD_PROMPT = 'y'
 MAP_CMD_STR_DUMP_DATA = 'l'
+MAP_CMD_STR_SHOOT = '\x20'	# space
 MAP_CMD_STR_USE = 'e'
 MAP_CMD_STR_OBJV = 'o'
 MAP_CMD_STR_MOVE_NORTH = 'w'
@@ -223,9 +224,11 @@ MAP_CMD_STR_RIFLE = '5'
 MAP_CMD_STR_BATTERY = '6'
 MAP_CMD_STR_BOMB = '7'
 
-# Special cmd not entered in the map UI but used to 
-# summarize all move cmds in the MapDisplay cmd processing.
-MAP_CMD_STR_MOVE = 'mv' 
+# ########## Special cmds not entered in the map UI ##########
+
+MAP_CMD_STR_MOVE = 'mv' # summarizes all move cmds in the MapDisplay cmd processing
+MAP_CMD_STR_PLACE_ENTITY = 'plc' # entity placement cmd
+
 
 MAP_CMD_STR_LIST = [
 					MAP_CMD_STR_QUIT,
@@ -356,7 +359,7 @@ MAP_BRIDGE_STR1_UCODE = u"""
 
 MAP_CC_STR1_UCODE = u"""
 ▐▄▄▄▄▄▄▄=▄▄=▄
-▐░░░░░░░░@░+▐
+▐░░░░░░░░@░░▐
 ▐░░░░░░░░░░░▐
 ▐▄▄▄▄▄▄▄░░░░▐
 ▐▓▓▓▓▓▓▐░░░░▐

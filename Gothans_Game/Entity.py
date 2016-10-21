@@ -6,10 +6,10 @@ import Utils
 
 #---------------------------------------------------
 #---------------------------------------------------
-# Class: Player
+# Class: Actor
 #--------------------------------------------------
 #---------------------------------------------------		
-class Player(object):
+class Actor(object):
 	
 	
 	def __init__(self):
@@ -19,7 +19,8 @@ class Player(object):
 		self.__health = 100
 		self.xp = 0
 		self.theInventoryMgr = InventoryMgr()
-		self.dir = GameData.DIR_NORTH
+		self.__dir = GameData.DIR_NORTH
+		self.Id = GameData.INVALID_INDEX
 		
 		# start with default melee weapons
 		# TODO: ultimately allow player to find these in map
@@ -40,24 +41,24 @@ class Player(object):
 			self.__health = 0
 			
 	def get_dir_num(self):
-		return self.dir
+		return self.__dir
 		
 	def get_dir_str(self):
-		dirStr = GameData.DIR_DICT.get(self.dir)
+		dirStr = GameData.DIR_DICT.get(self.__dir)
 		return dirStr
 	
-	# Updates player's direction.
+	# Updates actor's direction.
 	# Returns True if successful, else False
 	def set_dir(self, newDir):
 		retVal = False
 		
 		if ((newDir >= 0) and (newDir < len(GameData.DIR_STR_LIST))):
-			self.Dir = newDir
+			self.__dir = newDir
 			retVal = True
-			Utils.Log_Event("Changing Player Dir to %d" % self.dir)
+			Utils.Log_Event("Changing actor Dir to %d" % self.__dir)
 			
 		else:
-			Utils.Log_Event("Invalid change attempt of Player Dir to %d" % newDir)
+			Utils.Log_Event("Invalid change attempt of actor Dir to %d" % newDir)
 			
 			return retVal
 			
@@ -556,6 +557,7 @@ class UtilityItem(Item):
 
 		self.populate_constData(newDataIndex)
 		self.__count = newCount
+		self.Id = GameData.INVALID_INDEX
 
 		
 	
@@ -604,6 +606,7 @@ class WeaponItem(Item):
 		
 		self.populate_constData(newDataIndex)
 		self.ammo = newAmmo
+		self.Id = GameData.INVALID_INDEX
 		
 		
 	def is_usable(self):

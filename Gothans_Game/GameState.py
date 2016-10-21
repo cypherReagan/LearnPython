@@ -1,5 +1,6 @@
 import Entity
 import Utils
+import GameEngine
 
 
 __TheGameState = None
@@ -65,13 +66,14 @@ def Set_Player(newPlayer):
 class StateData(object):
 	
 	thePlayer = None
-	mapExitDict = {}
+	engineContainer = None
 	
 	def __init__(self):
 		self.reset_state()
 		
 	def reset_state(self):
-		self.thePlayer = Entity.Player()
+		self.thePlayer = Entity.Actor()
+		self.engineContainer = GameEngine.MapObjContainer()
 		
 	def clear(self):
 		pass

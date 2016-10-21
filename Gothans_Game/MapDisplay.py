@@ -17,6 +17,11 @@ class MapPos(object):
 	def __init__(self, newXVal, newYVal):
 		self.xPos = newXVal
 		self.yPos = newYVal
+		
+	def get_str(self):
+		retStr = "(%d, %d)" % (self.xPos, self.yPos)
+		
+		return retStr
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -27,6 +32,7 @@ class MapPos(object):
 #		dir			- direction in which map obj faces
 #		category	- category for map obj
 #		tileChar	- char representing map obj
+#		objID		- unique identifier for tile
 #---------------------------------------------------
 #---------------------------------------------------
 		
@@ -41,6 +47,28 @@ class MapTile(object):
 		# TODO: add color attribute if desired
 
 		
+#---------------------------------------------------
+#---------------------------------------------------
+# Class: NumGenerator
+#
+# Member Variables:	
+#		__counter - tracks the last assigned number
+#---------------------------------------------------
+#---------------------------------------------------
+class NumGenerator(object):
+
+	def __init__(self, startVal):
+		self.reset(startVal)
+		
+	def reset(self, startVal):
+		self.__counter = startVal
+	
+	def get_num(self):
+		retVal = self.__counter
+		self.__counter += 1
+		
+		return retVal
+		
 	
 #---------------------------------------------------
 #---------------------------------------------------
@@ -48,6 +76,7 @@ class MapTile(object):
 #
 # Member Variables:	
 #		__tileList		- list of all tiles in display map
+#		__idGen			- objID generator
 #		
 #---------------------------------------------------
 #---------------------------------------------------
@@ -55,6 +84,7 @@ class MapTile(object):
 class MapDisplayData(object):
 	
 	def __init__(self, mapStr):
+		self.__idGen = NumGenerator(0)
 		self.set_map_str(mapStr)
 		
 		
@@ -124,6 +154,25 @@ class MapDisplayData(object):
 			mapCategory = GameData.INVALID_INDEX
 			
 		return mapCategory
+		
+	# Get mapChar based on tile category.
+	# Returns empty char if mapChar cannot be calculated.
+	def get_char_from_category(self, mapTileCategory, charIndex=GameData.INVALID_INDEX):
+	
+		mapChar = ''
+			
+		if ((mapTileCategory >= 0) and (mapTileCategory < len(GameData.MAP_CHARS_LIST))):
+		
+			itemList = GameData.MAP_CHARS_LIST[mapTileCategory]
+			
+			if (charIndex == GameData.INVALID_INDEX):
+				# caller did not provide list index so default to the 1st list entry
+				charIndex = 0
+			
+			if (len(itemList) > charIndex):
+				mapChar = itemList[charIndex]
+		
+		return mapChar
 			
 	# Creates tile obj from map data
 	# Post-Cond: __exitPosList updated with any map exit positions
@@ -137,7 +186,7 @@ class MapDisplayData(object):
 			Utils.Show_Game_Error("Invalid character for map tile construction: \"%s\" (%d, %d)." % (newChar, xVal, yVal))
 		else:
 			mapPos = MapPos(xVal, yVal)
-			objID = len (self.__tileList) # use list index as unique ID
+			objID = self.__idGen.get_num() # use unique ID
 			mapTile = MapTile(mapPos, GameData.DIR_INVALID, category, newChar, objID)
 			
 			dbg_showCreation = False
@@ -173,6 +222,20 @@ class MapDisplayData(object):
 				count += 1
 		
 		return retIndex
+		
+	# Get map tile based on position.
+	# Returns None if error
+	def get_tile_from_Pos(self, pos):
+	
+		retTile = None
+		
+		tileIndex = self.get_tileIndex_from_Pos(pos)
+		
+		if (tileIndex != GameData.INVALID_INDEX):
+			retTile = self.__tileList[tileIndex]
+		
+		return retTile
+	
 		
 	# Swaps tile data while preserving position data.
 	def swap_tiles_in_List(self, index1, index2):
@@ -216,6 +279,7 @@ class MapDisplayData(object):
 	def get_target_tile_from_Dir(self, objID, objDir):
 	
 		retTile = None
+		retTileIndex = GameData.INVALID_INDEX
 		
 		currentTileIndex = self.get_tileIndex_from_ID(objID)
 		
@@ -253,7 +317,7 @@ class MapDisplayData(object):
 					
 		return retTile, retTileIndex
 	
-	
+	# TODO: Remove
 	def process_map_cmd(self, mapActionItem):
 		
 		retActionItem = None
@@ -267,6 +331,8 @@ class MapDisplayData(object):
 				self.dump_map_data()
 			elif(mapActionItem.cmdStr == GameData.MAP_CMD_STR_USE):
 				retActionItem = self.use_map_item(mapActionItem.objID, mapActionItem.dir)
+			elif(mapActionItem.cmdStr == GameData.MAP_CMD_STR_PLACE_ENTITY):
+				retActionItem = self.place_entity_map_item(mapActionItem.entityType, mapActionItem.entityPos)
 			else:
 				pass
 			
@@ -290,7 +356,7 @@ class MapDisplayData(object):
 					
 					
 	def use_map_item(self, objID, objDir):		
-		retActionItem = None
+		retID = GameData.INVALID_INDEX
 			
 		targetTile, targetTileIndex = self.get_target_tile_from_Dir(objID, objDir)
 			
@@ -298,9 +364,68 @@ class MapDisplayData(object):
 			if (targetTile.category == GameData.MAP_CAT_EXIT):
 				# send back the exit obj ID for engine processing
 				retID = targetTile.objID
-				retActionItem = GameEngine.MapActionItem(GameData.MAP_CMD_STR_USE, retID)
-				
-				Utils.Log_Event("MapDisplay::use_map_item() - returning exit event retID = %d" % retID)
-				Utils.Log_Event(retActionItem.dump_data())
+
+		else:
+			pass
 		
-		return retActionItem
+		return retID 
+		
+		
+	# Function places entity to target pos to empty tile in map
+	# Returns new objID if successful placement, else INVALID_INDEX 
+	def place_map_entity(self, newEntityChar, newEntityPos):		
+	
+		retID = GameData.INVALID_INDEX
+		
+		if (newEntityPos == None):
+			Utils.Show_Game_Error("MapDisplay::place_map_entity() - invalid newEntityPos!")
+		else:
+			# determine if target tile is empty
+			targetTile = self.get_tile_from_Pos(newEntityPos)
+			
+			if (targetTile == None):
+				Utils.Show_Game_Error("MapDisplay::place_map_entity() - could not get targetTile from position = %s" % newEntityPos.get_str())
+			else:
+			
+				newEntityCategory = self.get_category_from_char(newEntityChar)
+				
+				if (newEntityCategory == GameData.INVALID_INDEX):
+					Utils.Show_Game_Error("MapDisplay::place_map_entity() - invalid newEntityChar = %s" % newEntityChar)
+				else:
+				
+					if (targetTile.category == GameData.MAP_CAT_OPEN_SPACE):
+					
+						testStr = "DEBUG_JW - MapDisplay::place_map_entity() - tile %s : category = %d" % (newEntityPos.get_str(), targetTile.category)
+						Utils.Show_Game_Error(testStr) 
+					
+						# free to place entity
+						newTile = self.make_tile(newEntityPos.xPos, newEntityPos.yPos, newEntityChar)
+						
+						if (newTile == None):
+							Utils.Show_Game_Error("MapDisplay::place_map_entity() - could not get newTile from position vals = (%d, %d)" % (newEntityPos.xPos, newEntityPos.yPos))
+						else:
+							# find out where to insert the new entity
+							tileIndex = self.get_tileIndex_from_Pos(newEntityPos)
+							
+							if (tileIndex == GameData.INVALID_INDEX):
+								Utils.Show_Game_Error("MapDisplay::place_map_entity() - could not get tileIndex from pos = %d" % thePos.get_str())
+							else:
+								# insert entity into map and return actionItem listing the new entity ID
+								newTile.objID = self.__idGen.get_num()
+								self.__tileList[tileIndex] = newTile
+								retID = newTile.objID
+													
+		return retID
+
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
