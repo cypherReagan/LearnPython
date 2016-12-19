@@ -129,7 +129,7 @@ def run_keypad_override(self, thePlayer):
 	batteryItem = thePlayer.theInventoryMgr.get_item(GameData.ITEM_BATTERY_STR)
 	
 	if (batteryItem == None):
-		print GameData.NVALID_OVERRIDE_EQUIP_RSP
+		print GameData.INVALID_OVERRIDE_EQUIP_RSP
 	else:
 		Utils.Clear_Screen()
 		print GameData.OverrideDiagram3Wire
@@ -686,7 +686,8 @@ class Bridge(Scene):
 			
 			mapStrList = [GameData.MAP_CC_STR1_UCODE, GameData.MAP_TEST_STR1_UCODE, GameData.MAP_TEST_STR2_UCODE]
 			
-			aMapEngine = GameEngine.MapEngine("Bridge", self.sceneMsgStr, mapStrList)
+			#aMapEngine = GameEngine.MapEngine("Bridge", self.sceneMsgStr, mapStrList)
+			aMapEngine = GameEngine.MapEngine(GameData.LEVEL_DATA_FILE_BRIDGE_STR)
 			aMapEngine.execute()
 			
 			retScene = GameData.ESCAPE_POD_KEY

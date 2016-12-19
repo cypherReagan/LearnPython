@@ -302,8 +302,8 @@ MAP_CAT_LINE_FEED = 6
 # Map Obj characters
 MAP_CHAR_OPEN_SPACE = u'░'
 MAP_CHAR_PLAYER = '+'
-MAP_CHAR_ENEMY = '@'
-MAP_CHAR_DOOR = '='
+MAP_CHAR_ENEMY = '@'# TODO: make list
+MAP_CHAR_DOOR = '='# TODO: make list
 MAP_CHAR_SOLID_SPACE = u'▓'
 MAP_CHAR_LINE_FEED = '\n'
 
@@ -326,6 +326,11 @@ MAP_CHARS_LIST = [	MAP_CHAR_WALL_LIST,
 					[MAP_CHAR_SOLID_SPACE],
 					[MAP_CHAR_LINE_FEED]]
 					
+# Files containing level data
+LEVEL_DATA_FILE_CC_STR = "CcData.txt"
+LEVEL_DATA_FILE_AMORY_STR = "AmoryData.txt"
+LEVEL_DATA_FILE_BRIDGE_STR = "BridgeData.txt"
+LEVEL_DATA_FILE_ESCAPE_STR = "EscapeData.txt"
 					
 # Game Maps
 MAP_BRIDGE_STR1_TEST = """
@@ -375,14 +380,14 @@ MAP_CC_STR1_UCODE = u"""
 MAP_TEST_STR1_UCODE = u"""
 ▐▄▄▄▄▄▄▄▄▄▄▄▄
 ▐░░░░░░░░░░░▐
-▐░░░░+░░░░░░▐
+▐░░░░░░░░░░░▐
 ▐▄▄▄▄=▄▄▄▄▄▄▐
 """
 
 MAP_TEST_STR2_UCODE = u"""
 ▐▄▄▄▄▄▄▄▄▄▄=▄
 ▐▓▓▓▓▓▓▐░░░░▐
-▐▓▓▓▓▓▓▐░░░+▐
+▐▓▓▓▓▓▓▐░░░░▐
 ▐▄▄▄▄▄▄▄▄▄▄=▐
 """
 

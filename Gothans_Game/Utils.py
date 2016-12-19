@@ -393,9 +393,9 @@ def Get_Key_Input(prompStr):
 #---------------------------------------------------
 class EventLog:
 
-	__LogFile = None
-
 	def __init__(self, fileNameStr="", initMsgStr=""):
+		
+		self._LogFile = None
 	
 		if (fileNameStr != ""):
 			self.open_for_write(fileNameStr, initMsgStr)
@@ -453,10 +453,9 @@ class EventLog:
 #---------------------------------------------------
 class MapLog(object):
 	
-	__gameLogStrList = []
-	
 	def __init__(self):
 		
+		self.__gameLogStrList = []
 		self.clear()
 			
 	

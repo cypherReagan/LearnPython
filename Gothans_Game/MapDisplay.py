@@ -72,7 +72,7 @@ class NumGenerator(object):
 	
 #---------------------------------------------------
 #---------------------------------------------------
-# Class: MapDisplayData
+# Class: MapContainer
 #
 # Member Variables:	
 #		__tileList		- list of all tiles in display map
@@ -81,7 +81,7 @@ class NumGenerator(object):
 #---------------------------------------------------
 #---------------------------------------------------
 		
-class MapDisplayData(object):
+class MapContainer(object):
 	
 	def __init__(self, mapStr):
 		self.__idGen = NumGenerator(0)
@@ -120,7 +120,7 @@ class MapDisplayData(object):
 		
 		mapStr = ""
 		
-		#print "DEBUG_JW: MapDisplayData.__tileList len = %d" % len(self.__tileList)
+		#print "DEBUG_JW: MapContainer.__tileList len = %d" % len(self.__tileList)
 		
 		for mapItem in self.__tileList:
 			mapStr += mapItem.tileChar
@@ -128,16 +128,18 @@ class MapDisplayData(object):
 		return mapStr
 		
 		
-	def dump_map_data(self):
+	def dump_map_data(self, mapIndex):
+		# TODO: implement mapIndex dump
 		
-		print "###### MAP DATA ######"
+		print "###### MAP %d DATA ######" % mapIndex
 		
 		for mapItem in self.__tileList:
 			print "\'%s\' , category = %d, ID = %d at (%d, %d)" % (mapItem.tileChar, mapItem.category, mapItem.objID, mapItem.pos.xPos, mapItem.pos.yPos)
 		
 		raw_input(GameData.PROMPT_CONTINUE_STR)
 		
-	def get_category_from_char(self, mapChar):
+	@staticmethod
+	def get_category_from_char(mapChar):
 		
 		mapCategory = 0 # categories are 0-based
 		foundMatch = False
@@ -393,9 +395,14 @@ class MapDisplayData(object):
 					Utils.Show_Game_Error("MapDisplay::place_map_entity() - invalid newEntityChar = %s" % newEntityChar)
 				else:
 				
-					if (targetTile.category == GameData.MAP_CAT_OPEN_SPACE):
-					
-						testStr = "DEBUG_JW - MapDisplay::place_map_entity() - tile %s : category = %d" % (newEntityPos.get_str(), targetTile.category)
+					if (targetTile.category != GameData.MAP_CAT_OPEN_SPACE):
+						if (newEntityChar == targetTile.tileChar):
+							# placing tile that already exists so return existing ID
+							retID = targetTile.objID
+							Utils.Show_Game_Error("MapDisplay::place_map_entity() - duplicate placement at pos = %s" % newEntityPos.get_str()) 
+					else:
+						# placing entity in open space
+						testStr = "DEBUG_JW (notAnError): MapDisplay::place_map_entity() - tile %s : category = %d" % (newEntityPos.get_str(), targetTile.category)
 						Utils.Show_Game_Error(testStr) 
 					
 						# free to place entity
@@ -408,7 +415,7 @@ class MapDisplayData(object):
 							tileIndex = self.get_tileIndex_from_Pos(newEntityPos)
 							
 							if (tileIndex == GameData.INVALID_INDEX):
-								Utils.Show_Game_Error("MapDisplay::place_map_entity() - could not get tileIndex from pos = %d" % thePos.get_str())
+								Utils.Show_Game_Error("MapDisplay::place_map_entity() - could not get tileIndex from pos = %d" % newEntityPos.get_str())
 							else:
 								# insert entity into map and return actionItem listing the new entity ID
 								newTile.objID = self.__idGen.get_num()

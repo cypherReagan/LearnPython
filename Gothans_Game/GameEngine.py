@@ -1,3 +1,4 @@
+import GothansGame
 import MapDisplay
 import GameData
 import GameState
@@ -86,8 +87,6 @@ class PlaceEntityActionItem(MapActionItem):
 #---------------------------------------------------
 #---------------------------------------------------
 class MapLog(object):
-	
-	__gameLogStrList = []
 	
 	def __init__(self):
 		

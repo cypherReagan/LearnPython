@@ -110,8 +110,12 @@ class Actor(object):
 class InventoryMgr(object):
 	
 	# TODO - determine why these cannot go in init()
-	__itemList = []
-	__currentItemIndex = GameData.INVALID_INDEX
+	#__itemList = []
+	#__currentItemIndex = GameData.INVALID_INDEX
+	
+	def __init__(self):
+		self.__itemList = []
+		self.__currentItemIndex = GameData.INVALID_INDEX
 		
 	# Accessors for current item
 	def get_current_item(self):
@@ -423,7 +427,7 @@ class InventoryMgr(object):
 #---------------------------------------------------		
 class Item(object):
 	
-	__constData = None
+	__constData = None # TODO: determine if this should be static
 	
 	def __init__(self):
 		# should never get here
@@ -483,7 +487,7 @@ class Item(object):
 	
 		if (not Item.is_itemDataIndex_valid(itemDataIndex)):
 			defaultIndex = 0
-			Utils.Show_Game_Error("Cannot get item data from index %d... defaulting index to %d!" % (itemIndex, defaultIndex))
+			Utils.Show_Game_Error("Cannot get item data from index %d... defaulting index to %d!" % (itemDataIndex, defaultIndex))
 			itemDataIndex = defaultIndex
 			
 		itemData = GameData.ITEM_DATA_LIST[itemDataIndex]
@@ -549,9 +553,6 @@ class Item(object):
 #--------------------------------------------------
 #---------------------------------------------------		
 class UtilityItem(Item):
-	
-	# default unique members to invalid values
-	__count = GameData.INVALID_INDEX
 		
 	def __init__(self, newDataIndex, newCount):
 
@@ -598,9 +599,6 @@ class UtilityItem(Item):
 #--------------------------------------------------
 #---------------------------------------------------		
 class WeaponItem(Item):
-
-	# default unique members to invalid values
-	ammo = GameData.INVALID_INDEX
 	
 	def __init__(self, newDataIndex, newAmmo):
 		
@@ -632,12 +630,16 @@ class WeaponItem(Item):
 # Class: MapExitItem
 #
 # Member Variables:	
-#		linkIndex	- pointer to next map
+#       mapIndex	- exit's map location in level
+#       pos			- exit position in current map
+#		linkIndex	- pointer to next map in level
 #--------------------------------------------------
 #---------------------------------------------------		
 class MapExitItem(object):
 
-	def __init__(self, newMapIndex=GameData.INVALID_INDEX):
-		self.linkIndex = newMapIndex
-		Utils.Log_Event("Creating MapExitItem with linkIndex = %d" % self.linkIndex)
+	def __init__(self,  newMapIndex, newexitPos,  newLinkIndex):
+		self.mapIndex = newMapIndex
+		self.pos = newexitPos
+		self.linkIndex = newLinkIndex
+		Utils.Log_Event("Creating MapExitItem with mapIndex = %d, pos = %s, linkIndex = %d" % (self.mapIndex, self.pos.get_str(),  self.linkIndex))
 

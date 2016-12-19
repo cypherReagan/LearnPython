@@ -17,16 +17,12 @@ import Utils
 import Scene
 
 
-		
-			
-if __name__ == '__main__':	
-	# Start here when this file is being run directly (rather than being imported).
-	
+def start():
 	# Housekeeping items
 	gameLogFileStr = os.getcwd() + '\\' + GameData.GAME_LOG_STR
 	Utils.Init_Game_Log(gameLogFileStr, "Starting Game")
 	goodState = GameState.Init()
-	
+
 	if (not goodState):
 		Utils.Log_Event("Could not init game state!")
 		Utils.Exit_Game()
@@ -36,6 +32,11 @@ if __name__ == '__main__':
 		aGame = Engine.SceneEngine(aMap)
 		
 		aGame.play()
+			
+			
+if __name__ == '__main__':	
+	# Start here when this file is being run directly (rather than being imported).
+	start()
 	
 	
 	
