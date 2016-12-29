@@ -289,6 +289,8 @@ DIR_DICT = {DIR_NORTH	: "North",
 			DIR_WEST	: "West"}
 
 # Map Obj categories
+# WARNING!!!
+# must be in sync with MAP_CHARS_LIST
 MAP_CAT_WALL = 0
 MAP_CAT_OPEN_SPACE = 1
 MAP_CAT_PLAYER = 2
@@ -296,36 +298,56 @@ MAP_CAT_ENEMY = 3
 MAP_CAT_EXIT = 4
 MAP_CAT_SOLID_SPACE = 5
 MAP_CAT_LINE_FEED = 6
+MAP_CAT_ITEM = 7
 
 
 
 # Map Obj characters
-MAP_CHAR_OPEN_SPACE = u'░'
-MAP_CHAR_PLAYER = '+'
-MAP_CHAR_ENEMY = '@'# TODO: make list
-MAP_CHAR_DOOR = '='# TODO: make list
-MAP_CHAR_SOLID_SPACE = u'▓'
-MAP_CHAR_LINE_FEED = '\n'
+MAP_CHAR_WALL_LIST = [u'▄',u'▐']				# 0
+MAP_CHAR_OPEN_SPACE = u'░'					# 1
+MAP_CHAR_PLAYER = '+'								# 2
+MAP_CHAR_ENEMY_LIST = ['^','v','>','<']	# 3
+MAP_CHAR_EXIT_LIST = ['=',u'║']				# 4
+MAP_CHAR_SOLID_SPACE = u'▓'					# 5
+MAP_CHAR_LINE_FEED = '\n'						# 6
+MAP_CHAR_ITEM = '$'									# 7
 
 MAP_CHAR_OPEN_SPACE_ASCII = '`'
 MAP_CHAR_PLAYER_ASCII = '+'
-MAP_CHAR_ENEMY_ASCII = '@'
+MAP_CHAR_ENEMY_ASCII = 'v'
 MAP_CHAR_DOOR_ASCII = '='
 MAP_CHAR_SOLID_SPACE_ASCII = '#'
 
-MAP_CHAR_WALL_LIST = [u'▐','|',u'▄']
 MAP_CHAR_WALL_LIST_ASCII = ['_','|','-']
 
-MAP_CHAR_LIST_ENEMY = [MAP_CHAR_ENEMY]
+MAP_CHAR_ENEMY_LIST = ['^','v','>','<']
+MAP_CHAR_DOOR_LIST = ['=',u'║']
 
 MAP_CHARS_LIST = [	MAP_CHAR_WALL_LIST,
 					[MAP_CHAR_OPEN_SPACE],
 					[MAP_CHAR_PLAYER],
-					MAP_CHAR_LIST_ENEMY,
-					[MAP_CHAR_DOOR],
+					MAP_CHAR_ENEMY_LIST,
+					MAP_CHAR_EXIT_LIST,
 					[MAP_CHAR_SOLID_SPACE],
-					[MAP_CHAR_LINE_FEED]]
+					[MAP_CHAR_LINE_FEED], 
+					[MAP_CHAR_ITEM]]
 					
+# Tile orientation
+TILE_ORIENTATION_HOROZONTAL = 0
+TILE_ORIENTATION_VERTICAL = 1
+
+TILE_ORIENTATION_MAX_NUM = 2
+
+
+				
+# Tile layers
+MAP_TILE_LAYER_INDEX_FLOOR = 0
+MAP_TILE_LAYER_INDEX_STAND = 1
+
+MAP_TILE_LAYERS_NUM = 2
+
+MAP_TILE_LAYER_LIST = [MAP_TILE_LAYER_INDEX_FLOOR, MAP_TILE_LAYER_INDEX_STAND]
+				
 # Files containing level data
 LEVEL_DATA_FILE_CC_STR = "CcData.txt"
 LEVEL_DATA_FILE_AMORY_STR = "AmoryData.txt"
@@ -364,7 +386,7 @@ MAP_BRIDGE_STR1_UCODE = u"""
 
 MAP_CC_STR1_UCODE = u"""
 ▐▄▄▄▄▄▄▄=▄▄=▄
-▐░░░░░░░░@░░▐
+▐░░░░░░░░░░░▐
 ▐░░░░░░░░░░░▐
 ▐▄▄▄▄▄▄▄░░░░▐
 ▐▓▓▓▓▓▓▐░░░░▐
