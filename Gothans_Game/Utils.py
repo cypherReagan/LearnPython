@@ -4,7 +4,7 @@ from sys import exit
 import os
 import platform
 import datetime
-import GameData
+import SharedConst as Const
 import GameState
 import Entity
 import signal
@@ -85,7 +85,7 @@ def Exit_Game():
 	if (__GameLog != None):
 		__GameLog.close()
 	Clear_Screen()
-	print "%s\nFINAL SCORE: %d\n\n%s\n%s" % (GameData.SEPARATOR_LINE_STR, thePlayer.xp, GameData.GameOverMsg, GameData.SEPARATOR_LINE_STR)
+	print "%s\nFINAL SCORE: %d\n\n%s\n%s" % (Const.SEPARATOR_LINE_STR, thePlayer.xp, Const.GameOverMsg, Const.SEPARATOR_LINE_STR)
 	exit(1)
 	
 	
@@ -94,7 +94,7 @@ def Show_Game_Error(errMsgStr):
 	errMsgStr = "GAME ERROR: " + errMsgStr
 	errorSeparator = '************************************************************'
 	
-	printMsgStr = "%s\n***  %s  ***\n%s\n%s\n" % (errorSeparator, errMsgStr, errorSeparator, GameData.PROMPT_CONTINUE_STR)
+	printMsgStr = "%s\n***  %s  ***\n%s\n%s\n" % (errorSeparator, errMsgStr, errorSeparator, Const.PROMPT_CONTINUE_STR)
 	Log_Event("\n" + printMsgStr)
 	raw_input(printMsgStr)	
 	
@@ -108,7 +108,7 @@ def Prompt_User_Action(thePlayer):
 		answer = raw_input("[Action]> ")
 		answer = answer.lower()
 		
-		if answer in GameData.CMD_STR_LIST:
+		if answer in Const.CMD_STR_LIST:
 			# we have a good command
 			isCmdHandled, thePlayer = Process_Common_Actions(answer, thePlayer)
 			
@@ -116,7 +116,7 @@ def Prompt_User_Action(thePlayer):
 				# not a common command so let caller handle this one
 				done = True
 		else:
-			print GameData.INVALID_ENTRY_RSP
+			print Const.INVALID_ENTRY_RSP
 				
 	return answer, thePlayer
 	
@@ -127,23 +127,23 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 	retVal = True
 	
 	# HELP
-	if (userCmdStr == GameData.HELP_REQ_CMD_STR):
+	if (userCmdStr == Const.HELP_REQ_CMD_STR):
 		
-		print GameData.SEPARATOR_LINE_STR
+		print Const.SEPARATOR_LINE_STR
 		print "GAME COMMANDS:\n"
 
-		for entry in GameData.CMD_STR_LIST:
+		for entry in Const.CMD_STR_LIST:
 			isDbgPrint = False
-			if (GameData.DEBUG_MODE):
+			if (Const.DEBUG_MODE):
 				isDbgPrint = True
 				
-			if (isDbgPrint or (GameData.CHEAT_CMD_STR not in entry)):
+			if (isDbgPrint or (Const.CHEAT_CMD_STR not in entry)):
 				print entry
 		
-		print GameData.SEPARATOR_LINE_STR
+		print Const.SEPARATOR_LINE_STR
 	
 	# QUIT
-	elif (userCmdStr == GameData.QUIT_CMD_STR):
+	elif (userCmdStr == Const.QUIT_CMD_STR):
 		print "Are you sure want to quit?"
 		answer = raw_input("(y/n)> ")
 		
@@ -152,11 +152,11 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 			Exit_Game()
 	
 	# PLAYER STATISTICS
-	elif (userCmdStr == GameData.PLAYER_STATS_CMD_STR):
+	elif (userCmdStr == Const.PLAYER_STATS_CMD_STR):
 		thePlayer.print_stats()
 		
 	# INVENTORY
-	elif (userCmdStr == GameData.PLAYER_INV_CMD_STR):
+	elif (userCmdStr == Const.PLAYER_INV_CMD_STR):
 		thePlayer.theInventoryMgr.print_items()
 		
 		# give user option to equip inventory item from this menu
@@ -165,17 +165,17 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 		try:
 			answerNum = int(raw_input("Input>"))
 		except:
-			answerNum = GameData.INVALID_INDEX
+			answerNum = Const.INVALID_INDEX
 		
-		if (answerNum != GameData.INVALID_INDEX):
+		if (answerNum != Const.INVALID_INDEX):
 			thePlayer = Equip_Player_From_Cmd(answerNum,  thePlayer)
 		
 	# CHEAT: FULL HEALTH 
-	elif (userCmdStr == GameData.FULL_HEALTH_CHEAT_CMD_STR):
+	elif (userCmdStr == Const.FULL_HEALTH_CHEAT_CMD_STR):
 		thePlayer.set_health(100)
 		
 	# CHEAT: SET HEALTH
-	elif (userCmdStr == GameData.SET_HEALTH_CHEAT_CMD_STR):
+	elif (userCmdStr == Const.SET_HEALTH_CHEAT_CMD_STR):
 		
 		done = False
 		
@@ -189,7 +189,7 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 				print "Please enter a valid number!"
 				
 	# CHEAT: ADD ITEM
-	elif (userCmdStr == GameData.ADD_ITEM_CHEAT_CMD_STR):
+	elif (userCmdStr == Const.ADD_ITEM_CHEAT_CMD_STR):
 		
 		theItem = Prompt_User_For_Item_Add()
 		
@@ -197,20 +197,20 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 
 			stat = thePlayer.theInventoryMgr.add_item(theItem) 
 			
-			if (stat <> GameData.RT_SUCCESS):
+			if (stat <> Const.RT_SUCCESS):
 				errMsg = "Could not add %s to player!\n" % theItem.get_name()
-				if (stat == GameData.RT_OUT_OF_INV_SPACE):
+				if (stat == Const.RT_OUT_OF_INV_SPACE):
 					errMsg += "\t\tNot enough space in the inventory to add item"
 
 				Show_Game_Error(errMsg)
 			
 	# CHEAT: DELETE ITEM				
-	elif (userCmdStr == GameData.DELETE_ITEM_CHEAT_CMD_STR):
+	elif (userCmdStr == Const.DELETE_ITEM_CHEAT_CMD_STR):
 		
 		thePlayer = Prompt_User_For_Item_Delete(thePlayer)
 		
 	# TOGGLE DEBUG MODE
-	elif (userCmdStr == GameData.DEBUG_MODE_TOGGLE_CMD_STR):
+	elif (userCmdStr == Const.DEBUG_MODE_TOGGLE_CMD_STR):
 		Toggle_DEBUG_MODE()
 
 	else:
@@ -225,11 +225,11 @@ def Process_Common_Actions(userCmdStr, thePlayer):
 def Toggle_DEBUG_MODE():
 	msgStr = ""
 	
-	if (not GameData.DEBUG_MODE):
-		GameData.DEBUG_MODE = True
+	if (not Const.DEBUG_MODE):
+		Const.DEBUG_MODE = True
 		msgStr = "DEBUG_MODE = True"
 	else:
-		GameData.DEBUG_MODE = False
+		Const.DEBUG_MODE = False
 		msgStr = "DEBUG_MODE = False"
 		
 	print msgStr
@@ -245,11 +245,11 @@ def Equip_Player_From_Cmd(itemIndex, thePlayer):
 	else:
 		itemIndex = itemIndex - 1
 	
-	if (len(GameData.ITEM_DATA_LIST) > itemIndex):
+	if (len(Const.ITEM_DATA_LIST) > itemIndex):
 		
 		if (thePlayer.equip_item(itemIndex)):
-			item = GameData.ITEM_DATA_LIST[itemIndex]
-			itemStr = item[GameData.ITEM_DATA_NAME_INDEX]
+			item = Const.ITEM_DATA_LIST[itemIndex]
+			itemStr = item[Const.ITEM_DATA_NAME_INDEX]
 			Write_Map_Log("Equipped %s" % itemStr)
 	
 	return thePlayer
@@ -268,7 +268,7 @@ def Prompt_User_For_Item_Add():
 			itemAnswer = raw_input("(Enter item name) > ")
 			itemIndex = Entity.Item.get_itemIndex_from_itemStr(itemAnswer)
 		
-			if (itemIndex == GameData.INVALID_INDEX):
+			if (itemIndex == Const.INVALID_INDEX):
 				print "Please enter valid item name!"
 			else:
 		
@@ -278,7 +278,7 @@ def Prompt_User_For_Item_Add():
 					
 				elif (typeAnswer == "w"):
 					# weapon item
-					theItem = Entity.WeaponItem(itemIndex, GameData.INFINITE_VAL)
+					theItem = Entity.WeaponItem(itemIndex, Const.INFINITE_VAL)
 			
 		elif (typeAnswer == "q"):
 			# quit
@@ -432,7 +432,7 @@ class EventLog:
 			timeStampStr = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
 			self.__LogFile.write(timeStampStr + "\t---\t" + eventStr + "\n")
 			
-			if (GameData.DEBUG_MODE):
+			if (Const.DEBUG_MODE):
 				# pipe log to map UI
 				Write_Map_Log(eventStr)
 	
@@ -463,7 +463,7 @@ class MapLog(object):
 		self.__logCount = 0
 		del self.__gameLogStrList[:]
 		
-		for count in range(0, GameData.MAX_MAP_LOG_ENTRIES):
+		for count in range(0, Const.MAX_MAP_LOG_ENTRIES):
 			self.__gameLogStrList.append("")
 		
 	
@@ -493,5 +493,10 @@ class MapLog(object):
 		for logStr in self.__gameLogStrList:
 			gameLogStr = gameLogStr + logStr + "\n"
 			
-		print "\n\n%s\n%s\n%s\n\n" % (GameData.SEPARATOR_LINE_STR,  gameLogStr,  GameData.SEPARATOR_LINE_STR)
+		print "\n\n%s\n%s\n%s\n\n" % (Const.SEPARATOR_LINE_STR,  gameLogStr,  Const.SEPARATOR_LINE_STR)
 
+		
+		
+
+if __name__ == '__main__':	
+	Engine.start()
