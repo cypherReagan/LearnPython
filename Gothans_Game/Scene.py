@@ -6,9 +6,9 @@
 from sys import exit
 from random import randint
 import random
-import GameData
+import SharedConst as Const
 import GameState
-import GameEngine
+import Engine
 import Entity
 import Utils
 
@@ -24,13 +24,13 @@ def run_melee_attack(self, thePlayer):
 	while (not done):
 		answer = raw_input("%s> " % anAttack.get_option_str(thePlayer))
 		
-		if (answer == GameData.HELP_REQ_CMD_STR):
+		if (answer == Const.HELP_REQ_CMD_STR):
 			anAttack.print_desc()
 		else:
 			userAttack = anAttack.translate_cmd(answer)
 			
 			if (userAttack == MeleeAttack.INVALID):
-				print GameData.INVALID_ENTRY_RSP
+				print Const.INVALID_ENTRY_RSP
 			else:
 				gothanAttack = anAttack.get_random_attack()
 				print "\nThe Gothan attacks with %s" % anAttack.get_attack_name(gothanAttack)
@@ -77,7 +77,7 @@ def run_keyPad(cheatCode, retryMax, thePlayer):
 	while (not done):
 		answer = raw_input("[Code]> ")
 		
-		if (answer == GameData.OVERRIDE_CMD_STR):
+		if (answer == Const.OVERRIDE_CMD_STR):
 		
 			retVal, thePlayer = run_keypad_override(thePlayer)
 			done = True
@@ -123,17 +123,17 @@ def run_keypad_override(self, thePlayer):
 	keypadWire, doorWire, batteryWire = anOverride.get_wire_color()
 	
 	print "You pry off the panel to reveal a series of wires.\n"
-	print GameData.OverrideDiagram2Wire
-	print GameData.OverrideDiagram2Wire_Seed % (keypadWire, doorWire)
+	print Const.OverrideDiagram2Wire
+	print Const.OverrideDiagram2Wire_Seed % (keypadWire, doorWire)
 	
-	batteryItem = thePlayer.theInventoryMgr.get_item(GameData.ITEM_BATTERY_STR)
+	batteryItem = thePlayer.theInventoryMgr.get_item(Const.ITEM_BATTERY_STR)
 	
 	if (batteryItem == None):
-		print GameData.INVALID_OVERRIDE_EQUIP_RSP
+		print Const.INVALID_OVERRIDE_EQUIP_RSP
 	else:
 		Utils.Clear_Screen()
-		print GameData.OverrideDiagram3Wire
-		print GameData.OverrideDiagram3Wire_Seed % (keypadWire, doorWire, batteryWire) 
+		print Const.OverrideDiagram3Wire
+		print Const.OverrideDiagram3Wire_Seed % (keypadWire, doorWire, batteryWire) 
 	
 		print "\n\nChoose the wires to cross.\n"
 		done = False
@@ -144,14 +144,14 @@ def run_keypad_override(self, thePlayer):
 			wireStr1 = raw_input("\tWire 1 %s> " % Override.OVERRIDE_OPTION_STR)
 			wireStr1 = anOverride.translate_cmd(wireStr1)
 			
-			if (wireStr1 == GameData.INVALID_ENTRY_RSP):
-				print GameData.INVALID_ENTRY_RSP
+			if (wireStr1 == Const.INVALID_ENTRY_RSP):
+				print Const.INVALID_ENTRY_RSP
 			else:
 				wireStr2 = raw_input("\n\tWire 2 %s> " % Override.OVERRIDE_OPTION_STR)
 				wireStr2 = anOverride.translate_cmd(wireStr2)
 				
-				if (wireStr2 == GameData.INVALID_ENTRY_RSP):
-					print GameData.INVALID_ENTRY_RSP
+				if (wireStr2 == Const.INVALID_ENTRY_RSP):
+					print Const.INVALID_ENTRY_RSP
 				else:
 					done = True
 		
@@ -199,14 +199,14 @@ class MeleeAttack:
 	
 		retStr = self.ATTACK_OPTION_STR
 		
-		if (thePlayer.theInventoryMgr.get_item(GameData.ITEM_SLEDGEHAMMER_STR) != None):
-			retStr += "1. %s\n" % GameData.ITEM_SLEDGEHAMMER_STR
+		if (thePlayer.theInventoryMgr.get_item(Const.ITEM_SLEDGEHAMMER_STR) != None):
+			retStr += "1. %s\n" % Const.ITEM_SLEDGEHAMMER_STR
 			
-		if (thePlayer.theInventoryMgr.get_item(GameData.ITEM_NET_STR) != None):
-			retStr += "\t2. %s\n" % GameData.ITEM_NET_STR
+		if (thePlayer.theInventoryMgr.get_item(Const.ITEM_NET_STR) != None):
+			retStr += "\t2. %s\n" % Const.ITEM_NET_STR
 			
-		if (thePlayer.theInventoryMgr.get_item(GameData.ITEM_KNIFE_STR) != None):
-			retStr += "\t3. %s\n\n" % GameData.ITEM_KNIFE_STR
+		if (thePlayer.theInventoryMgr.get_item(Const.ITEM_KNIFE_STR) != None):
+			retStr += "\t3. %s\n\n" % Const.ITEM_KNIFE_STR
 		
 		return retStr
 	
@@ -241,7 +241,7 @@ class MeleeAttack:
 		Net (n) - beats sledgehammer, loses to knife\n
 		Knife (k) - beats net, loses to sledgehammer\n
 		"""
-		print "%s\n%s\n%s" % (GameData.SEPARATOR_LINE_STR, desc, GameData.SEPARATOR_LINE_STR)
+		print "%s\n%s\n%s" % (Const.SEPARATOR_LINE_STR, desc, Const.SEPARATOR_LINE_STR)
 		
 	# Gets the attack name string based on number.
 	# Returns empty string on invalid attackNum.
@@ -249,11 +249,11 @@ class MeleeAttack:
 		retStr = ""
 		
 		if (attackNum == self.SLEDGEHAMMER_NUM):
-			retStr = GameData.ITEM_SLEDGEHAMMER_STR
+			retStr = Const.ITEM_SLEDGEHAMMER_STR
 		elif (attackNum == self.NET_NUM):
-			retStr = GameData.ITEM_NET_STR
+			retStr = Const.ITEM_NET_STR
 		elif (attackNum == self.KNIFE_NUM):
-			retStr = GameData.ITEM_KNIFE_STR
+			retStr = Const.ITEM_KNIFE_STR
 		
 		return retStr
 		
@@ -321,7 +321,7 @@ class Override(object):
 	wireDict = {
 			'keypad': '',
 			'door': '',
-			GameData.ITEM_BATTERY_STR: ''
+			Const.ITEM_BATTERY_STR: ''
 		}
 	
 	def __init__(self):
@@ -335,7 +335,7 @@ class Override(object):
 		
 		self.wireDict['keypad'] = wireColorList[self.KEYPAD_ID]
 		self.wireDict['door'] = wireColorList[self.DOOR_ID]
-		self.wireDict[GameData.ITEM_BATTERY_STR] = wireColorList[self.BATTERY_ID]
+		self.wireDict[Const.ITEM_BATTERY_STR] = wireColorList[self.BATTERY_ID]
 		
 	
 	# Determines successful override given 2 input wires. 
@@ -346,10 +346,10 @@ class Override(object):
 		retVal = False
 		
 		print "DEBUG_JW: door wire = %s" % self.wireDict['door']
-		print "DEBUG_JW: battery wire = %s" % self.wireDict[GameData.ITEM_BATTERY_STR]
+		print "DEBUG_JW: battery wire = %s" % self.wireDict[Const.ITEM_BATTERY_STR]
 		
-		cond1 = ((wireStr1 == self.wireDict['door']) and (wireStr2 == self.wireDict[GameData.ITEM_BATTERY_STR]))
-		cond2 = ((wireStr1 == self.wireDict[GameData.ITEM_BATTERY_STR]) and (wireStr2 == self.wireDict['door']))
+		cond1 = ((wireStr1 == self.wireDict['door']) and (wireStr2 == self.wireDict[Const.ITEM_BATTERY_STR]))
+		cond2 = ((wireStr1 == self.wireDict[Const.ITEM_BATTERY_STR]) and (wireStr2 == self.wireDict['door']))
 		
 		if ((cond1) or (cond2)):
 			retVal = True
@@ -361,13 +361,13 @@ class Override(object):
 		
 		keyPadStr = self.wireDict['keypad']
 		doorStr = self.wireDict['door']
-		batteryStr = self.wireDict[GameData.ITEM_BATTERY_STR]
+		batteryStr = self.wireDict[Const.ITEM_BATTERY_STR]
 		
 		return keyPadStr, doorStr, batteryStr
 		
 		
 	# Verify that the wire menu input is valid and convert them if necessary.
-	# Returns converted wire string if valid, else GameData.INVALID_ENTRY_RSP.
+	# Returns converted wire string if valid, else Const.INVALID_ENTRY_RSP.
 	def translate_cmd(self, wireStr):
 	
 		retStr = '' 
@@ -394,7 +394,7 @@ class Override(object):
 		if (isValid):
 			retStr = wireStr
 		else:
-			retStr = GameData.INVALID_ENTRY_RSP
+			retStr = Const.INVALID_ENTRY_RSP
 		
 		return retStr
 
@@ -413,11 +413,11 @@ class SceneMap(object):
 	def __init__(self, startScene):
 	
 		# declare dict for all scenes
-		self.__sceneDict = {	GameData.CORRIDOR_KEY	: CentralCorridor(),
-								GameData.ARMORY_KEY 	: Armory(),
-								GameData.BRIDGE_KEY		: Bridge(),
-								GameData.ESCAPE_POD_KEY	: EscapePod(),
-								GameData.DEATH_KEY		: Death()	}
+		self.__sceneDict = {	Const.CORRIDOR_KEY	: CentralCorridor(),
+								Const.ARMORY_KEY 	: Armory(),
+								Const.BRIDGE_KEY		: Bridge(),
+								Const.ESCAPE_POD_KEY	: EscapePod(),
+								Const.DEATH_KEY		: Death()	}
 								
 		self.firstScene = startScene
 		
@@ -460,11 +460,11 @@ class Scene(object):
 class Death(Scene):
 	
 	def enter(self, thePlayer):
-		retScene = GameData.FINISH_RESULT_KEY
+		retScene = Const.FINISH_RESULT_KEY
 		self.ThePlayer = thePlayer
 		
 		Utils.Clear_Screen()
-		print GameData.ART_STR_SKULL
+		print Const.ART_STR_SKULL
 		print "You died in a really horrifying way!"
 
 		print "Do you want to play again (y/n)?"
@@ -473,17 +473,17 @@ class Death(Scene):
 		if (answer.lower() == 'y'):
 			# TODO: implement way to save score before resetting
 			thePlayer.reset_data()
-			retScene = GameData.CORRIDOR_KEY
+			retScene = Const.CORRIDOR_KEY
 		
 		return retScene, thePlayer
 		
 
 class CentralCorridor(Scene):
 	
-	sceneMsgStr = "%s\n%s\nLocation: Central Corridor\n%s\n%s\n\nA Gothan stands before you. You must defeat him with an attack before proceeding.\n" % (GameData.SEPARATOR_LINE_STR, GameData.SEPARATOR_LINE_STR, GameData.SEPARATOR_LINE_STR, GameData.SEPARATOR_LINE_STR)
+	sceneMsgStr = "%s\n%s\nLocation: Central Corridor\n%s\n%s\n\nA Gothan stands before you. You must defeat him with an attack before proceeding.\n" % (Const.SEPARATOR_LINE_STR, Const.SEPARATOR_LINE_STR, Const.SEPARATOR_LINE_STR, Const.SEPARATOR_LINE_STR)
 	
 	def enter(self, thePlayer):
-		retScene = GameData.DEATH_KEY
+		retScene = Const.DEATH_KEY
 		self.ThePlayer = thePlayer
 		
 		Utils.Clear_Screen()
@@ -494,31 +494,31 @@ class CentralCorridor(Scene):
 		while (not done):
 			answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 			
-			if ((answer == GameData.CC_CHEAT_CMD_STR) or (answer == GameData.ATTACK_CMD_STR)):
+			if ((answer == Const.CC_CHEAT_CMD_STR) or (answer == Const.ATTACK_CMD_STR)):
 				done = True
 			else:
-				print GameData.INVALID_ENTRY_RSP
+				print Const.INVALID_ENTRY_RSP
 		
-		if (answer == GameData.CC_CHEAT_CMD_STR):
-			retScene = GameData.ARMORY_KEY
+		if (answer == Const.CC_CHEAT_CMD_STR):
+			retScene = Const.ARMORY_KEY
 		else:
-			if (answer == GameData.ATTACK_CMD_STR):
+			if (answer == Const.ATTACK_CMD_STR):
 				thePlayer = run_melee_attack(thePlayer)
 				
 				if (thePlayer.get_health() > 0):
-					retScene = GameData.ARMORY_KEY
+					retScene = Const.ARMORY_KEY
 				
 			else:
 				# user chose not to attack => Death
 				print "The Gothan proceeds to dismember you."
 		
-		if (retScene == GameData.ARMORY_KEY):
+		if (retScene == Const.ARMORY_KEY):
 			
 			# TODO - allow player to search (maybe include randomly generated item)
 			print "Moving to the Armory...\n"
 			
 			
-		raw_input(GameData.PROMPT_CONTINUE_STR)	
+		raw_input(Const.PROMPT_CONTINUE_STR)	
 		
 		return retScene, thePlayer
 		
@@ -530,7 +530,7 @@ class Armory(Scene):
 	sceneMsgStr = "\nLocation: Laser Weapon Armory.\nThis is where you get the neutron bomb that must be placed on the bridge to blow up the ship.\n You must guess the keypad code to obtain the bomb.\n"
 	
 	def enter(self, thePlayer):
-		retScene = GameData.DEATH_KEY
+		retScene = Const.DEATH_KEY
 		self.ThePlayer = thePlayer
 		
 		Utils.Clear_Screen()
@@ -543,31 +543,31 @@ class Armory(Scene):
 		
 			answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 			
-			if ((answer == GameData.ARMORY_CHEAT_CMD_STR) or (answer == GameData.KEYPAD_CMD_STR)):
+			if ((answer == Const.ARMORY_CHEAT_CMD_STR) or (answer == Const.KEYPAD_CMD_STR)):
 				done = True
 			else:
-				print GameData.INVALID_ENTRY_RSP
+				print Const.INVALID_ENTRY_RSP
 			
 		
-		if (answer == GameData.ARMORY_CHEAT_CMD_STR):
-			retScene = GameData.BRIDGE_KEY
+		if (answer == Const.ARMORY_CHEAT_CMD_STR):
+			retScene = Const.BRIDGE_KEY
 		else:
-			if (answer == GameData.KEYPAD_CMD_STR):
+			if (answer == Const.KEYPAD_CMD_STR):
 
-				isWin, thePlayer = run_keyPad(GameData.ARMORY_CHEAT_CMD_STR, 4, thePlayer)
+				isWin, thePlayer = run_keyPad(Const.ARMORY_CHEAT_CMD_STR, 4, thePlayer)
 				
 				if (isWin):
-					retScene = GameData.BRIDGE_KEY
+					retScene = Const.BRIDGE_KEY
 				else:
 					# Failed door code entry scenario
 					print "A Gothan hears the alarms and moves in to attack!"
 					
 					answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 		
-					if (answer == GameData.ARMORY_CHEAT_CMD_STR):
-						retScene = GameData.BRIDGE_KEY
+					if (answer == Const.ARMORY_CHEAT_CMD_STR):
+						retScene = Const.BRIDGE_KEY
 					else:
-						if (answer == GameData.ATTACK_CMD_STR):
+						if (answer == Const.ATTACK_CMD_STR):
 							isWin = run_melee_attack(thePlayer)
 							
 							#DEBUG_JW - remove 'or not isWin' which is only for testing
@@ -587,22 +587,22 @@ class Armory(Scene):
 								while (not done):
 									answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 
-									if (answer == GameData.ARMORY_CHEAT_CMD_STR):
-										retScene = GameData.BRIDGE_KEY
+									if (answer == Const.ARMORY_CHEAT_CMD_STR):
+										retScene = Const.BRIDGE_KEY
 									else:
-										if (answer == GameData.OVERRIDE_CMD_STR):
+										if (answer == Const.OVERRIDE_CMD_STR):
 											isWin, thePlayer = run_keypad_override(thePlayer)
 											
 											if (isWin):
-												retScene = GameData.BRIDGE_KEY
+												retScene = Const.BRIDGE_KEY
 												done = True
 											
-										elif (answer == GameData.SEARCH_CMD_STR):
+										elif (answer == Const.SEARCH_CMD_STR):
 											print "You search the Gothans dead body and find a battery pack!"
 											
-											thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(GameData.ITEM_BATTERY_INDEX, 1))
+											thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(Const.ITEM_BATTERY_INDEX, 1))
 										else:
-											print GameData.INVALID_ENTRY_RSP
+											print Const.INVALID_ENTRY_RSP
 								
 						else:
 							# user chose not to attack => Death
@@ -612,15 +612,15 @@ class Armory(Scene):
 				# no keypad command. We should never get here
 				Utils.Show_Game_Error("Invalid command.")
 				
-		if (retScene == GameData.BRIDGE_KEY):
-			thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(GameData.ITEM_BOMB_ITEM, 1))
+		if (retScene == Const.BRIDGE_KEY):
+			thePlayer.theInventoryMgr.add_item(Entity.UtilityItem(Const.ITEM_BOMB_ITEM, 1))
 			
 			# TODO - allow user to pick up bomb and other weapons
 			
 			print "Moving to the Bridge...\n"
 			
 		
-		raw_input(GameData.PROMPT_CONTINUE_STR)	
+		raw_input(Const.PROMPT_CONTINUE_STR)	
 		
 		return retScene, thePlayer
 		
@@ -630,12 +630,12 @@ class Bridge(Scene):
 	sceneMsgStr = "Location: Bridge.\nA Gothan stands in your way.\nYou must defeat him in order to set the bomb and attempt to escape.\n"
 	
 	def enter(self, thePlayer):
-		retScene = GameData.DEATH_KEY
+		retScene = Const.DEATH_KEY
 		self.ThePlayer = thePlayer
 		
 		Utils.Clear_Screen()
 		print self.sceneMsgStr
-		raw_input(GameData.PROMPT_CONTINUE_STR)
+		raw_input(Const.PROMPT_CONTINUE_STR)
 		
 		isMelee = False
 		
@@ -645,14 +645,14 @@ class Bridge(Scene):
 			
 			answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 			
-			if (answer == GameData.BRIDGE_CHEAT_CMD_STR):
-				retScene = GameData.ESCAPE_POD_KEY
+			if (answer == Const.BRIDGE_CHEAT_CMD_STR):
+				retScene = Const.ESCAPE_POD_KEY
 			else:
-				if (answer == GameData.ATTACK_CMD_STR):
+				if (answer == Const.ATTACK_CMD_STR):
 					thePlayer = run_melee_attack(thePlayer)
 					
 					if (thePlayer.get_health() > 0):
-						retScene = GameData.ESCAPE_POD_KEY
+						retScene = Const.ESCAPE_POD_KEY
 				else:
 					# user chose not to attack
 					print "The Gothan liquifies you with his plasma rifle"
@@ -671,11 +671,11 @@ class Bridge(Scene):
 				tmpStrU = u"░▓▐▄"
 				print tmpStrU
 				
-				#aMapDisplay = MapDisplay.MapDisplayData(GameData.MAP_BRIDGE_STR1_UCODE)
+				#aMapDisplay = Display.MapDisplayData(Const.MAP_BRIDGE_STR1_UCODE)
 				#mapStr = u"%s" % aMapDisplay.get_map()
 				#print mapStr
 				
-				aMapEngine = GameEngine.MapEngine(GameData.MAP_BRIDGE_STR1_UCODE)
+				aMapEngine = Engine.MapEngine(Const.MAP_BRIDGE_STR1_UCODE)
 				thePlayer = aMapEngine.run_map(thePlayer)
 			
 				#Utils.Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
@@ -684,19 +684,19 @@ class Bridge(Scene):
 			
 			GameState.Set_Player(thePlayer)
 			
-			mapStrList = [GameData.MAP_CC_STR1_UCODE, GameData.MAP_TEST_STR1_UCODE, GameData.MAP_TEST_STR2_UCODE]
+			mapStrList = [Const.MAP_CC_STR1_UCODE, Const.MAP_TEST_STR1_UCODE, Const.MAP_TEST_STR2_UCODE]
 			
-			#aMapEngine = GameEngine.MapEngine("Bridge", self.sceneMsgStr, mapStrList)
-			aMapEngine = GameEngine.MapEngine(GameData.LEVEL_DATA_FILE_BRIDGE_STR)
+			#aMapEngine = Engine.MapEngine("Bridge", self.sceneMsgStr, mapStrList)
+			aMapEngine = Engine.MapEngine(Const.LEVEL_DATA_FILE_BRIDGE_STR)
 			aMapEngine.execute()
 			
-			retScene = GameData.ESCAPE_POD_KEY
+			retScene = Const.ESCAPE_POD_KEY
 			
-		if (retScene == GameData.ESCAPE_POD_KEY):
+		if (retScene == Const.ESCAPE_POD_KEY):
 			print "Moving to the Escape Pod Bay...\n"
 			
 			
-		raw_input(GameData.PROMPT_CONTINUE_STR)	
+		raw_input(Const.PROMPT_CONTINUE_STR)	
 		
 		return retScene, thePlayer
 		pass
@@ -707,7 +707,7 @@ class EscapePod(Scene):
 	sceneMsgStr = "Location: Escape Pod Bay.\nYou must guess the correct escape pod in order to leave.\n"
 	
 	def enter(self, thePlayer):
-		retScene = GameData.DEATH_KEY
+		retScene = Const.DEATH_KEY
 		self.ThePlayer = thePlayer
 		
 		Utils.Clear_Screen()
@@ -718,12 +718,15 @@ class EscapePod(Scene):
 		
 		
 		
-		if ((answer == escapeNumStr) or (answer == GameData.EP_CHEAT_CMD_STR)):
+		if ((answer == escapeNumStr) or (answer == Const.EP_CHEAT_CMD_STR)):
 			print "\n\nYou picked the correct escape pod and successfully removed yourself from a sticky situation. Good job!"
 			
-			retScene = GameData.FINISH_RESULT_KEY
+			retScene = Const.FINISH_RESULT_KEY
 		
 		return retScene, thePlayer
 		pass
 		
 		
+		
+if __name__ == '__main__':	
+	Engine.start()

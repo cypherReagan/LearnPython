@@ -531,3 +531,9 @@ OverrideDiagram3Wire = """
 		"""
 		
 OverrideDiagram3Wire_Seed = '\t\t    %s          %s          %s'
+
+
+
+
+if __name__ == '__main__':	
+	Engine.start()

@@ -1,5 +1,5 @@
-import GothansGame
-import GameData
+
+import SharedConst as Const
 import Utils
 import copy
 
@@ -37,26 +37,26 @@ class MapPos(object):
 class MapTile(object):
 	
 	# static members
-	__DEFAULT_LAYER = GameData.MAP_TILE_LAYER_INDEX_STAND
+	__DEFAULT_LAYER = Const.MAP_TILE_LAYER_INDEX_STAND
 	
 	@staticmethod
 	def get_tileChar_orientation(tileChar, tileCategory):
 		
-		retOrientation = GameData.INVALID_INDEX
+		retOrientation = Const.INVALID_INDEX
 		
-		if (tileCategory == GameData.MAP_CAT_WALL):
-			retOrientation = MapTile.get_tileChar_orientation_from_list(tileChar, GameData.MAP_CHAR_WALL_LIST)
-		elif (tileCategory == GameData.MAP_CAT_EXIT):
-			retOrientation = MapTile.get_tileChar_orientation_from_list(tileChar, GameData.MAP_CHAR_EXIT_LIST)
+		if (tileCategory == Const.MAP_CAT_WALL):
+			retOrientation = MapTile.get_tileChar_orientation_from_list(tileChar, Const.MAP_CHAR_WALL_LIST)
+		elif (tileCategory == Const.MAP_CAT_EXIT):
+			retOrientation = MapTile.get_tileChar_orientation_from_list(tileChar, Const.MAP_CHAR_EXIT_LIST)
 		
 		return retOrientation
 		
 	@staticmethod
 	def get_tileChar_orientation_from_list(tileChar, tileCharList):
 		
-		retVal = GameData.INVALID_INDEX
+		retVal = Const.INVALID_INDEX
 		
-		for count in range(0, GameData.TILE_ORIENTATION_MAX_NUM):
+		for count in range(0, Const.TILE_ORIENTATION_MAX_NUM):
 			if (tileCharList[count] == tileChar):
 				retVal = count
 				break
@@ -74,7 +74,7 @@ class MapTile(object):
 		
 		layerListLen = len(newLayerList)
 		
-		if (layerListLen != GameData.MAP_TILE_LAYERS_NUM):
+		if (layerListLen != Const.MAP_TILE_LAYERS_NUM):
 			Utils.Show_Game_Error("MapTile::init() - invalid layerList length!")
 		else:
 			self.__layerList = copy.deepcopy(newLayerList)
@@ -87,42 +87,42 @@ class MapTile(object):
 	def __init_all_layers(self):
 	
 		# fill solid space to prevent holes inside walls
-		self.__fill_layers(GameData.MAP_CAT_SOLID_SPACE)
+		self.__fill_layers(Const.MAP_CAT_SOLID_SPACE)
 		# fill empty space to prevent air/floor hole
-		self.__fill_layers(GameData.MAP_CAT_OPEN_SPACE)
+		self.__fill_layers(Const.MAP_CAT_OPEN_SPACE)
 		# fill line feed to maintain consistent layer display
-		self.__fill_layers(GameData.MAP_CAT_LINE_FEED)
+		self.__fill_layers(Const.MAP_CAT_LINE_FEED)
 		# fill wall to prevent gaps
-		self.__fill_layers(GameData.MAP_CAT_WALL)
+		self.__fill_layers(Const.MAP_CAT_WALL)
 		
-		floorCategory = self.get_category(GameData.MAP_TILE_LAYER_INDEX_FLOOR)
-		standCategory = self.get_category(GameData.MAP_TILE_LAYER_INDEX_STAND)
+		floorCategory = self.get_category(Const.MAP_TILE_LAYER_INDEX_FLOOR)
+		standCategory = self.get_category(Const.MAP_TILE_LAYER_INDEX_STAND)
 		
-		if ((floorCategory == GameData.INVALID_INDEX) and (standCategory == GameData.MAP_CAT_EXIT)):
+		if ((floorCategory == Const.INVALID_INDEX) and (standCategory == Const.MAP_CAT_EXIT)):
 			# the floor underneath the door should be a wall to prevent a hole			
-			standChar = self.get_char(GameData.MAP_TILE_LAYER_INDEX_STAND)
-			tileOrientation = MapTile.get_tileChar_orientation(self.get_char(GameData.MAP_TILE_LAYER_INDEX_STAND), GameData.MAP_CAT_EXIT)
+			standChar = self.get_char(Const.MAP_TILE_LAYER_INDEX_STAND)
+			tileOrientation = MapTile.get_tileChar_orientation(self.get_char(Const.MAP_TILE_LAYER_INDEX_STAND), Const.MAP_CAT_EXIT)
 			
-			if (tileOrientation == GameData.INVALID_INDEX):
+			if (tileOrientation == Const.INVALID_INDEX):
 				Utils.Show_Game_Error("MapTile::__init_all_layers() - Invalid tileOrientation for standChar = \'%s\'" % standChar)
 			else:
-				exitChar = GameData.MAP_CHAR_EXIT_LIST[tileOrientation]
-				self.set_category(GameData.MAP_CAT_EXIT, GameData.MAP_TILE_LAYER_INDEX_FLOOR)
-				self.set_char(exitChar, GameData.MAP_TILE_LAYER_INDEX_FLOOR)
+				exitChar = Const.MAP_CHAR_EXIT_LIST[tileOrientation]
+				self.set_category(Const.MAP_CAT_EXIT, Const.MAP_TILE_LAYER_INDEX_FLOOR)
+				self.set_char(exitChar, Const.MAP_TILE_LAYER_INDEX_FLOOR)
 			
 			
 	# Fills uninitialized layers with initialized layer data
 	def __fill_layers(self, srcCategory):
 		
-		floorCategory = self.get_category(GameData.MAP_TILE_LAYER_INDEX_FLOOR)
-		standCategory = self.get_category(GameData.MAP_TILE_LAYER_INDEX_STAND)
+		floorCategory = self.get_category(Const.MAP_TILE_LAYER_INDEX_FLOOR)
+		standCategory = self.get_category(Const.MAP_TILE_LAYER_INDEX_STAND)
 		
-		if ((floorCategory == GameData.INVALID_INDEX) and (standCategory == srcCategory)):
+		if ((floorCategory == Const.INVALID_INDEX) and (standCategory == srcCategory)):
 				# fill uninitialized floor layer
-				self.__copy_layer(GameData.MAP_TILE_LAYER_INDEX_STAND, GameData.MAP_TILE_LAYER_INDEX_FLOOR)
-		elif ((floorCategory == srcCategory) and (standCategory == GameData.INVALID_INDEX)):
+				self.__copy_layer(Const.MAP_TILE_LAYER_INDEX_STAND, Const.MAP_TILE_LAYER_INDEX_FLOOR)
+		elif ((floorCategory == srcCategory) and (standCategory == Const.INVALID_INDEX)):
 			# fill uninitialized floor layer
-			self.__copy_layer(GameData.MAP_TILE_LAYER_INDEX_FLOOR, GameData.MAP_TILE_LAYER_INDEX_STAND)
+			self.__copy_layer(Const.MAP_TILE_LAYER_INDEX_FLOOR, Const.MAP_TILE_LAYER_INDEX_STAND)
 				
 	# Copies source layer data to target layer.
 	# NOTE: Function preserves the target layer obj ID
@@ -140,12 +140,12 @@ class MapTile(object):
 	# NOTE: Function preserves the existing layer obj ID unless specified otherwise
 	def insert_layer(self, newLayer, newLayerIndex, isCopyID=False):
 	
-		rStat = GameData.RT_FAILURE
+		rStat = Const.RT_FAILURE
 	
 		if (TileLayer.is_valid(newLayerIndex)):
 		
 			#currentLayer = self.__layerList[newLayerIndex]
-			#print u"DEBUG_JW - MapDisplay::insert_layer() - LAYER%d inserting (%s) into (%s)" % (newLayerIndex, newLayer.get_str(), currentLayer.get_str())
+			#print u"DEBUG_JW - MapContainer::insert_layer() - LAYER%d inserting (%s) into (%s)" % (newLayerIndex, newLayer.get_str(), currentLayer.get_str())
 			#raw_input()
 			
 			self.set_category(newLayer.category, newLayerIndex)
@@ -154,7 +154,7 @@ class MapTile(object):
 			if (isCopyID):
 				self.set_ID(newLayer.objID, newLayerIndex)
 			
-			rStat = GameData.RT_SUCCESS
+			rStat = Const.RT_SUCCESS
 			
 		return rStat
 			
@@ -162,9 +162,9 @@ class MapTile(object):
 	# Returns INVALID_INDEX if ID is not in tile.
 	def get_layerIndex_from_ID(self, inObjID):
 		
-		retLayer = GameData.INVALID_INDEX
+		retLayer = Const.INVALID_INDEX
 		
-		for layerCount in range(0, GameData.MAP_TILE_LAYERS_NUM): 
+		for layerCount in range(0, Const.MAP_TILE_LAYERS_NUM): 
 			if (self.__layerList[layerCount].objID == inObjID):
 				retLayer = layerCount
 		
@@ -186,7 +186,7 @@ class MapTile(object):
 		
 		retVal = False
 		
-		for layerCount in range(0, GameData.MAP_TILE_LAYERS_NUM): 
+		for layerCount in range(0, Const.MAP_TILE_LAYERS_NUM): 
 			if (self.__layerList[layerCount].objID == inObjID):
 				retVal = True
 				break # done looking so quit
@@ -195,16 +195,16 @@ class MapTile(object):
 		
 	# Accessors for tile obj category.
 	# If no valid inLayer is given, functions assume default layer category.
-	def get_category(self, inLayer=GameData.INVALID_INDEX):
+	def get_category(self, inLayer=Const.INVALID_INDEX):
 		
-		retCategory = GameData.INVALID_INDEX
+		retCategory = Const.INVALID_INDEX
 		if (TileLayer.is_valid(inLayer)):
 			retCategory = self.__layerList[inLayer].category
 		else:
 			retCategory = self.__layerList[self.__DEFAULT_LAYER].category
 		return retCategory
 		
-	def set_category(self, newCategory,  inLayer=GameData.INVALID_INDEX):
+	def set_category(self, newCategory,  inLayer=Const.INVALID_INDEX):
 		
 		if (TileLayer.is_valid(inLayer)):
 			self.__layerList[inLayer].category = newCategory
@@ -213,16 +213,16 @@ class MapTile(object):
 			
 	# Accessors for tile obj character.
 	# If no valid inLayer is given, functions assume default layer char.
-	def get_char(self, inLayer=GameData.INVALID_INDEX):
+	def get_char(self, inLayer=Const.INVALID_INDEX):
 		
-		retChar = GameData.INVALID_INDEX
+		retChar = Const.INVALID_INDEX
 		if (TileLayer.is_valid(inLayer)):
 			retChar = self.__layerList[inLayer].tileChar
 		else:
 			retChar = self.__layerList[self.__DEFAULT_LAYER].tileChar
 		return retChar
 		
-	def set_char(self, newChar,  inLayer=GameData.INVALID_INDEX):
+	def set_char(self, newChar,  inLayer=Const.INVALID_INDEX):
 		
 		if (TileLayer.is_valid(inLayer)):
 			self.__layerList[inLayer].tileChar = newChar
@@ -231,16 +231,16 @@ class MapTile(object):
 			
 	# Accessors for tile obj ID.
 	# If no valid inLayer is given, functions assume default layer ID.
-	def get_ID(self, inLayer=GameData.INVALID_INDEX):
+	def get_ID(self, inLayer=Const.INVALID_INDEX):
 		
-		retID = GameData.INVALID_INDEX
+		retID = Const.INVALID_INDEX
 		if (TileLayer.is_valid(inLayer)):
 			retID = self.__layerList[inLayer].objID
 		else:
 			retID = self.__layerList[self.__DEFAULT_LAYER].objID
 		return retID
 		
-	def set_ID(self, newID,  inLayer=GameData.INVALID_INDEX):
+	def set_ID(self, newID,  inLayer=Const.INVALID_INDEX):
 		
 		if (TileLayer.is_valid(inLayer)):
 			self.__layerList[inLayer].objID = newID
@@ -253,10 +253,10 @@ class MapTile(object):
 		
 		retChar = ''
 		
-		floorChar = self.get_char(GameData.MAP_TILE_LAYER_INDEX_FLOOR)
-		standChar = self.get_char(GameData.MAP_TILE_LAYER_INDEX_STAND)
+		floorChar = self.get_char(Const.MAP_TILE_LAYER_INDEX_FLOOR)
+		standChar = self.get_char(Const.MAP_TILE_LAYER_INDEX_STAND)
 		
-		if (standChar != GameData.MAP_CAT_OPEN_SPACE):
+		if (standChar != Const.MAP_CAT_OPEN_SPACE):
 			# standing layer trumps anything on the floor for user display
 			retChar = standChar
 		else:
@@ -297,7 +297,7 @@ class MapTile(object):
 		
 class TileLayer(object):
 		
-	def __init__(self, newCategory=GameData.INVALID_INDEX, newTileChar='', newObjID=GameData.INVALID_INDEX):
+	def __init__(self, newCategory=Const.INVALID_INDEX, newTileChar='', newObjID=Const.INVALID_INDEX):
 			
 		self.category = newCategory
 		self.tileChar = newTileChar
@@ -309,7 +309,7 @@ class TileLayer(object):
 		
 		retVal = False
 		
-		for tileLayer in GameData.MAP_TILE_LAYER_LIST:
+		for tileLayer in Const.MAP_TILE_LAYER_LIST:
 			if (inLayer == tileLayer):
 				retVal = True
 				break # done looking so quit
@@ -319,10 +319,10 @@ class TileLayer(object):
 	@staticmethod
 	# Determine layer from rules of entity location
 	def get_layerIndex_from_char(mapChar):
-		retLayerIndex = GameData.MAP_TILE_LAYER_INDEX_STAND
+		retLayerIndex = Const.MAP_TILE_LAYER_INDEX_STAND
 		
-		if (mapChar == GameData.MAP_CHAR_ITEM):
-			retLayerIndex = GameData.MAP_TILE_LAYER_INDEX_FLOOR
+		if (mapChar == Const.MAP_CHAR_ITEM):
+			retLayerIndex = Const.MAP_TILE_LAYER_INDEX_FLOOR
 		
 		return retLayerIndex
 		
@@ -332,7 +332,7 @@ class TileLayer(object):
 		mapCategory = 0 # categories are 0-based
 		foundMatch = False
 		
-		for itemList in GameData.MAP_CHARS_LIST:
+		for itemList in Const.MAP_CHARS_LIST:
 			if (mapChar in itemList):
 				# done looking
 				foundMatch = True
@@ -341,22 +341,22 @@ class TileLayer(object):
 				mapCategory += 1
 				
 		if (not foundMatch):
-			mapCategory = GameData.INVALID_INDEX
+			mapCategory = Const.INVALID_INDEX
 			
 		return mapCategory
 		
 	# Get mapChar based on tile category.
 	# Returns empty char if mapChar cannot be calculated.
 	@staticmethod
-	def get_char_from_category(self, mapTileCategory, charIndex=GameData.INVALID_INDEX):
+	def get_char_from_category(self, mapTileCategory, charIndex=Const.INVALID_INDEX):
 	
 		mapChar = ''
 			
-		if ((mapTileCategory >= 0) and (mapTileCategory < len(GameData.MAP_CHARS_LIST))):
+		if ((mapTileCategory >= 0) and (mapTileCategory < len(Const.MAP_CHARS_LIST))):
 		
-			itemList = GameData.MAP_CHARS_LIST[mapTileCategory]
+			itemList = Const.MAP_CHARS_LIST[mapTileCategory]
 			
-			if (charIndex == GameData.INVALID_INDEX):
+			if (charIndex == Const.INVALID_INDEX):
 				# caller did not provide list index so default to the 1st list entry
 				charIndex = 0
 			
@@ -369,7 +369,7 @@ class TileLayer(object):
 	def get_str(self):
 		retStr = self.tileChar
 		
-		if (self.tileChar == GameData.MAP_CHAR_LINE_FEED):
+		if (self.tileChar == Const.MAP_CHAR_LINE_FEED):
 			# prevent CR on print
 			retStr = "<LF>"
 		
@@ -456,7 +456,7 @@ class MapContainer(object):
 			newMapTile = self.__make_tile_from_single_layer(xVal, yVal, newChar,  layerIndex)
 			self.__tileList.append(newMapTile)
 			
-			if (newChar == GameData.MAP_CHAR_LINE_FEED):
+			if (newChar == Const.MAP_CHAR_LINE_FEED):
 				yVal += 1
 				xVal = 0
 			else:
@@ -483,7 +483,7 @@ class MapContainer(object):
 		for mapItem in self.__tileList:
 			print "%s" % mapItem.get_str()
 		
-		raw_input(GameData.PROMPT_CONTINUE_STR)
+		raw_input(Const.PROMPT_CONTINUE_STR)
 		
 			
 	# Creates single-layer tile obj from map data
@@ -497,14 +497,14 @@ class MapContainer(object):
 		else:
 			category = TileLayer.get_category_from_char(newChar)
 			
-			if (category == GameData.INVALID_INDEX):
+			if (category == Const.INVALID_INDEX):
 				Utils.Show_Game_Error("MapContainer::__make_tile_from_single_layer() - Invalid character for map tile construction: \"%s\" (%d, %d)." % (newChar, xVal, yVal))
 			else:
 				mapPos = MapPos(xVal, yVal)
 				
 				newTileLayerList = []
 				
-				for layerCount in range(0, GameData.MAP_TILE_LAYERS_NUM): 
+				for layerCount in range(0, Const.MAP_TILE_LAYERS_NUM): 
 				
 					objID = self.__idGen.get_num() # use unique ID for each layer obj
 					
@@ -513,7 +513,7 @@ class MapContainer(object):
 						newTileLayerList.append(TileLayer(category, newChar, objID))
 					else:
 						# init invalid layer data for now (except for valid ID)
-						newTileLayerList.append(TileLayer(GameData.INVALID_INDEX, '', objID))
+						newTileLayerList.append(TileLayer(Const.INVALID_INDEX, '', objID))
 						
 				mapTile = MapTile(mapPos,  newTileLayerList)
 				
@@ -527,7 +527,7 @@ class MapContainer(object):
 	# Gets the tile location from objID.
 	# Returns INVALID_INDEX if no tile is found.
 	def __get_tileIndex_from_ID(self, objID):
-		retIndex = GameData.INVALID_INDEX
+		retIndex = Const.INVALID_INDEX
 		count = 0
 		
 		for mapItem in self.__tileList:
@@ -541,7 +541,7 @@ class MapContainer(object):
 		
 		
 	def __get_tileIndex_from_Pos(self, pos):
-		retIndex = GameData.INVALID_INDEX
+		retIndex = Const.INVALID_INDEX
 		count = 0
 		
 		for mapItem in self.__tileList:
@@ -561,7 +561,7 @@ class MapContainer(object):
 		
 		tileIndex = self.__get_tileIndex_from_Pos(pos)
 		
-		if (tileIndex != GameData.INVALID_INDEX):
+		if (tileIndex != Const.INVALID_INDEX):
 			retTile = self.__tileList[tileIndex]
 		
 		return retTile
@@ -595,7 +595,7 @@ class MapContainer(object):
 	#	layerIndex = points at layer to swap
 	def __swap_tileLayers_in_List(self, tileIndex1, tileIndex2, layerIndex):
 		
-		rStat = GameData.RT_FAILURE
+		rStat = Const.RT_FAILURE
 		
 		listLen = len(self.__tileList)
 		
@@ -611,7 +611,7 @@ class MapContainer(object):
 			else:
 				rStat = self.__tileList[tileIndex2].insert_layer(tmpLayer2, layerIndex, True)
 				
-				if (rStat == GameData.RT_SUCCESS):
+				if (rStat == Const.RT_SUCCESS):
 					rStat = self.__tileList[tileIndex1].insert_layer(tmpLayer1, layerIndex, True)
 			
 		return rStat
@@ -637,12 +637,12 @@ class MapContainer(object):
 	def __get_target_tile_from_Dir(self, objID, objDir):
 	
 		retTile = None
-		retTileIndex = GameData.INVALID_INDEX
+		retTileIndex = Const.INVALID_INDEX
 		
 		currentTileIndex = self.__get_tileIndex_from_ID(objID)
 		
-		if (currentTileIndex == GameData.INVALID_INDEX):
-			Utils.Show_Game_Error("MapDisplay::__get_target_tile_from_Dir() - invalid objID %d!" % objID)
+		if (currentTileIndex == Const.INVALID_INDEX):
+			Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Dir() - invalid objID %d!" % objID)
 		else:
 			currentTile = self.__tileList[currentTileIndex]
 			currentPos = currentTile.pos
@@ -650,24 +650,24 @@ class MapContainer(object):
 			targetPos = MapPos(currentPos.xPos, currentPos.yPos) # get new instance to avoid copy-by-reference
 			isGoodDir = True
 			
-			if (objDir == GameData.DIR_NORTH):
+			if (objDir == Const.DIR_NORTH):
 				targetPos.yPos -= 1 # y-axis is inverted in map str
-			elif (objDir == GameData.DIR_WEST):
+			elif (objDir == Const.DIR_WEST):
 				targetPos.xPos -= 1
-			elif (objDir == GameData.DIR_SOUTH):
+			elif (objDir == Const.DIR_SOUTH):
 				targetPos.yPos += 1 # y-axis is inverted in map str
-			elif (objDir == GameData.DIR_EAST):
+			elif (objDir == Const.DIR_EAST):
 				targetPos.xPos += 1
 			else:
 				isGoodDir = False
 			
 			if (not isGoodDir):
-				Utils.Show_Game_Error("MapDisplay::__get_target_tile_from_Dir() - invalid objDir %s!" % objDir)
+				Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Dir() - invalid objDir %s!" % objDir)
 			else:
 				targetTileIndex = self.__get_tileIndex_from_Pos(targetPos)
 				
-				if (targetTileIndex == GameData.INVALID_INDEX):
-					Utils.Show_Game_Error("MapDisplay::__get_target_tile_from_Dir() - invalid target position (%d, %d)!" % (targetPos.xPos, targetPos.yPos))
+				if (targetTileIndex == Const.INVALID_INDEX):
+					Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Dir() - invalid target position (%d, %d)!" % (targetPos.xPos, targetPos.yPos))
 				else:
 					# get target
 					retTile = self.__tileList[targetTileIndex]
@@ -683,13 +683,13 @@ class MapContainer(object):
 		if (mapActionItem != None):
 			Utils.Log_Event("Map Display receiving cmd - %s" % mapActionItem.dump_data())
 		
-			if (mapActionItem.cmdStr == GameData.MAP_CMD_STR_MOVE):
+			if (mapActionItem.cmdStr == Const.MAP_CMD_STR_MOVE):
 				self.move_map_item(mapActionItem.objID, mapActionItem.dir)
-			elif(mapActionItem.cmdStr == GameData.MAP_CMD_STR_DUMP_DATA):
+			elif(mapActionItem.cmdStr == Const.MAP_CMD_STR_DUMP_DATA):
 				self.dump_map_data()
-			elif(mapActionItem.cmdStr == GameData.MAP_CMD_STR_USE):
+			elif(mapActionItem.cmdStr == Const.MAP_CMD_STR_USE):
 				retActionItem = self.use_map_item(mapActionItem.objID, mapActionItem.dir)
-			elif(mapActionItem.cmdStr == GameData.MAP_CMD_STR_PLACE_ENTITY):
+			elif(mapActionItem.cmdStr == Const.MAP_CMD_STR_PLACE_ENTITY):
 				retActionItem = self.place_entity_map_item(mapActionItem.entityType, mapActionItem.entityPos)
 			else:
 				pass
@@ -704,23 +704,23 @@ class MapContainer(object):
 		if (targetTile != None):
 			currentTileIndex = self.__get_tileIndex_from_ID(objID)
 			
-			if (currentTileIndex == GameData.INVALID_INDEX):
+			if (currentTileIndex == Const.INVALID_INDEX):
 				Utils.Show_Game_Error("MapContainer::move_map_item() - invalid objID %d!" % objID)
 			else:
 				currentLayerIndex = self.__tileList[currentTileIndex].get_layerIndex_from_ID(objID)
-				if (targetTile.get_category(currentLayerIndex) == GameData.MAP_CAT_OPEN_SPACE):
+				if (targetTile.get_category(currentLayerIndex) == Const.MAP_CAT_OPEN_SPACE):
 					# this is a valid move so proceed with swap
 					self.__swap_tileLayers_in_List(currentTileIndex, targetTileIndex, currentLayerIndex)
 					
 					
 	def use_map_item(self, objID, objDir):		
-		retID = GameData.INVALID_INDEX
+		retID = Const.INVALID_INDEX
 			
 		targetTile, targetTileIndex = self.__get_target_tile_from_Dir(objID, objDir)
 			
 		if (targetTile != None):
 			currentLayerIndex = self.get_layer_from_ID(objID)
-			if (targetTile.get_category(currentLayerIndex) == GameData.MAP_CAT_EXIT):
+			if (targetTile.get_category(currentLayerIndex) == Const.MAP_CAT_EXIT):
 				# send back the exit obj ID for engine processing
 				retID = targetTile.objID
 
@@ -734,45 +734,45 @@ class MapContainer(object):
 	# Returns new objID if successful placement, else INVALID_INDEX 
 	def place_map_entity(self, newEntityChar, newEntityPos):		
 	
-		retID = GameData.INVALID_INDEX
+		retID = Const.INVALID_INDEX
 		
 		if (newEntityPos == None):
-			Utils.Show_Game_Error("MapDisplay::place_map_entity() - invalid newEntityPos!")
+			Utils.Show_Game_Error("MapContainer::place_map_entity() - invalid newEntityPos!")
 		else:
 			# determine if target tile is empty
 			targetTile = self.__get_tile_from_Pos(newEntityPos)
 			
 			if (targetTile == None):
-				Utils.Show_Game_Error("MapDisplay::place_map_entity() - could not get targetTile from position = %s" % newEntityPos.get_str())
+				Utils.Show_Game_Error("MapContainer::place_map_entity() - could not get targetTile from position = %s" % newEntityPos.get_str())
 			else:
 			
 				newEntityCategory = TileLayer.get_category_from_char(newEntityChar)
 				
-				if (newEntityCategory == GameData.INVALID_INDEX):
-					Utils.Show_Game_Error("MapDisplay::place_map_entity() - invalid newEntityChar = %s" % newEntityChar)
+				if (newEntityCategory == Const.INVALID_INDEX):
+					Utils.Show_Game_Error("MapContainer::place_map_entity() - invalid newEntityChar = %s" % newEntityChar)
 				else:
 				
 					layerIndex = TileLayer.get_layerIndex_from_char(newEntityChar)
 				
-					if (targetTile.get_category(layerIndex) != GameData.MAP_CAT_OPEN_SPACE):
+					if (targetTile.get_category(layerIndex) != Const.MAP_CAT_OPEN_SPACE):
 						if (newEntityChar == targetTile.get_char(layerIndex)):
 							# placing tile that already exists so return existing ID
 							retID = targetTile.get_ID(layerIndex)
-							Utils.Show_Game_Error("MapDisplay::place_map_entity() - duplicate placement at pos = %s" % newEntityPos.get_str()) 
+							Utils.Show_Game_Error("MapContainer::place_map_entity() - duplicate placement at pos = %s" % newEntityPos.get_str()) 
 					else:
 						# placing entity in open space
-						testStr = "DEBUG_JW (notAnError): MapDisplay::place_map_entity() - tile %s : category = %d" % (newEntityPos.get_str(), newEntityCategory)
+						testStr = "DEBUG_JW (notAnError): MapContainer::place_map_entity() - tile %s : category = %d" % (newEntityPos.get_str(), newEntityCategory)
 						Utils.Show_Game_Error(testStr) 
 					
 						# Free to place entity
 						# don't care about new objID since we'll keep the existing one
-						newLayer = TileLayer(newEntityCategory, newEntityChar, GameData.INVALID_INDEX)
+						newLayer = TileLayer(newEntityCategory, newEntityChar, Const.INVALID_INDEX)
 						
 						# update target reference
 						rStat = targetTile.insert_layer(newLayer, layerIndex)
 						
-						if (rStat != GameData.RT_SUCCESS):
-							Utils.Show_Game_Error("MapDisplay::place_map_entity() - could not insert \'%s\' into pos %s,layer %d!" % (newEntityChar, newEntityPos.get_str(),  layerIndex))
+						if (rStat != Const.RT_SUCCESS):
+							Utils.Show_Game_Error("MapContainer::place_map_entity() - could not insert \'%s\' into pos %s,layer %d!" % (newEntityChar, newEntityPos.get_str(),  layerIndex))
 						else:
 							retID = targetTile.get_ID(layerIndex)
 													
@@ -786,7 +786,7 @@ class MapContainer(object):
 
 	
 	if __name__ == '__main__':	
-		GothansGame.start()
+		Engine.start()
 		
 		
 		

@@ -1,7 +1,7 @@
 # DESCRIPTION: 
 #		Module contains implementation for all entities featured in game map
 
-import GameData
+import SharedConst as Const
 import Utils
 
 #---------------------------------------------------
@@ -19,16 +19,16 @@ class Actor(object):
 		self.__health = 100
 		self.xp = 0
 		self.theInventoryMgr = InventoryMgr()
-		self.__dir = GameData.DIR_NORTH
-		self.Id = GameData.INVALID_INDEX
+		self.__dir = Const.DIR_NORTH
+		self.Id = Const.INVALID_INDEX
 		
 		# start with default melee weapons
 		# TODO: ultimately allow player to find these in map
-		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_SLEDGEHAMMER_INDEX, GameData.INFINITE_VAL))
-		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_NET_INDEX, GameData.INFINITE_VAL))
-		self.theInventoryMgr.add_item(WeaponItem(GameData.ITEM_KNIFE_INDEX, GameData.INFINITE_VAL))
+		self.theInventoryMgr.add_item(WeaponItem(Const.ITEM_SLEDGEHAMMER_INDEX, Const.INFINITE_VAL))
+		self.theInventoryMgr.add_item(WeaponItem(Const.ITEM_NET_INDEX, Const.INFINITE_VAL))
+		self.theInventoryMgr.add_item(WeaponItem(Const.ITEM_KNIFE_INDEX, Const.INFINITE_VAL))
 		#DEBUG_JW - this is for testing
-		self.theInventoryMgr.add_item(UtilityItem(GameData.ITEM_BATTERY_INDEX, 1))
+		self.theInventoryMgr.add_item(UtilityItem(Const.ITEM_BATTERY_INDEX, 1))
 		
 	def get_health(self):
 		return self.__health
@@ -44,7 +44,7 @@ class Actor(object):
 		return self.__dir
 		
 	def get_dir_str(self):
-		dirStr = GameData.DIR_DICT.get(self.__dir)
+		dirStr = Const.DIR_DICT.get(self.__dir)
 		return dirStr
 	
 	# Updates actor's direction.
@@ -52,7 +52,7 @@ class Actor(object):
 	def set_dir(self, newDir):
 		retVal = False
 		
-		if ((newDir >= 0) and (newDir < len(GameData.DIR_STR_LIST))):
+		if ((newDir >= 0) and (newDir < len(Const.DIR_STR_LIST))):
 			self.__dir = newDir
 			retVal = True
 			Utils.Log_Event("Changing actor Dir to %d" % self.__dir)
@@ -73,7 +73,7 @@ class Actor(object):
 			
 			
 	def get_current_itemStr(self):
-		retStr = GameData.EMPTY_ITEM_STR
+		retStr = Const.EMPTY_ITEM_STR
 		
 		currentItem = self.theInventoryMgr.get_current_item()
 		if (currentItem != None):
@@ -89,7 +89,7 @@ class Actor(object):
 
 		
 	def print_stats(self):
-		print "%s\n\nPLAYER STATS:\n\nHEALTH = %d\nXP = %d\n\n%s" % (GameData.SEPARATOR_LINE_STR, self.get_health(), self.xp, GameData.SEPARATOR_LINE_STR)
+		print "%s\n\nPLAYER STATS:\n\nHEALTH = %d\nXP = %d\n\n%s" % (Const.SEPARATOR_LINE_STR, self.get_health(), self.xp, Const.SEPARATOR_LINE_STR)
 		
 		
 #---------------------------------------------------
@@ -111,11 +111,11 @@ class InventoryMgr(object):
 	
 	# TODO - determine why these cannot go in init()
 	#__itemList = []
-	#__currentItemIndex = GameData.INVALID_INDEX
+	#__currentItemIndex = Const.INVALID_INDEX
 	
 	def __init__(self):
 		self.__itemList = []
-		self.__currentItemIndex = GameData.INVALID_INDEX
+		self.__currentItemIndex = Const.INVALID_INDEX
 		
 	# Accessors for current item
 	def get_current_item(self):
@@ -137,11 +137,11 @@ class InventoryMgr(object):
 		
 			# Convert data index into inv list index for updating
 			# the current inv list index.
-			itemData = GameData.ITEM_DATA_LIST[itemDataIndex]
-			itemNameStr = itemData[GameData.ITEM_DATA_NAME_INDEX]
+			itemData = Const.ITEM_DATA_LIST[itemDataIndex]
+			itemNameStr = itemData[Const.ITEM_DATA_NAME_INDEX]
 			invListIndex = self.get_item_index(itemNameStr)	
 			
-			if (invListIndex != GameData.INVALID_INDEX):
+			if (invListIndex != Const.INVALID_INDEX):
 				# successful assignement
 				self.__currentItemIndex = invListIndex
 				retVal = True
@@ -155,7 +155,7 @@ class InventoryMgr(object):
 	#	RT_FAILURE			- any other failure in adding item
 	def add_item(self, newItem):
 		
-		retStat = GameData.RT_SUCCESS
+		retStat = Const.RT_SUCCESS
 		
 		# we have valid item name
 		itemIndex = self.get_item_index(newItem.get_name())
@@ -164,25 +164,25 @@ class InventoryMgr(object):
 			# item already exists in list => update existing item counts
 			theItem = self.__itemList[itemIndex]
 			
-			if (theItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
+			if (theItem.get_typeID() == Const.ITEM_UTILITY_TYPE_ID):
 				
 				retStat = self.check_capacity_for_item(newItem)
 				
-				if (retStat == GameData.RT_SUCCESS):
+				if (retStat == Const.RT_SUCCESS):
 				
 					theItem.add_count(newItem.get_count())
 					
-			elif (theItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
+			elif (theItem.get_typeID() == Const.ITEM_WEAPON_TYPE_ID):
 				theItem.ammo += newItem.ammo
 			else:
 				# should never get here
-				Utils.Show_Game_Error(GameData.INVALID_TYPE_ID_STR)
+				Utils.Show_Game_Error(Const.INVALID_TYPE_ID_STR)
 				retStat = Utils.RT_FAILURE
 		else:
 			# brand new item to add
 			retStat = self.check_capacity_for_item(newItem)
 			
-			if (retStat == GameData.RT_SUCCESS):		
+			if (retStat == Const.RT_SUCCESS):		
 				# we are good to add item to list
 				
 				# Determine collection index for fast referencing
@@ -204,24 +204,24 @@ class InventoryMgr(object):
 	#	RT_FAILURE			- item size cannot be determined
 	def check_capacity_for_item(self, theItem):
 		
-		retStat = GameData.RT_SUCCESS
+		retStat = Const.RT_SUCCESS
 		
 		itemSize = theItem.get_size()
 			
-		if (itemSize == GameData.INVALID_INDEX): 
+		if (itemSize == Const.INVALID_INDEX): 
 			Utils.Show_Game_Error("InventoryMgr::is_capacity_for_item() - could not get size from item: %s" % theItem.get_name())
 			retStat = Utils.RT_FAILURE
 		else: 
 			invSize = itemSize + self.get_total_size()
 			
-			if (invSize > GameData.INV_SIZE_MAX):
-				retStat = GameData.RT_OUT_OF_INV_SPACE
+			if (invSize > Const.INV_SIZE_MAX):
+				retStat = Const.RT_OUT_OF_INV_SPACE
 		
 		return retStat
 		
 		
 	def is_item_index_valid(self, theItem):
-		retIndex = GameData.INVALID_INDEX
+		retIndex = Const.INVALID_INDEX
 		itemIndex = theItem.index
 		
 		Utils.Log_Event("DEBUG_JW: InventoryMgr.is_item_index_valid() - item arg = %s item arg index = %d\n, %s item index is %d and itemList len = %d\n" % (theItem.get_name(), theItem.index, self.__itemList[itemIndex].get_name(), itemIndex, len(self.__itemList)))
@@ -244,13 +244,13 @@ class InventoryMgr(object):
 		
 		isUpdate = False
 		
-		if (itemIndex != GameData.INVALID_INDEX):
+		if (itemIndex != Const.INVALID_INDEX):
 			isUpdate = True
 		else:
 			# something is wrong with the item's assigned index => search list for item
 			itemIndex = self.get_item_index(updatedItem.get_name())
 			
-			if (itemIndex != GameData.INVALID_INDEX):
+			if (itemIndex != Const.INVALID_INDEX):
 				isUpdate = True
 			else:
 				Utils.Show_Game_Error("Unable to update inventory item - %s" % updatedItem.get_name())
@@ -273,7 +273,7 @@ class InventoryMgr(object):
 		
 		itemIndex = self.get_item_index(itemNameStr)
 		
-		if (itemIndex != GameData.INVALID_INDEX):
+		if (itemIndex != Const.INVALID_INDEX):
 			tmpItem = self.__itemList[itemIndex]
 			
 			if (tmpItem.get_name() == itemNameStr):
@@ -282,7 +282,7 @@ class InventoryMgr(object):
 				# Something went wrong. We got a mismatching item from query.
 				Utils.Show_Game_Error("get_item() fail for %s" % itemNameStr)
 				
-				if (GameData.DEBUG_MODE):
+				if (Const.DEBUG_MODE):
 					Utils.Log_Event("get_item(): itemNameStr = %s. itemIndex = %d. result name = %s\n" % (itemNameStr, itemIndex, tmpItem.get_name()))
 		
 		return retItem
@@ -291,7 +291,7 @@ class InventoryMgr(object):
 	# Returns item index if found in the inv list, else INVALID_INDEX
 	def get_item_index(self, itemName):
 		
-		retIndex = GameData.INVALID_INDEX
+		retIndex = Const.INVALID_INDEX
 		count = 0
 		
 		for item in self.__itemList:
@@ -312,7 +312,7 @@ class InventoryMgr(object):
 	
 		itemIndex = self.is_item_index_valid(theItem)
 		
-		if (itemIndex != GameData.INVALID_INDEX):
+		if (itemIndex != Const.INVALID_INDEX):
 			# we have a valid item
 				
 			try:	
@@ -346,11 +346,11 @@ class InventoryMgr(object):
 			Utils.Log_Event("InventoryMgr::delete_named_item() - could not get item: %s" % itemNameStr)
 		else:
 		
-			if (theItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
+			if (theItem.get_typeID() == Const.ITEM_UTILITY_TYPE_ID):
 				theItem.subtract_count(1)
 				retVal = self.update_item(theItem)
 				
-			elif (theItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
+			elif (theItem.get_typeID() == Const.ITEM_WEAPON_TYPE_ID):
 				# remove weapon entirely from list
 				retVal = self.delete_item(theItem)
 				
@@ -367,28 +367,28 @@ class InventoryMgr(object):
 	
 	def print_items(self):
 		
-		print "%s\nINVENTORY:\n\n" % GameData.SEPARATOR_LINE_STR
+		print "%s\nINVENTORY:\n\n" % Const.SEPARATOR_LINE_STR
 		print "SIZE: %d\n\n" % self.get_total_size()
 		
 		itemNum = 1 # start label counting here (even though index starts at 0)
-		itemListLen = len(GameData.ITEM_DATA_LIST)
+		itemListLen = len(Const.ITEM_DATA_LIST)
 		
 		for invItem in self.__itemList:
 			countNameStr = ""
 			invCountStr = ""
 			
-			if (invItem.get_typeID() == GameData.ITEM_UTILITY_TYPE_ID):
+			if (invItem.get_typeID() == Const.ITEM_UTILITY_TYPE_ID):
 				countNameStr = "Count: "
 				invCountStr = invItem.get_count()
 				
-			elif (invItem.get_typeID() == GameData.ITEM_WEAPON_TYPE_ID):
-				if (invItem.ammo != GameData.INFINITE_VAL):
+			elif (invItem.get_typeID() == Const.ITEM_WEAPON_TYPE_ID):
+				if (invItem.ammo != Const.INFINITE_VAL):
 					invCountStr = invItem.ammo
 					countNameStr = "Ammo: "
 					
 			else:
 				# should never get here
-				Utils.Show_Game_Error(GameData.INVALID_TYPE_ID_STR)
+				Utils.Show_Game_Error(Const.INVALID_TYPE_ID_STR)
 				
 			# Calculate the correct item index corresponding to hotkeys.
 			# This allows the user to use this number to equip item from menu.
@@ -397,9 +397,9 @@ class InventoryMgr(object):
 				
 			for itemIndex in range(lowIndex,highIndex):
 	
-				item = GameData.ITEM_DATA_LIST[itemIndex]
+				item = Const.ITEM_DATA_LIST[itemIndex]
 				
-				if (invItem.get_name() == item[GameData.ITEM_DATA_NAME_INDEX]):
+				if (invItem.get_name() == item[Const.ITEM_DATA_NAME_INDEX]):
 					itemNum = itemIndex + 1 
 					# done looking so quit
 					break
@@ -407,7 +407,7 @@ class InventoryMgr(object):
 			print "%d. %s\t\t%s %s\tSize: %d" % (itemNum, invItem.get_name(), countNameStr, invCountStr, invItem.get_size())
 			itemNum += 1
 		
-		print "\n\n%s" % GameData.SEPARATOR_LINE_STR
+		print "\n\n%s" % Const.SEPARATOR_LINE_STR
 		
 		
 	# Returns size of current item collection
@@ -441,7 +441,7 @@ class Item(object):
 		
 		retVal = False
 		
-		if ((itemDataIndex >= 0) and (itemDataIndex < len(GameData.ITEM_DATA_LIST))):
+		if ((itemDataIndex >= 0) and (itemDataIndex < len(Const.ITEM_DATA_LIST))):
 			retVal = True
 		
 		return retVal
@@ -452,8 +452,8 @@ class Item(object):
 		
 		retVal = False
 		
-		for item in GameData.ITEM_DATA_LIST:
-			if (itemStr == item[GameData.ITEM_DATA_NAME_INDEX]):
+		for item in Const.ITEM_DATA_LIST:
+			if (itemStr == item[Const.ITEM_DATA_NAME_INDEX]):
 				retVal = True
 				# we have a match so quit looking
 				break
@@ -464,12 +464,12 @@ class Item(object):
 	# Returns INVALID_INDEX if no match was found.
 	@staticmethod
 	def get_itemIndex_from_itemStr(itemStr):
-		retIndex = GameData.INVALID_INDEX
+		retIndex = Const.INVALID_INDEX
 		
 		count = 0
 		
-		for dataItem in GameData.ITEM_DATA_LIST:
-			if (dataItem[GameData.ITEM_DATA_NAME_INDEX] == itemStr):
+		for dataItem in Const.ITEM_DATA_LIST:
+			if (dataItem[Const.ITEM_DATA_NAME_INDEX] == itemStr):
 				retIndex = count
 				break
 			else:
@@ -490,7 +490,7 @@ class Item(object):
 			Utils.Show_Game_Error("Cannot get item data from index %d... defaulting index to %d!" % (itemDataIndex, defaultIndex))
 			itemDataIndex = defaultIndex
 			
-		itemData = GameData.ITEM_DATA_LIST[itemDataIndex]
+		itemData = Const.ITEM_DATA_LIST[itemDataIndex]
 		
 		return itemData
 		
@@ -510,7 +510,7 @@ class Item(object):
 		retStr = "" 
 		
 		if (self.__constData != None):
-			retStr = self.__constData[GameData.ITEM_DATA_NAME_INDEX]
+			retStr = self.__constData[Const.ITEM_DATA_NAME_INDEX]
 		
 		return retStr
 		
@@ -518,10 +518,10 @@ class Item(object):
 	# Returns INVALID_INDEX if ID could not be accessed
 	def get_typeID(self):
 		
-		retID = GameData.INVALID_INDEX
+		retID = Const.INVALID_INDEX
 		
 		if (self.__constData != None):
-			retID = self.__constData[GameData.ITEM_DATA_TYPE_INDEX]
+			retID = self.__constData[Const.ITEM_DATA_TYPE_INDEX]
 		
 		return retID
 			
@@ -530,16 +530,16 @@ class Item(object):
 	# Returns INVALID_INDEX if size could not be accessed
 	def get_size(self):
 	
-		retSize = GameData.INVALID_INDEX
+		retSize = Const.INVALID_INDEX
 		
 		if (self.__constData != None):
 		
-			itemType = self.__constData[GameData.ITEM_DATA_TYPE_INDEX]
+			itemType = self.__constData[Const.ITEM_DATA_TYPE_INDEX]
 		
-			if (itemType == GameData.ITEM_UTILITY_TYPE_ID):
-				retSize = self.get_count() * self.__constData[GameData.ITEM_DATA_SIZE_INDEX]
-			elif (itemType == GameData.ITEM_WEAPON_TYPE_ID):
-				retSize = self.__constData[GameData.ITEM_DATA_SIZE_INDEX]
+			if (itemType == Const.ITEM_UTILITY_TYPE_ID):
+				retSize = self.get_count() * self.__constData[Const.ITEM_DATA_SIZE_INDEX]
+			elif (itemType == Const.ITEM_WEAPON_TYPE_ID):
+				retSize = self.__constData[Const.ITEM_DATA_SIZE_INDEX]
 			else:
 				# Should never get here
 				Utils.Show_Game_Error("Item::get_size() - invalid item type %d" % itemType)
@@ -558,7 +558,7 @@ class UtilityItem(Item):
 
 		self.populate_constData(newDataIndex)
 		self.__count = newCount
-		self.Id = GameData.INVALID_INDEX
+		self.Id = Const.INVALID_INDEX
 
 		
 	
@@ -604,14 +604,14 @@ class WeaponItem(Item):
 		
 		self.populate_constData(newDataIndex)
 		self.ammo = newAmmo
-		self.Id = GameData.INVALID_INDEX
+		self.Id = Const.INVALID_INDEX
 		
 		
 	def is_usable(self):
 	
 		retVal = False
 		
-		if ((self.ammo > 0) or (self.ammo == GameData.INFINITE_VAL)):
+		if ((self.ammo > 0) or (self.ammo == Const.INFINITE_VAL)):
 			retVal = True
 			
 		return retVal
@@ -620,7 +620,7 @@ class WeaponItem(Item):
 	def set_count(self, newCount):
 		retVal = False
 		
-		if ((newCount > 0) or (newCount == GameData.INFINITE_VAL)):
+		if ((newCount > 0) or (newCount == Const.INFINITE_VAL)):
 			self.ammo = newCount
 			
 		return retVal
@@ -643,3 +643,9 @@ class MapExitItem(object):
 		self.linkIndex = newLinkIndex
 		Utils.Log_Event("Creating MapExitItem with mapIndex = %d, pos = %s, linkIndex = %d" % (self.mapIndex, self.pos.get_str(),  self.linkIndex))
 
+
+		
+		
+		
+if __name__ == '__main__':	
+	Engine.start()
