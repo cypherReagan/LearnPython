@@ -2,7 +2,8 @@
 import SharedConst as Const
 import Utils
 import copy
-
+import Console
+  
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -151,6 +152,13 @@ class MapTile(object):
 			self.set_category(newLayer.category, newLayerIndex)
 			self.set_char(newLayer.tileChar, newLayerIndex)
 			
+			newColor = TileLayer.get_default_color(newLayer.category)
+			
+			if (newColor == None):
+				Utils.Show_Game_Error("MapTile:insert_layer() - Could not insert color from newCategory = %d!" % newLayer.category)
+			else:
+				self.set_color(newColor, newLayerIndex)
+			
 			if (isCopyID):
 				self.set_ID(newLayer.objID, newLayerIndex)
 			
@@ -221,6 +229,7 @@ class MapTile(object):
 		else:
 			retChar = self.__layerList[self.__DEFAULT_LAYER].tileChar
 		return retChar
+	
 		
 	def set_char(self, newChar,  inLayer=Const.INVALID_INDEX):
 		
@@ -248,6 +257,25 @@ class MapTile(object):
 			self.__layerList[self.__DEFAULT_LAYER].objID = newID
 			
 			
+	# Accessors for tile color.
+	# If no valid inLayer is given, functions assume default layer ID.
+	def get_color(self, inLayer=Const.INVALID_INDEX):
+		
+		retColor = Const.INVALID_INDEX
+		if (TileLayer.is_valid(inLayer)):
+			retColor = self.__layerList[inLayer].color
+		else:
+			retColor = self.__layerList[self.__DEFAULT_LAYER].color
+		return retColor
+		
+	def set_color(self, newColor,  inLayer=Const.INVALID_INDEX):
+		
+		if (TileLayer.is_valid(inLayer)):
+			self.__layerList[inLayer].color = newColor
+		else:
+			self.__layerList[self.__DEFAULT_LAYER].color = copy.deepcpoy(newColor)
+			
+			
 	# Provides tile char for map display
 	def get_char_for_display(self):
 		
@@ -256,11 +284,13 @@ class MapTile(object):
 		floorChar = self.get_char(Const.MAP_TILE_LAYER_INDEX_FLOOR)
 		standChar = self.get_char(Const.MAP_TILE_LAYER_INDEX_STAND)
 		
+		# provide char with color applied
 		if (standChar != Const.MAP_CAT_OPEN_SPACE):
 			# standing layer trumps anything on the floor for user display
-			retChar = standChar
+			retChar = self.__layerList[Const.MAP_TILE_LAYER_INDEX_STAND].color.get_painted_char(standChar)
+			
 		else:
-			retChar = floorChar
+			retChar = self.__layerList[Const.MAP_TILE_LAYER_INDEX_FLOOR].color.get_painted_char(floorChar)
 			
 		return retChar
 		
@@ -292,6 +322,7 @@ class MapTile(object):
 #		category	- category for map obj
 #		tileChar	- char representing map obj
 #		objID		- unique identifier for layer
+#		color		- specifies which color the layer uses
 #---------------------------------------------------
 #---------------------------------------------------
 		
@@ -302,6 +333,35 @@ class TileLayer(object):
 		self.category = newCategory
 		self.tileChar = newTileChar
 		self.objID = newObjID 
+		
+		# update tile color with pre-defined defaults
+		tmpColor = TileLayer.get_default_color(self.category)
+			
+		if (tmpColor == None):
+			# something went really wrong
+			Utils.Show_Game_Error("TileLayer::init() - could not get color from category %d!" % self.category)
+		else:
+			self.color = copy.deepcopy(tmpColor)
+			
+
+			
+	@staticmethod
+	def get_default_color(inCategory):
+		
+		retColor = None
+		
+		if ((inCategory >= 0) and (inCategory < len (Const.DEFAULT_CHAR_COLOR_LIST))):
+
+			colorForeground, colorBackground, format = Const.DEFAULT_CHAR_COLOR_LIST[inCategory]
+		else:
+			# given invalid category so just set generic defaults for now
+			colorForeground = Console.DEFAULT_COLOR
+			colorBackground = Console.DEFAULT_COLOR
+			format = Const.INVALID_INDEX
+			
+		retColor = Console.bcolor(colorForeground, colorBackground, format)
+		
+		return retColor
 			
 	# static method to determine validity of given layer number
 	@staticmethod	
@@ -373,25 +433,12 @@ class TileLayer(object):
 			# prevent CR on print
 			retStr = "<LF>"
 		
-		retStr += ", category = %d, " % self.category
-		retStr += "ID = %d" % self.objID
+		retStr += ", category= %d, " % self.category
+		retStr += "ID= %d, " % self.objID
+		retStr += "color=%s" % self.color.get_str()
 		
 		return retStr
 			
-#---------------------------------------------------
-#---------------------------------------------------
-# Class: bcolors
-#---------------------------------------------------
-#---------------------------------------------------			
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033 [ 93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 #---------------------------------------------------
 #---------------------------------------------------
