@@ -3,10 +3,15 @@
 # Global Game Data
 # This Python file uses the following encoding: utf-8
 
+import Console
+
 DEBUG_MODE = True
 GAME_LOG_STR = "GameLog.txt"
 
+
+# #############################################################################
 # Map Keys
+# #############################################################################
 CORRIDOR_KEY = 'central corridor'
 ARMORY_KEY = 'armory'
 BRIDGE_KEY = 'bridge'
@@ -16,7 +21,9 @@ FINISH_RESULT_KEY = 'done'
 #START_KEY = CORRIDOR_KEY # DEBUG_JW: Put this back after testing!
 START_KEY = BRIDGE_KEY
 
+# #############################################################################
 # Game String Msgs
+# #############################################################################
 INVALID_ENTRY_RSP = 'DOES NOT COMPUTE!'
 EMPTY_ITEM_STR = '<EMPTY>'
 PROMPT_CONTINUE_STR = "[Press ENTER to continue...]> "
@@ -28,15 +35,18 @@ SEPARATOR_LINE_STR = '----------------------------------------------------------
 
 INFINITE_VAL = -1000
 
+# #############################################################################
 # Return Status
+# #############################################################################
 RT_SUCCESS = 0
 RT_FAILURE = 1
 
 RT_OUT_OF_INV_SPACE = 2
 # End Status
 
-
+# #############################################################################
 # User Action Commands
+# #############################################################################
 HELP_REQ_CMD_STR = '?'
 QUIT_CMD_STR = 'quit'
 ATTACK_CMD_STR = 'attack'
@@ -303,14 +313,27 @@ MAP_CAT_ITEM = 7
 
 
 # Map Obj characters
-MAP_CHAR_WALL_LIST = [u'▄',u'▐']				# 0
-MAP_CHAR_OPEN_SPACE = u'░'					# 1
-MAP_CHAR_PLAYER = '+'								# 2
+MAP_CHAR_WALL_LIST = [u'▄',u'▐']		# 0
+MAP_CHAR_OPEN_SPACE = u'░'				# 1
+MAP_CHAR_PLAYER = '+'					# 2
 MAP_CHAR_ENEMY_LIST = ['^','v','>','<']	# 3
-MAP_CHAR_EXIT_LIST = ['=',u'║']				# 4
-MAP_CHAR_SOLID_SPACE = u'▓'					# 5
-MAP_CHAR_LINE_FEED = '\n'						# 6
-MAP_CHAR_ITEM = '$'									# 7
+MAP_CHAR_EXIT_LIST = ['=',u'║']			# 4
+MAP_CHAR_SOLID_SPACE = u'▓'				# 5
+MAP_CHAR_LINE_FEED = '\n'				# 6
+MAP_CHAR_ITEM = '$'						# 7
+
+# Default Map Obj characters colors -> use category as index
+# Oder: Forground, Background, Format
+							
+DEFAULT_CHAR_COLOR_LIST = [ (Console.DEFAULT_COLOR, Console.WHITE, 			INVALID_INDEX), 
+							(Console.DEFAULT_COLOR, Console.DEFAULT_COLOR,	INVALID_INDEX),
+							(Console.GREEN, 		Console.DEFAULT_COLOR,	Console.BOLD),
+							(Console.YELLOW, 		Console.DEFAULT_COLOR,	Console.BOLD),
+							(Console.DEFAULT_COLOR, Console.DEFAULT_COLOR,	Console.UNDERLINE),
+							(Console.DEFAULT_COLOR, Console.DEFAULT_COLOR,	INVALID_INDEX),
+							(Console.DEFAULT_COLOR, Console.DEFAULT_COLOR,	INVALID_INDEX),
+							(Console.MAGENTA, 		Console.DEFAULT_COLOR,	INVALID_INDEX)]
+
 
 MAP_CHAR_OPEN_SPACE_ASCII = '`'
 MAP_CHAR_PLAYER_ASCII = '+'

@@ -495,8 +495,7 @@ class MapLog(object):
 			
 		print "\n\n%s\n%s\n%s\n\n" % (Const.SEPARATOR_LINE_STR,  gameLogStr,  Const.SEPARATOR_LINE_STR)
 
-		
-		
+
 
 if __name__ == '__main__':	
 	Engine.start()

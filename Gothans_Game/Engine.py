@@ -1,8 +1,9 @@
-# Name				: GothansGame.py
+# Name				: Engine.py
 # Author			: JWalker
 # Created			: 17th September 2015
 # Version			: 1.0
 # Runtime			: Python27
+# ASCII Colors		: ANSICON
 
 # Implementation of Gothans Attack
 
@@ -16,6 +17,7 @@ import datetime
 import Scene
 import Entity
 import os
+import Console
 	
 #---------------------------------------------------
 #---------------------------------------------------
@@ -716,11 +718,8 @@ class SceneEngine(object):
 			Time to blow this baby and escape to the planet below!\n\n
 		"""
 		
-		# DEBUG_JW: testing colors
-		#print Display.bcolors.WARNING + "Warning: No active frommets remain. Continue?" + Display.bcolors.ENDC
-		print "It is \033[31mnot\033[39m intelligent to use \033[32mhardcoded ANSI\033[39m codes!"
-		raw_input(Const.PROMPT_CONTINUE_STR)
-		# end debug
+		
+		Console.test_formatting() # DEBUG_JW:
 		
 		done = False
 		
