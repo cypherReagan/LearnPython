@@ -415,8 +415,9 @@ class SceneMap(object):
 		# declare dict for all scenes
 		self.__sceneDict = {	Const.CORRIDOR_KEY	: CentralCorridor(),
 								Const.ARMORY_KEY 	: Armory(),
-								Const.BRIDGE_KEY		: Bridge(),
-								Const.ESCAPE_POD_KEY	: EscapePod(),
+								Const.BRIDGE_KEY	: Bridge(),
+								Const.ESCAPE_POD_KEY: EscapePod(),
+								Const.TEST_KEY		: TestScene(),
 								Const.DEATH_KEY		: Death()	}
 								
 		self.firstScene = startScene
@@ -637,69 +638,21 @@ class Bridge(Scene):
 		print self.sceneMsgStr
 		raw_input(Const.PROMPT_CONTINUE_STR)
 		
-		isMelee = False
+		print "A Gothan is blocking you from planting the bomb."
+			
+		answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
 		
-		if (isMelee):
-		
-			print "A Gothan is blocking you from planting the bomb."
-			
-			answer, thePlayer = Utils.Prompt_User_Action(thePlayer)
-			
-			if (answer == Const.BRIDGE_CHEAT_CMD_STR):
-				retScene = Const.ESCAPE_POD_KEY
-			else:
-				if (answer == Const.ATTACK_CMD_STR):
-					thePlayer = run_melee_attack(thePlayer)
-					
-					if (thePlayer.get_health() > 0):
-						retScene = Const.ESCAPE_POD_KEY
-				else:
-					# user chose not to attack
-					print "The Gothan liquifies you with his plasma rifle"
-			
-		else:
-			# TODO: implement map scenario
-			
-			# Use game loop to send map manipulation requests.
-			# The map will return 
-			
-			#DEBUG_JW - start debug
-			if (0):
-				#print u'\u0420\u043e\u0441\u0441\u0438\u044f'
-				
-				#tmpStrU = u"➕☻↑↓→✊☠☃"
-				tmpStrU = u"░▓▐▄"
-				print tmpStrU
-				
-				#aMapDisplay = Display.MapDisplayData(Const.MAP_BRIDGE_STR1_UCODE)
-				#mapStr = u"%s" % aMapDisplay.get_map()
-				#print mapStr
-				
-				aMapEngine = Engine.MapEngine(Const.MAP_BRIDGE_STR1_UCODE)
-				thePlayer = aMapEngine.run_map(thePlayer)
-			
-				#Utils.Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
-				Utils.Show_Game_Error("DEBUG_JW - This is just a unicode string TEST!!!!\n\n")
-			# end debug
-			
-			GameState.Set_Player(thePlayer)
-			
-			mapStrList = [Const.MAP_CC_STR1_UCODE, Const.MAP_TEST_STR1_UCODE, Const.MAP_TEST_STR2_UCODE]
-			
-			#aMapEngine = Engine.MapEngine("Bridge", self.sceneMsgStr, mapStrList)
-			aMapEngine = Engine.MapEngine(Const.LEVEL_DATA_FILE_BRIDGE_STR)
-			aMapEngine.execute()
-			
+		if (answer == Const.BRIDGE_CHEAT_CMD_STR):
 			retScene = Const.ESCAPE_POD_KEY
-			
-		if (retScene == Const.ESCAPE_POD_KEY):
-			print "Moving to the Escape Pod Bay...\n"
-			
-			
-		raw_input(Const.PROMPT_CONTINUE_STR)	
-		
-		return retScene, thePlayer
-		pass
+		else:
+			if (answer == Const.ATTACK_CMD_STR):
+				thePlayer = run_melee_attack(thePlayer)
+				
+				if (thePlayer.get_health() > 0):
+					retScene = Const.ESCAPE_POD_KEY
+			else:
+				# user chose not to attack
+				print "The Gothan liquifies you with his plasma rifle"
 		
 		
 class EscapePod(Scene):
@@ -716,16 +669,64 @@ class EscapePod(Scene):
 		escapeNumStr = '5' # TODO: implemnent random number
 		answer = raw_input("[pod #]> ")
 		
-		
-		
 		if ((answer == escapeNumStr) or (answer == Const.EP_CHEAT_CMD_STR)):
 			print "\n\nYou picked the correct escape pod and successfully removed yourself from a sticky situation. Good job!"
+			print "Moving to the Escape Pod Bay...\n"
 			
 			retScene = Const.FINISH_RESULT_KEY
+			
+		
+		raw_input(Const.PROMPT_CONTINUE_STR)	
 		
 		return retScene, thePlayer
 		pass
 		
+# used for map testing
+class TestScene(Scene):
+	
+	sceneMsgStr = "Location: Test Scene."
+	
+	def enter(self, thePlayer):
+		retScene = Const.DEATH_KEY
+		self.ThePlayer = thePlayer
+		
+		Utils.Clear_Screen()
+		print self.sceneMsgStr
+		raw_input(Const.PROMPT_CONTINUE_STR)
+		
+		#DEBUG_JW - start debug
+		if (0):
+			#print u'\u0420\u043e\u0441\u0441\u0438\u044f'
+			
+			#tmpStrU = u"➕☻↑↓→✊☠☃"
+			tmpStrU = u"░▓▐▄"
+			print tmpStrU
+			
+			#aMapDisplay = Display.MapDisplayData(Const.MAP_BRIDGE_STR1_UCODE)
+			#mapStr = u"%s" % aMapDisplay.get_map()
+			#print mapStr
+			
+			aLevelEngine = Engine.LevelEngine(Const.MAP_BRIDGE_STR1_UCODE)
+			thePlayer = aLevelEngine.run_map(thePlayer)
+		
+			#Utils.Show_Game_Error("DEBUG_JW - This is just a TEST!!!!\n\n%s" % mapStr)
+			Utils.Show_Game_Error("DEBUG_JW - This is just a unicode string TEST!!!!\n\n")
+		# end debug
+		
+		GameState.Set_Player(thePlayer)
+		
+		mapStrList = [Const.MAP_CC_STR1_UCODE, Const.MAP_TEST_STR1_UCODE, Const.MAP_TEST_STR2_UCODE]
+		
+		aLevelEngine = Engine.LevelEngine(Const.LEVEL_DATA_FILE_BRIDGE_STR)
+		aLevelEngine.execute()
+		
+		retScene = Const.FINISH_RESULT_KEY
+		
+		
+		raw_input(Const.PROMPT_CONTINUE_STR)	
+		
+		return retScene, thePlayer
+		pass
 		
 		
 if __name__ == '__main__':	

@@ -13,6 +13,7 @@ class Actor(object):
 	
 	
 	def __init__(self):
+		self.__cmdStrList = []
 		self.reset_data()
 		
 	def reset_data(self):
@@ -21,6 +22,8 @@ class Actor(object):
 		self.theInventoryMgr = InventoryMgr()
 		self.__dir = Const.DIR_NORTH
 		self.Id = Const.INVALID_INDEX
+		self.__cmdStrList[:] = []
+		self.location = Const.INVALID_INDEX
 		
 		# start with default melee weapons
 		# TODO: ultimately allow player to find these in map
@@ -86,6 +89,18 @@ class Actor(object):
 		
 		return self.theInventoryMgr.set_current_item(itemDataIndex)
 		
+	def set_cmdStrList(self, newCmdStrList):
+		self.__cmdStrList = newCmdStrList
+		
+	def get_next_cmdStr(self):
+		
+		retStr = ''
+		
+		if (len(self.__cmdStrList) > 0):
+			retStr = self.__cmdStrList[0]
+			del self.__cmdStrList[0]
+		
+		return retStr
 
 		
 	def print_stats(self):
@@ -632,19 +647,51 @@ class WeaponItem(Item):
 # Member Variables:	
 #       mapIndex	- exit's map location in level
 #       pos			- exit position in current map
+#		char		- character representation on map
 #		linkIndex	- pointer to next map in level
+#		linkPos		- exit position in next map
 #--------------------------------------------------
 #---------------------------------------------------		
 class MapExitItem(object):
 
-	def __init__(self,  newMapIndex, newexitPos,  newLinkIndex):
+	def __init__(self,  newMapIndex, newExitPos, newChar, newLinkIndex, linkPos):
+	
 		self.mapIndex = newMapIndex
-		self.pos = newexitPos
+		self.pos = newExitPos
 		self.linkIndex = newLinkIndex
-		Utils.Log_Event("Creating MapExitItem with mapIndex = %d, pos = %s, linkIndex = %d" % (self.mapIndex, self.pos.get_str(),  self.linkIndex))
+		self.char = self.__get_valid_char(newChar)
+		self.linkPos = linkPos
+		Utils.Log_Event("Creating MapExitItem with mapIndex = %d, pos = %s, linkIndex = %d, char = %s" % (self.mapIndex, self.pos.get_str(),  self.linkIndex, self.char))
 
 
+	def __get_valid_char(self, inChar):
 		
+		retChar = ''
+		
+		tmpChar = inChar
+		charLen = len(inChar)
+		
+		if (charLen <= 0):
+			# default to generic door char
+			tmpChar = Const.MAP_CHAR_EXIT_LIST[Const.TILE_ORIENTATION_HOROZONTAL]
+		elif(charLen > 1):
+			# just use the first character
+			tmpChar = inChar[0]
+			
+		isMatch = False
+			
+		for doorChar in Const.MAP_CHAR_EXIT_LIST:
+			if (doorChar == tmpChar):
+				isMatch = True
+				break # done looking so quit
+				
+		if (isMatch):
+			retChar = tmpChar
+		else:
+			# default to generic char
+			retChar = Const.MAP_CHAR_EXIT_LIST[Const.TILE_ORIENTATION_HOROZONTAL]
+				
+		return retChar
 		
 		
 if __name__ == '__main__':	

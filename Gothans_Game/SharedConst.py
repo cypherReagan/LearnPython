@@ -18,8 +18,8 @@ BRIDGE_KEY = 'bridge'
 ESCAPE_POD_KEY = 'escape pod'
 DEATH_KEY = 'death'
 FINISH_RESULT_KEY = 'done'
-#START_KEY = CORRIDOR_KEY # DEBUG_JW: Put this back after testing!
-START_KEY = BRIDGE_KEY
+TEST_KEY = 'test'
+START_KEY = CORRIDOR_KEY
 
 # #############################################################################
 # Game String Msgs
@@ -40,8 +40,10 @@ INFINITE_VAL = -1000
 # #############################################################################
 RT_SUCCESS = 0
 RT_FAILURE = 1
+RT_INVALID_PARAMETER = 2
+RT_NULL_ITEM = 3
 
-RT_OUT_OF_INV_SPACE = 2
+RT_OUT_OF_INV_SPACE = 20
 # End Status
 
 # #############################################################################
@@ -280,7 +282,7 @@ ITEM_CMD_STR_LIST = [
 				MAP_CMD_STR_BATTERY, 
 				MAP_CMD_STR_BOMB]
 
-MAP_EXIT_NUM = 9999
+LEVEL_EXIT_NUM = -2 # exit that triggers player map level completion
 
 
 # Map Obj directions
@@ -313,14 +315,15 @@ MAP_CAT_ITEM = 7
 
 
 # Map Obj characters
-MAP_CHAR_WALL_LIST = [u'▄',u'▐']		# 0
-MAP_CHAR_OPEN_SPACE = u'░'				# 1
-MAP_CHAR_PLAYER = '+'					# 2
-MAP_CHAR_ENEMY_LIST = ['^','v','>','<']	# 3
-MAP_CHAR_EXIT_LIST = ['=',u'║']			# 4
-MAP_CHAR_SOLID_SPACE = u'▓'				# 5
-MAP_CHAR_LINE_FEED = '\n'				# 6
-MAP_CHAR_ITEM = '$'						# 7
+MAP_CHAR_WALL_LIST = [u'▄',u'▐']			# 0
+MAP_CHAR_OPEN_SPACE = u'░'					# 1
+MAP_CHAR_PLAYER_LIST = ['^','v','>','<']	# 2
+MAP_CHAR_ENEMY_LIST = ['W','M','E','3']		# 3
+MAP_CHAR_EXIT_LIST = ['=',u'║']				# 4
+MAP_CHAR_SOLID_SPACE = u'▓'					# 5
+MAP_CHAR_LINE_FEED = '\n'					# 6
+MAP_CHAR_ITEM = '$'							# 7
+
 
 # Default Map Obj characters colors -> use category as index
 # Oder: Forground, Background, Format
@@ -343,12 +346,9 @@ MAP_CHAR_SOLID_SPACE_ASCII = '#'
 
 MAP_CHAR_WALL_LIST_ASCII = ['_','|','-']
 
-MAP_CHAR_ENEMY_LIST = ['^','v','>','<']
-MAP_CHAR_DOOR_LIST = ['=',u'║']
-
 MAP_CHARS_LIST = [	MAP_CHAR_WALL_LIST,
 					[MAP_CHAR_OPEN_SPACE],
-					[MAP_CHAR_PLAYER],
+					MAP_CHAR_PLAYER_LIST,
 					MAP_CHAR_ENEMY_LIST,
 					MAP_CHAR_EXIT_LIST,
 					[MAP_CHAR_SOLID_SPACE],

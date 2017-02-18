@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import SharedConst as Const
 
 
@@ -22,7 +24,10 @@ BLACK = 11 #'\033[30m'
 
 	
 def test_formatting():
-	#theBcolor = bcolors()
+	
+	#uCodeStr = u'Ω'
+	#print "%s" % uCodeStr
+	
 	print "%sWarning: No active formats remain. Continue?%s\n" % (bcolor.get_colorStr(MAGENTA), bcolor.get_colorStr(ENDC))
 	print "It is \033[31mnot\033[39m intelligent to use \033[32mhardcoded ANSI\033[39m \033[1mcodes!\033[0m"
 	print "It is \033[31m\033[47mnot\033[39m\033[49m intelligent to use \033[92mhardcoded ANSI\033[39m \033[1mcodes!\033[0m"

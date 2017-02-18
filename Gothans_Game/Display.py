@@ -20,10 +20,29 @@ class MapPos(object):
 		self.xPos = newXVal
 		self.yPos = newYVal
 		
+	def is_valid(self):
+		
+		retVal = False
+		
+		if ((self.xPos >= 0) and (self.yPos >=0)):
+			retVal = True
+		
+		return retVal
+		
+	def compare(self, inPos):
+		
+		retVal = False
+		
+		if (inPos != None):
+			if ((inPos.xPos == self.xPos) and (inPos.yPos == self.yPos)):
+				retVal = True
+		
+		return retVal
+		
 	def get_str(self):
 		retStr = "(%d, %d)" % (self.xPos, self.yPos)
-		
 		return retStr
+		
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -285,7 +304,7 @@ class MapTile(object):
 		standChar = self.get_char(Const.MAP_TILE_LAYER_INDEX_STAND)
 		
 		# provide char with color applied
-		if (standChar != Const.MAP_CAT_OPEN_SPACE):
+		if (standChar != Const.MAP_CHAR_OPEN_SPACE):
 			# standing layer trumps anything on the floor for user display
 			retChar = self.__layerList[Const.MAP_TILE_LAYER_INDEX_STAND].color.get_painted_char(standChar)
 			
@@ -294,6 +313,27 @@ class MapTile(object):
 			
 		return retChar
 		
+	# Updates direction for rotatable characters
+	# Returns status from update
+	def update_char_from_dir(self, inLayer, newDir):
+		
+		rStat = Const.RT_INVALID_PARAMETER
+		
+		if ((newDir >= 0) and (newDir < len(Const.DIR_STR_LIST))):
+			# valid direction
+			if (TileLayer.is_valid(inLayer)):
+	
+				rStat = Const.RT_SUCCESS
+				
+				if (self.__layerList[inLayer].category == Const.MAP_CAT_PLAYER):
+					self.__layerList[inLayer].tileChar = Const.MAP_CHAR_PLAYER_LIST[newDir]
+					
+				elif (self.__layerList[inLayer].category == Const.MAP_CAT_ENEMY):
+					self.__layerList[inLayer].tileChar = Const.MAP_CHAR_ENEMY_LIST[newDir]
+				else:
+					# char is not rotatable
+					rStat = RT_FAILURE
+				
 		
 	def get_str(self):
 		retStr = self.pos.get_str() + ": "
@@ -425,6 +465,41 @@ class TileLayer(object):
 		
 		return mapChar
 		
+		
+	# Get layer index based on tile category.
+	# Assumes category relates to a map entity.
+	#
+	# Returns INVALID_INDEX if index cannot be calculated.
+	@staticmethod
+	def Get_Entity_LayerIndex_From_Category(mapTileCategory):
+		
+		retIndex = Const.INVALID_INDEX
+		
+		if ((mapTileCategory == Const.MAP_CAT_PLAYER) or (mapTileCategory == Const.MAP_CAT_ENEMY) or (mapTileCategory == Const.MAP_CAT_EXIT)):
+			retIndex = Const.MAP_TILE_LAYER_INDEX_STAND
+			
+		elif (mapTileCategory == Const.MAP_CAT_ITEM):
+			retIndex = Const.MAP_TILE_LAYER_INDEX_FLOOR
+		
+		return retIndex
+		
+		
+	# Get layer index based on tile char.
+	# Assumes char relates to a map entity.
+	#
+	# Returns INVALID_INDEX if index cannot be calculated.
+	@staticmethod
+	def Get_Entity_LayerIndex_From_Char(mapTileChar):
+		
+		retIndex = Const.INVALID_INDEX
+		
+		if ((mapTileChar in Const.MAP_CHAR_PLAYER_LIST) or (mapTileChar in Const.MAP_CHAR_ENEMY_LIST) or (mapTileChar in Const.MAP_CHAR_EXIT_LIST)):
+			retIndex = Const.MAP_TILE_LAYER_INDEX_STAND
+			
+		elif (mapTileChar == Const.MAP_CHAR_ITEM):
+			retIndex = Const.MAP_TILE_LAYER_INDEX_FLOOR
+		
+		return retIndex
 	
 	def get_str(self):
 		retStr = self.tileChar
@@ -469,15 +544,16 @@ class NumGenerator(object):
 #
 # Member Variables:	
 #		__tileList		- list of all tiles in display map
-#		__idGen			- objID generator
+#		IdGen			- objID generator
 #		
 #---------------------------------------------------
 #---------------------------------------------------
 		
 class MapContainer(object):
 	
+	IdGen = NumGenerator(0)
+	
 	def __init__(self, mapStr):
-		self.__idGen = NumGenerator(0)
 		self.set_map_str(mapStr)
 		
 		
@@ -509,7 +585,27 @@ class MapContainer(object):
 			else:
 				xVal += 1
 				
+	@staticmethod
+	# Determines target position from current position and given direction
+	# Returns:
+	#	targetPos - None if target could not be calculated
+	def Get_Pos_From_Dir(currentPos, objDir):
+	
+		targetPos = MapPos(currentPos.xPos, currentPos.yPos) # get new instance to avoid copy-by-reference
 		
+		if (objDir == Const.DIR_NORTH):
+			targetPos.yPos -= 1 # y-axis is inverted in map str
+		elif (objDir == Const.DIR_WEST):
+			targetPos.xPos -= 1
+		elif (objDir == Const.DIR_SOUTH):
+			targetPos.yPos += 1 # y-axis is inverted in map str
+		elif (objDir == Const.DIR_EAST):
+			targetPos.xPos += 1
+		else:
+			# bad direction so return bad pos
+			targetPos = None
+			
+		return targetPos
 		
 	def get_map_for_display(self):
 		
@@ -527,8 +623,11 @@ class MapContainer(object):
 		
 		print "###### MAP %d DATA######" % (mapIndex)
 		
+		count = 0
+		
 		for mapItem in self.__tileList:
-			print "%s" % mapItem.get_str()
+			print "%d. %s" % (count, mapItem.get_str())
+			count += 1
 		
 		raw_input(Const.PROMPT_CONTINUE_STR)
 		
@@ -553,7 +652,7 @@ class MapContainer(object):
 				
 				for layerCount in range(0, Const.MAP_TILE_LAYERS_NUM): 
 				
-					objID = self.__idGen.get_num() # use unique ID for each layer obj
+					objID = MapContainer.IdGen.get_num() # use unique ID for each layer obj
 					
 					if (layerCount == layerIndex):
 						# insert tile data in proper layer
@@ -675,12 +774,12 @@ class MapContainer(object):
 	# Finds the mapTile in a given direction
 	#
 	#	Parameters:
-	#		objID - ID of starting tile obj
-	#		objDir - direction to look for target
+	#		objID	- ID of starting tile obj
+	#		objDir	- direction to look for target
 	#
 	#	Return:
-	#		retTile - target tile of given direction
-	#		retTileIndex - target's index into tile collection
+	#		retTile 		- target tile of given direction
+	#		retTileIndex	- target's index into tile collection
 	def __get_target_tile_from_Dir(self, objID, objDir):
 	
 		retTile = None
@@ -694,32 +793,58 @@ class MapContainer(object):
 			currentTile = self.__tileList[currentTileIndex]
 			currentPos = currentTile.pos
 			
-			targetPos = MapPos(currentPos.xPos, currentPos.yPos) # get new instance to avoid copy-by-reference
-			isGoodDir = True
+			targetPos = MapContainer.Get_Pos_From_Dir(currentPos, objDir)
 			
-			if (objDir == Const.DIR_NORTH):
-				targetPos.yPos -= 1 # y-axis is inverted in map str
-			elif (objDir == Const.DIR_WEST):
-				targetPos.xPos -= 1
-			elif (objDir == Const.DIR_SOUTH):
-				targetPos.yPos += 1 # y-axis is inverted in map str
-			elif (objDir == Const.DIR_EAST):
-				targetPos.xPos += 1
-			else:
-				isGoodDir = False
-			
-			if (not isGoodDir):
+			if (targetPos == None):
 				Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Dir() - invalid objDir %s!" % objDir)
 			else:
 				targetTileIndex = self.__get_tileIndex_from_Pos(targetPos)
 				
 				if (targetTileIndex == Const.INVALID_INDEX):
-					Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Dir() - invalid target position (%d, %d)!" % (targetPos.xPos, targetPos.yPos))
+					Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Dir() - invalid targetPos %s from currentPos %s, ID = %d!" % (targetPos.get_str(), currentPos.get_str(), objID))
 				else:
 					# get target
 					retTile = self.__tileList[targetTileIndex]
 					retTileIndex = targetTileIndex
 					
+		return retTile, retTileIndex
+	
+	# Queries the map for a tile in a given direction from start position
+	#
+	#	Parameters:
+	#		objPos	- position of starting tile obj
+	#		objDir	- direction to look for target
+	#
+	#	Return:
+	#		retTile - target tile of given direction
+	#		retTileIndex	- target's index into tile collection
+	#
+	def __get_target_tile_from_Pos(self, objPos, objDir, layerIndex):
+		
+		retTile = None
+		retTileIndex = Const.INVALID_INDEX
+		
+		if (objPos == None):
+			Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Pos() - invalid objPos!")
+		else:
+			# calculate starting tile location			
+			tileIndex = 0
+			
+			for tile in self.__tileList:
+				if (tile.pos.compare(objPos)):
+					# we have a winner so quit
+					break
+					
+				tileIndex += 1
+					
+			
+			if ((tileIndex < 0) or (tileIndex >= len (self.__tileList))):
+				Utils.Show_Game_Error("MapContainer::__get_target_tile_from_Pos() - invalid tileIndex %d from pos %s!" % (tileIndex, objPos.get_str()))
+			else:
+				currentTile = self.__tileList[tileIndex]
+				retTile, retTileIndex = self.__get_target_tile_from_Dir(currentTile.get_ID(layerIndex), objDir)
+				
+		
 		return retTile, retTileIndex
 	
 	# TODO: Remove
@@ -743,6 +868,51 @@ class MapContainer(object):
 			
 		return retActionItem
 	
+	# Determines if target tile is an open space.
+	# Looks up target based on direction from objPos.
+	def is_open_pos_from_pos(self, objPos, objCategory, objDir):
+		
+		retVal = False
+		
+		layerIndex = TileLayer.Get_Entity_LayerIndex_From_Category(objCategory)
+			
+		if (layerIndex == Const.INVALID_INDEX):
+			Utils.Show_Game_Error("MapContainer::is_open_pos_from_pos() - could not get layerIndex from objCategory %d!" % (objCategory))
+		else:
+	
+			targetTile, targetTileIndex = self.__get_target_tile_from_Pos(objPos, objDir, layerIndex)
+			
+			if (targetTile != None):
+			
+				targetCategory = targetTile.get_category(layerIndex)
+					
+				if (targetCategory == Const.MAP_CAT_OPEN_SPACE):
+					retVal = True
+				elif (Const.DEBUG_MODE):
+					Utils.Log_Event("MapContainer::is_open_pos_from_pos() - target NOT open. Start pos %s, targetTileIndex = %d, Category = %d" % (objPos.get_str(), targetTileIndex, targetCategory))
+		
+		return retVal
+		
+		
+	# Determines if target tile is an open space.
+	# Looks up target based on direction from objID.
+	#
+	# NOTE: Assumes target tile is in same map
+	def is_open_pos_from_ID(self, objID, objDir):
+		retVal = False
+		
+		targetTile, targetTileIndex = self.__get_target_tile_from_Dir(objID, objDir)
+		
+		if (targetTile == None):
+			Utils.Show_Game_Error("MapContainer::is_open_pos_from_ID() - could not get targetTile from objID %d and dir=%d!" % (objID, objDir))
+		else:
+			currentLayerIndex = self.__tileList[targetTileIndex].get_layerIndex_from_ID(objID)
+			targetCategory = targetTile.get_category(currentLayerIndex)
+				
+			if (targetCategory == Const.MAP_CAT_OPEN_SPACE):
+				retVal = True
+		
+		return retVal
 	
 	def move_map_item(self, objID, objDir):
 	
@@ -755,31 +925,60 @@ class MapContainer(object):
 				Utils.Show_Game_Error("MapContainer::move_map_item() - invalid objID %d!" % objID)
 			else:
 				currentLayerIndex = self.__tileList[currentTileIndex].get_layerIndex_from_ID(objID)
+				self.__tileList[currentTileIndex].update_char_from_dir(currentLayerIndex, objDir)
+				
 				if (targetTile.get_category(currentLayerIndex) == Const.MAP_CAT_OPEN_SPACE):
 					# this is a valid move so proceed with swap
 					self.__swap_tileLayers_in_List(currentTileIndex, targetTileIndex, currentLayerIndex)
 					
-					
+	# Function finds entity relative to current objID tile in map
+	# Returns target (objID, category) if successfully located, else INVALID_INDEX 		
 	def use_map_item(self, objID, objDir):		
 		retID = Const.INVALID_INDEX
+		retCategory = Const.INVALID_INDEX
 			
 		targetTile, targetTileIndex = self.__get_target_tile_from_Dir(objID, objDir)
 			
-		if (targetTile != None):
-			currentLayerIndex = self.get_layer_from_ID(objID)
-			if (targetTile.get_category(currentLayerIndex) == Const.MAP_CAT_EXIT):
-				# send back the exit obj ID for engine processing
-				retID = targetTile.objID
-
+		if (targetTile == None):
+			Utils.Show_Game_Error("MapContainer::use_map_item() - could not get targetTile from objID %d and dir=%d!" % (objID, objDir))
 		else:
-			pass
+			currentLayerIndex = targetTile.get_layerIndex_from_ID(objID)
+			targetCategory = targetTile.get_category(currentLayerIndex)
+			
+			if (targetCategory == Const.MAP_CAT_EXIT):
+				# send back the exit obj ID and category for engine processing
+				retID = targetTile.get_ID(currentLayerIndex)
+				retCategory = targetCategory
+	
+		return retID, retCategory
 		
-		return retID 
+	# Function places entity to target position's empty tile in map (based on direction from starting position)
+	# Returns new Oid if successful placement, else INVALID_INDEX 
+	def place_map_entity_from_dir(self, newEntityChar, newEntityPos, newObjCategory, newEntityDir, needsNewOid=False):		
+	
+		retOid = Const.INVALID_INDEX
 		
+		layerIndex = TileLayer.Get_Entity_LayerIndex_From_Category(newObjCategory)
+			
+		if (layerIndex == Const.INVALID_INDEX):
+			Utils.Show_Game_Error("MapContainer::place_map_entity_from_dir() - could not get layerIndex from objCategory %d!" % (newObjCategory))
+		else:
+	
+			if (newEntityPos == None):
+				Utils.Show_Game_Error("MapContainer::place_map_entity_from_dir() - invalid newEntityPos!")
+			else:
+				targetTile, targetTileIndex = self.__get_target_tile_from_Pos(newEntityPos, newEntityDir, layerIndex)
+				
+				if (targetTile == None):
+					Utils.Show_Game_Error("MapContainer::place_map_entity_from_dir() - could not get targetTile from pos=%s, dir=%d!" % (newEntityPos.get_str(), newEntityDir))
+				else:
+					retOid = self.place_map_entity(newEntityChar, targetTile.pos, needsNewOid)
+		
+		return retOid
 		
 	# Function places entity to target position's empty tile in map
 	# Returns new objID if successful placement, else INVALID_INDEX 
-	def place_map_entity(self, newEntityChar, newEntityPos):		
+	def place_map_entity(self, newEntityChar, newEntityPos, needsNewOid=False):		
 	
 		retID = Const.INVALID_INDEX
 		
@@ -805,15 +1004,19 @@ class MapContainer(object):
 						if (newEntityChar == targetTile.get_char(layerIndex)):
 							# placing tile that already exists so return existing ID
 							retID = targetTile.get_ID(layerIndex)
-							Utils.Show_Game_Error("MapContainer::place_map_entity() - duplicate placement at pos = %s" % newEntityPos.get_str()) 
+							Utils.Log_Event("MapContainer::place_map_entity() - duplicate placement at pos = %s" % newEntityPos.get_str()) 
 					else:
 						# placing entity in open space
-						testStr = "DEBUG_JW (notAnError): MapContainer::place_map_entity() - tile %s : category = %d" % (newEntityPos.get_str(), newEntityCategory)
-						Utils.Show_Game_Error(testStr) 
+						Utils.Log_Event("MapContainer::place_map_entity() - placing at tile %s : category = %d" % (newEntityPos.get_str(), newEntityCategory)) 
 					
 						# Free to place entity
-						# don't care about new objID since we'll keep the existing one
-						newLayer = TileLayer(newEntityCategory, newEntityChar, Const.INVALID_INDEX)
+						# Unless specified, don't care about new objID since we'll keep the existing one
+						layerOid = Const.INVALID_INDEX
+						
+						if (needsNewOid):
+							layerOid = MapContainer.IdGen.get_num() # caller asked for unique OID
+						
+						newLayer = TileLayer(newEntityCategory, newEntityChar, layerOid)
 						
 						# update target reference
 						rStat = targetTile.insert_layer(newLayer, layerIndex)
@@ -825,8 +1028,28 @@ class MapContainer(object):
 													
 		return retID
 		
-		def remove_map_entity(self):
-			pass
+	# Function deletes entity and replaces it with an open space in map
+	# Returns status of obj removal 
+	def remove_map_entity(self, objID):
+		rStat = Const.RT_SUCCESS
+		
+		currentTileIndex = self.__get_tileIndex_from_ID(objID)
+		
+		if (currentTileIndex == Const.INVALID_INDEX):
+			Utils.Show_Game_Error("MapContainer::remove_map_entity() - invalid objID %d!" % objID)
+			rStat = Const.RT_INVALID_PARAMETER
+		else:
+			currentTile = self.__tileList[currentTileIndex]
+		
+			if (currentTile == None):
+				Utils.Show_Game_Error("MapContainer::remove_map_entity() - invalid tile at index %d!" % currentTileIndex)
+				rStat = Const.RT_NULL_ITEM
+			else:
+				currentLayerIndex = currentTile.get_layerIndex_from_ID(objID)
+				currentTile.set_category(Const.MAP_CAT_OPEN_SPACE, currentLayerIndex)
+				currentTile.set_char(Const.MAP_CHAR_OPEN_SPACE, currentLayerIndex)
+	
+		return rStat
 			
 		def replace_map_entity(self):
 			pass
