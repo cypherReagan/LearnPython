@@ -266,7 +266,7 @@ def Prompt_User_For_Item_Add():
 		if ((typeAnswer == "u") or (typeAnswer == "w")):
 		
 			itemAnswer = raw_input("(Enter item name) > ")
-			itemIndex = Entity.Item.get_itemIndex_from_itemStr(itemAnswer)
+			itemIndex = Entity.Item.Is_ItemDataIndex_Valid(itemAnswer)
 		
 			if (itemIndex == Const.INVALID_INDEX):
 				print "Please enter valid item name!"

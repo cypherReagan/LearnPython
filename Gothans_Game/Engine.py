@@ -20,71 +20,6 @@ import os
 import Console
 import codecs
 import copy
-	
-#---------------------------------------------------
-#---------------------------------------------------
-# Class: MapActionItem
-#
-#	Base class for action items.
-#
-# Member Variables:	
-#
-#	Required:
-#		cmdStr		- map manipulation command
-#		targetID	- target objID in map 
-#
-#	Optional:
-#		dir			- map direction
-#---------------------------------------------------
-#---------------------------------------------------
-class MapActionItem(object):
-
-	def __init__(self, newCmdStr, newTargetID, newDir=Const.DIR_INVALID):
-		self.cmdStr = newCmdStr
-		self.objID = newTargetID
-		self.dir = newDir
-		
-	def dump_data(self):
-		retStr = "Action: cmdStr = %s, objID = %d, dir = %d" % (self.cmdStr, self.objID, self.dir)
-		return retStr
-	
-#---------------------------------------------------
-#---------------------------------------------------
-# Class: UseActionItem
-#
-# Member Variables:	
-#
-#	Required:
-#		itemType	- item type being used
-#
-#	Optional:
-#		exitNum		- number of exit door order
-#---------------------------------------------------
-#---------------------------------------------------	
-class UseActionItem(MapActionItem):
-
-	def __init__(self, newItemType, newExitNum=Const.INVALID_INDEX):
-		self.itemType = newItemType
-		self.exitnum = newExitNum
-		
-		
-#---------------------------------------------------
-#---------------------------------------------------
-# Class: PlaceEntityActionItem
-#
-# Member Variables:	
-#
-#	Required:
-#		entityType	- entity type being placed
-#		entityPos	- target map position
-#---------------------------------------------------
-#---------------------------------------------------	
-class PlaceEntityActionItem(MapActionItem):
-
-	def __init__(self, newEntityType, newEntityPos):
-		self.entityType = newEntityType
-		self.entityPos = newEntityPos
-		
 
 #---------------------------------------------------
 #---------------------------------------------------
@@ -96,7 +31,7 @@ class PlaceEntityActionItem(MapActionItem):
 # Member Variables:	
 #
 #	Private:
-#		mapLogStrList 	- FIFO queue to store game msg strings
+#		gameLogStrList	- FIFO queue to store game msg strings
 #		logCount		- number of msgs in queue
 #---------------------------------------------------
 #---------------------------------------------------
@@ -119,7 +54,6 @@ class MapLog(object):
 	def add(self,  newStr):
 		
 		listSize = len (self.__gameLogStrList)
-		#Utils.Show_Game_Error("DEBUG_JW: GameLog.add(%s) - listSize = %d" % (newStr,  listSize))
 		
 		# Timestamp each entry
 		timeStampStr = '{:%H:%M:%S}'.format(datetime.datetime.now())
@@ -171,7 +105,9 @@ class MapObjContainer(object):
 		
 		self.clear()
 			
-	
+	# Class: MapObjContainer
+	#
+	# Reset container data
 	def clear(self):
 		self.exitDict.clear()
 		self.itemList[:] = []
@@ -180,6 +116,8 @@ class MapObjContainer(object):
 		self.__actorList.append(Entity.Actor()) 
 		self.__actorList[0] = None
 		
+	# Class: MapObjContainer
+	#
 	# Methods to simplify player access
 	def get_player(self):
 		return self.get_actor(self.PLAYER_INDEX)
@@ -190,6 +128,9 @@ class MapObjContainer(object):
 	def get_num_actors(self):
 		return len (self.__actorList)
 		
+	# Class: MapObjContainer
+	#
+	# Accessor for actor count
 	def get_num_valid_actors(self):
 		retVal = len (self.__actorList)
 		
@@ -199,6 +140,9 @@ class MapObjContainer(object):
 		
 		return retVal
 		
+	# Class: MapObjContainer
+	#
+	# Adds actor obj to container
 	def add_actor(self, actorObj, isPlayer=False):
 		if (isPlayer):
 			# replace current player
@@ -207,6 +151,8 @@ class MapObjContainer(object):
 			# need to insert player slot in list
 			self.__actorList.append(actorObj)
 		
+	# Class: MapObjContainer
+	#
 	# Actor Accessors
 	def get_actor(self, actorIndex):
 		retObj = None
@@ -218,7 +164,7 @@ class MapObjContainer(object):
 		
 	def set_actor(self, actorObj, actorIndex):
 		if (len (self.__actorList) > actorIndex):
-			# slot already exists so replace existing objID
+			# slot already exists so replace existing oid
 			self.__actorList[actorIndex] = actorObj
 		else:
 			# need to insert player slot in list
@@ -234,10 +180,6 @@ class MapObjContainer(object):
 #---------------------------------------------------		
 class LevelEngine(object):
 	
-	
-	__theMapCmdList = []	# TODO: remove this
-	__objContainer = None	# stores all level entity objs DEBUG_JW - remove this static obj?
-	
 	def __init__(self, levelDataFileStr):
 		
 		# DEBUG_JW start
@@ -245,17 +187,14 @@ class LevelEngine(object):
 		newMapObjvStr = "Location: Bridge.\nA Gothan stands in your way.\nYou must defeat him in order to set the bomb and attempt to escape.\n"
 		newMapStrList = [Const.MAP_CC_STR1_UCODE, Const.MAP_TEST_STR1_UCODE, Const.MAP_TEST_STR2_UCODE]
 		# DEBUG_JW end
-		
-		self.__theMapDisplay = None # TODO: remove
+
 		self.__theMapDisplayList = []
-		self.__theMapStrList = []
 		self.__theMapNameStr = ""	# name of current map level
 		self.__theMapObjvStr = ""	# player's current level obj
 		
 		self.__mapIndex = 0			# points to current player map
 		
 		self.__objContainer = MapObjContainer() # stores all scene entity objs
-		self.__objContainerList = []	# TODO: remove
 		self.__numMaps = Const.INVALID_INDEX
 				
 		# Clear the ID range so that all map obj in this level 
@@ -275,15 +214,15 @@ class LevelEngine(object):
 			self.init_map_data(newMapNameStr,  newMapObjvStr, newMapStrList)
 			pass
 
+	# Class: LevelEngine
+	#
 	# init all map data from level script
 	def init_map_data(self,  newMapNameStr, newMapObjvStr, newMapStrList):
 		
 		for mapStr in newMapStrList:
-			self.__theMapStrList.append(mapStr)
-			self.__objContainerList.append(MapObjContainer()) # DEBUG_JW - remove
 			self.__theMapDisplayList.append(Display.MapContainer(mapStr))
 		
-		self.__numMaps = len (self.__theMapStrList)
+		self.__numMaps = len (self.__theMapDisplayList)
 		
 		playerActor = GameState.Get_Player()
 		
@@ -346,7 +285,7 @@ class LevelEngine(object):
 					levelScriptExitList.remove(exit)
 			
 			if (mapIndex == playerMapIndex):
-				playerActor.Id = self.__theMapDisplayList[mapIndex].place_map_entity(Const.MAP_CHAR_PLAYER_LIST[Const.DIR_NORTH], playerPos)
+				playerActor.oid = self.__theMapDisplayList[mapIndex].place_map_entity(Const.MAP_CHAR_PLAYER_LIST[Const.DIR_NORTH], playerPos)
 				playerActor.location = mapIndex
 				self.__objContainer.set_actor(playerActor, MapObjContainer.PLAYER_INDEX)
 		
@@ -354,11 +293,11 @@ class LevelEngine(object):
 		
 			if (mapIndex == 0):
 				gothanChar = Const.MAP_CHAR_ENEMY_LIST[Const.DIR_SOUTH]
-				gothanActor1.Id = self.__theMapDisplayList[mapIndex].place_map_entity(gothanChar, gothanPos1)
+				gothanActor1.oid = self.__theMapDisplayList[mapIndex].place_map_entity(gothanChar, gothanPos1)
 				gothanActor1.location = mapIndex
 				self.__objContainer.set_actor(gothanActor1, 1)
 				
-				batteryItem.Id = self.__theMapDisplayList[mapIndex].place_map_entity(Const.MAP_CHAR_ITEM, itemPos1)
+				batteryItem.oid = self.__theMapDisplayList[mapIndex].place_map_entity(Const.MAP_CHAR_ITEM, itemPos1)
 				self.__objContainer.itemList.append(batteryItem)
 				
 				#exitID = mapDisplay.place_map_entity(Const.MAP_CHAR_DOOR, exitPos1)
@@ -385,45 +324,31 @@ class LevelEngine(object):
 				self.__objContainer.exitDict[exitID] = exit2_2
 				
 
-	# determines if given mapIndex is in range of __theMapStrList
+	# Class: LevelEngine
+	#
+	# determines if given mapIndex is in range of __theMapDisplayList
 	def is_valid_map_index(self, mapIndex):
 		retVal = False
 		
-		if ((mapIndex >= 0) and (mapIndex < len(self.__theMapStrList))):
+		if ((mapIndex >= 0) and (mapIndex < len(self.__theMapDisplayList))):
 			retVal = True
 		
 		return retVal
 			
+	# Class: LevelEngine
+	#
 	# Writes relative data to GameState
 	def __create_checkPoint(self):
 		pass
 		
-		
-	# DEBUG_JW: probebly don't need this... remove
-	def __update_map(self, listIndex):
-		
-		retVal = False
-	
-		if (listIndex < len (self.__theMapStrList)):
-		
-			newMapStr = u""
-			newMapStr = self.__theMapStrList[listIndex]
-			self.__theMapDisplay = Display.MapContainer(newMapStr)
-
-			retVal = True
-			
-		return retVal
 	
 	# Executes series of maps in list
 	def execute(self):
 		
-		# DEBUG_JW: might need to do this at obj placement
-		#self.__objContainerList[self.__mapIndex].set_player(GameState.Get_Player())
-		
 		done = False
 		
 		while (not done):
-			if (self.__mapIndex >= len (self.__theMapStrList)):
+			if (self.__mapIndex >= len (self.__theMapDisplayList)):
 				# we've hit an exit that moves player out of current level
 				done = True
 			else:
@@ -441,7 +366,8 @@ class LevelEngine(object):
 								
 		GameState.Set_Player(self.__objContainer.get_player())
 		
-				
+	# Class: LevelEngine
+	#	
 	# Determine next map based on user exit of previous map
 	def calc_next_map_index(self): 
 		retIndex = Const.INVALID_INDEX
@@ -451,6 +377,8 @@ class LevelEngine(object):
 		
 		return retIndex
 		
+	# Class: LevelEngine
+	#
 	# Runs all maps in level until player is done current map
 	def __run_maps(self):
 	
@@ -460,55 +388,7 @@ class LevelEngine(object):
 	
 		done = False
 		
-		# Call utility function to iterate over map str and create list of game objs
-		# ############### DEBUG_JW: this is a hack for now!
-		
-		# FIXME: DEBUG_JW - continue removing __theMapDisplay references here
-		if (0):
-		
-			exitIdList = []#self.__theMapDisplay.__get_obj_mapID_list(Const.MAP_CAT_EXIT)
-			mapExitDict = {}
-			
-			tmpActor = GameState.Get_Player()
-
-			for exitID in exitIdList:
-				exitLink = Const.INVALID_INDEX
-				
-				if (self.__mapIndex == 0):
-					# map 0
-					if (exitID == 9):
-						exitLink = 1
-					elif (exitID == 12):
-						exitLink = 2
-					elif (exitID == 160):
-						exitLink = 0 # stay here when using first entry
-						
-				elif (self.__mapIndex == 1):
-					# map 1
-					if (exitID == 48):
-						exitLink = 0
-						
-				elif (self.__mapIndex == 2):
-					# map 2
-					if (exitID == 12):
-						exitLink = Const.LEVEL_EXIT_NUM # flag the level exit using unique num ( len(__theMapStrList)? )
-					if (exitID == 54):
-						exitLink = 0
-					
-				mapExitDict[exitID] = Entity.MapExitItem(exitLink)
-			
-			if (self.__mapIndex == 0):
-					# map 0
-					tmpActor.Id = self.__theMapDisplay.place_map_entity(Const.MAP_CHAR_PLAYER_LIST[Const.DIR_NORTH], Display.MapPos(5, 11))
-			
-			self.__objContainer.exitDict = mapExitDict
-			self.__objContainer.set_actor(tmpActor, MapObjContainer.PLAYER_INDEX)
-			
-		# ############### end hacked code
-		
 		while (not done):
-			# clear all old map actions
-			del self.__theMapCmdList[:]
 			
 			# TODO: implement DisplayPrint thread and use list to pass display strings.
 			#		Set list values here.
@@ -536,7 +416,7 @@ class LevelEngine(object):
 			# http://effbot.org/librarybook/msvcrt.htm
 			
 			# iterate through all maps and process any changes
-			maxMapCount = len(self.__theMapStrList)
+			maxMapCount = len(self.__theMapDisplayList)
 			objContainer = self.__objContainer
 			maxActorCount = objContainer.get_num_actors()
 			
@@ -589,37 +469,11 @@ class LevelEngine(object):
 								if (actorIndex == MapObjContainer.PLAYER_INDEX):
 									# player has exited current map
 									done = True
-								
-						
-							# construct player action
-							#playerAction = MapActionItem(answer, playerID, self.__objContainerList[self.__mapIndex].thePlayer.get_dir_num())
-							#self.__theMapCmdList.append(playerAction)
-
-							
-							# DEBUG_JW: delete this loop!
-							# send action to map
-							if (0):
-								for cmdItem in self.__theMapCmdList:
-									#Utils.Log_Event("DEBUG_JW: Map Engine sending UI cmd - %s" % cmdItem.dump_data())
-									engineActionItem = self.__theMapDisplay.process_map_cmd(cmdItem)
-									
-									# process any return map engine action from the UI
-									if (engineActionItem != None):
-										Utils.Log_Event("Map Engine receiving UI cmd - %s" % engineActionItem.dump_data())
-										
-										# check for exit to see if we are done with current map
-										exitNum = self.get_map_exit_action(mapIndex, engineActionItem)
-										
-										if (exitNum != Const.INVALID_INDEX):
-											done = True
-										else:
-											# process any other return action
-											self.process_engine_action(engineActionItem)
 				
 		return exitNum
 		
-		
-	def get_map_exit_action(self, mapIndex, actionCmdStr, objID):
+	# TODO: remove???
+	def get_map_exit_action(self, mapIndex, actionCmdStr, oid):
 
 		exitNum = Const.INVALID_INDEX
 		
@@ -631,22 +485,24 @@ class LevelEngine(object):
 			
 			if (actionCmdStr == Const.MAP_CMD_STR_USE):
 				
-				exitItem = objContainer.exitDict.get(objID)
+				exitItem = objContainer.exitDict.get(oid)
 
 				if (not exitItem):
-					Utils.Show_Game_Error("LevelEngine::process_engine_action() - invalid exit objID %d!" % objID)
+					Utils.Show_Game_Error("LevelEngine::process_engine_action() - invalid exit oid %d!" % oid)
 				else:
 					exitNum = exitItem.linkIndex
 		
 		return exitNum
 		
+	# TODO: remove???
 	def process_engine_action(self, engineActionItem):
 		pass
 		
+	# Class: LevelEngine
+	#
 	# Process cmd entered by user on behalf of player
 	# Returns:
-	#	retCmdStr - empty str if cmd was processed, else original cmd		 
-	#			 
+	#	retCmdStr - empty str if cmd was processed, else original cmd		 	 
 	def process_player_cmd(self, answer):
 		
 		retCmdStr = ''
@@ -692,6 +548,8 @@ class LevelEngine(object):
 				
 		return retCmdStr
 		
+	# Class: LevelEngine
+	#
 	# Processes actor action cmd that needs to go to map
 	# Returns exitNum if actor exits current map, else INVALID_INDEX
 	def process_actor_cmd(self, mapIndex, actionCmdStr, actorIndex):
@@ -721,14 +579,14 @@ class LevelEngine(object):
 					actorObj.set_dir(actorDir)
 				
 				# send general move cmd to UI
-				Utils.Log_Event("LevelEngine::process_actor_cmd() - moving actor %d in dir = %d" % (actorObj.Id, actorDir))
-				self.__theMapDisplayList[mapIndex].move_map_item(actorObj.Id, actorDir)
+				Utils.Log_Event("LevelEngine::process_actor_cmd() - moving actor %d in dir = %d" % (actorObj.oid, actorDir))
+				self.__theMapDisplayList[mapIndex].move_map_item(actorObj.oid, actorDir)
 			
 			# USE
 			elif (actionCmdStr == Const.MAP_CMD_STR_USE):
 				actorDir = actorObj.get_dir_num()
-				Utils.Log_Event("LevelEngine::process_actor_cmd() - actor %d issued use cmd in dir = %d" % (actorObj.Id, actorDir))
-				useObjID, useObjCategory = self.__theMapDisplayList[mapIndex].use_map_item(actorObj.Id, actorDir)
+				Utils.Log_Event("LevelEngine::process_actor_cmd() - actor %d issued use cmd in dir = %d" % (actorObj.oid, actorDir))
+				useObjID, useObjCategory = self.__theMapDisplayList[mapIndex].use_map_item(actorObj.oid, actorDir)
 				
 				if (useObjCategory == Const.MAP_CAT_EXIT):
 					# check to see if actor can exit current map
@@ -744,7 +602,7 @@ class LevelEngine(object):
 							# not done with level yet
 							if ((exitNum > Const.INVALID_INDEX) and (exitNum < len(self.__theMapDisplayList))):
 								# ping display to see if actor has open space to move in next map
-								Utils.Log_Event("LevelEngine::process_actor_cmd() - actor %d encountered exit map %d" % (actorObj.Id, exitNum))
+								Utils.Log_Event("LevelEngine::process_actor_cmd() - actor %d encountered exit map %d" % (actorObj.oid, exitNum))
 								
 								actorCategory = Const.INVALID_INDEX
 								
@@ -762,7 +620,7 @@ class LevelEngine(object):
 									Utils.Write_Map_Log("This door is blocked")
 								else:
 									rStat = self.__transport_entity(actorObj, actorCategory, mapIndex, exitNum, exitItem.linkPos)
-									Utils.Log_Event("LevelEngine::process_actor_cmd() - actor %d transported with Stat=%d" % (actorObj.Id, rStat))
+									Utils.Log_Event("LevelEngine::process_actor_cmd() - actor %d transported with Stat=%d" % (actorObj.oid, rStat))
 									
 									if (rStat != Const.RT_SUCCESS):
 										# something went wrong... cannot proceed to next map
@@ -775,6 +633,24 @@ class LevelEngine(object):
 				
 		return retVal
 		
+	# Class: LevelEngine
+	#
+	# Transports actor entity between display maps.
+	# Entity will be placed in their current direction 
+	# outside the target map's exit.
+	#
+	# NOTE:
+	#	Entity Oid will be updated to a valid Oid within new display
+	#
+	#	Parameters:
+	#		entityObj		- entity data
+	#		entityCategory	- map entity category
+	#		currentMapIndex	- current map location of entity
+	#		targetMapIndex	- target map location to move entity
+	#		targetExitPos	- pos of target map's exit in which to move entity to 
+	#
+	#	Return:
+	#		rStat - status of transport
 	def __transport_entity(self, entityObj, entityCategory, currentMapIndex, targetMapIndex, targetExitPos):
 	
 		rStat = Const.RT_SUCCESS
@@ -797,7 +673,7 @@ class LevelEngine(object):
 				
 			if (entityChar != ''):
 				# remove entity from current map and insert into target map
-				rStat = self.__theMapDisplayList[currentMapIndex].remove_map_entity(entityObj.Id)
+				rStat = self.__theMapDisplayList[currentMapIndex].remove_map_entity(entityObj.oid)
 				
 				if (rStat == Const.RT_SUCCESS):
 					# create new entity in target map with new OID
@@ -807,12 +683,14 @@ class LevelEngine(object):
 						Utils.Show_Game_Error("LevelEngine::__transport_entity() - invalid obj entity placement at map %d - pos %s!" % (targetMapIndex, targetPos.get_str()))
 						rStat = Const.RT_FAILURE
 					else:
-						entityObj.Id = newOid
+						entityObj.oid = newOid
 						entityObj.location = targetMapIndex
 		
 		return rStat
 		
-		
+	# Class: LevelEngine
+	#
+	# Displays current map as specified by __mapIndex
 	def print_map_str(self, isUCode=True):
 		if (isUCode):
 			mapStr = u"%s" % self.__theMapDisplayList[self.__mapIndex].get_map_for_display()
@@ -833,8 +711,10 @@ class LevelEngine(object):
 		"""
 		print mapStr
 		
-		#print Const.MAP_CHAR_SOLID_SPACE
 		
+	# Class: LevelEngine
+	#
+	# Update level's map log
 	def write_map_log(self,  gameStr):
 		self.__mapLog.add(gameStr)
 		
@@ -851,14 +731,16 @@ class SceneEngine(object):
 	
 	def __init__(self, sceneMap):
 		self.__sceneMap = Scene.SceneMap(Const.START_KEY)
-		
+	
+	# Class: SceneEngine
+	#
+	# Drives game by running through scene state machine
 	def play(self):
 
 		Utils.Clear_Screen()
 		# Show Title Screen with menu options
 		print "%s\n%s\n%s\n" % (Const.SEPARATOR_LINE_STR, Const.ART_STR_GAME_TITLE, Const.SEPARATOR_LINE_STR)
 		
-		# TODO: - possibly store all game msgs in separate file
 		startMenuStr = """
 			1. Start Game
 			2. Help
@@ -878,8 +760,8 @@ class SceneEngine(object):
 			Time to blow this baby and escape to the planet below!\n\n
 		"""
 		
-		
-		Console.test_formatting() # DEBUG_JW:
+		if (Const.DEBUG_MODE):
+			Console.test_formatting()
 		
 		done = False
 		

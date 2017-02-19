@@ -28,20 +28,20 @@ def test_formatting():
 	#uCodeStr = u'Ω'
 	#print "%s" % uCodeStr
 	
-	print "%sWarning: No active formats remain. Continue?%s\n" % (bcolor.get_colorStr(MAGENTA), bcolor.get_colorStr(ENDC))
+	print "%sWarning: No active formats remain. Continue?%s\n" % (bcolor.Get_ColorStr(MAGENTA), bcolor.Get_ColorStr(ENDC))
 	print "It is \033[31mnot\033[39m intelligent to use \033[32mhardcoded ANSI\033[39m \033[1mcodes!\033[0m"
 	print "It is \033[31m\033[47mnot\033[39m\033[49m intelligent to use \033[92mhardcoded ANSI\033[39m \033[1mcodes!\033[0m"
-	endColorStr = bcolor.get_colorStr(ENDC)
-	defaultColorStr = bcolor.get_colorStr(DEFAULT_COLOR)
-	whiteStr = bcolor.get_colorStr(WHITE)
-	cyanStr = bcolor.get_colorStr(CYAN)
-	magentaStr = bcolor.get_colorStr(MAGENTA)
-	blueStr = bcolor.get_colorStr(BLUE)
-	yellowStr = bcolor.get_colorStr(YELLOW)
-	greenStr = bcolor.get_colorStr(GREEN)
-	redStr = bcolor.get_colorStr(RED)
-	redBoldStr = bcolor.get_colorStr(BOLD) + bcolor.get_colorStr(RED)
-	blackStr = bcolor.get_colorStr(UNDERLINE) + bcolor.get_colorStr(BLACK)
+	endColorStr = bcolor.Get_ColorStr(ENDC)
+	defaultColorStr = bcolor.Get_ColorStr(DEFAULT_COLOR)
+	whiteStr = bcolor.Get_ColorStr(WHITE)
+	cyanStr = bcolor.Get_ColorStr(CYAN)
+	magentaStr = bcolor.Get_ColorStr(MAGENTA)
+	blueStr = bcolor.Get_ColorStr(BLUE)
+	yellowStr = bcolor.Get_ColorStr(YELLOW)
+	greenStr = bcolor.Get_ColorStr(GREEN)
+	redStr = bcolor.Get_ColorStr(RED)
+	redBoldStr = bcolor.Get_ColorStr(BOLD) + bcolor.Get_ColorStr(RED)
+	blackStr = bcolor.Get_ColorStr(UNDERLINE) + bcolor.Get_ColorStr(BLACK)
 	print "%sDEFAULT%s %sWHITE%s %sCYAN%s %sMAGENTA%s %sBLUE%s %sYELLOW%s %sGREEN%s %sRED%s %sRED_BOLD%s %sBLACK_UNDERLINE%s" % (defaultColorStr, endColorStr, whiteStr, endColorStr, cyanStr, endColorStr, magentaStr, endColorStr, blueStr, endColorStr, yellowStr, endColorStr, greenStr, endColorStr, redStr, endColorStr, redBoldStr, endColorStr, blackStr, endColorStr)
 	raw_input(Const.PROMPT_CONTINUE_STR)
 	
@@ -73,16 +73,16 @@ class bcolor:
 		self.__colorList = [0,0]
 		self.__clear()
 		
-		if (bcolor.is_valid_colorNum(foreColorNum)):
+		if (bcolor.Is_Valid_ColorNum(foreColorNum)):
 			self.__colorList[bcolor.FOREGROUND_INDEX] = foreColorNum
 		
-		if (bcolor.is_valid_colorNum(backColorNum)):
+		if (bcolor.Is_Valid_ColorNum(backColorNum)):
 			self.__colorList[bcolor.BACKGROUND_INDEX] = backColorNum
 			
 		self.add_format(colorFormatNum)
 
 	@staticmethod
-	def is_valid_colorNum(colorNum):
+	def Is_Valid_ColorNum(colorNum):
 		
 		retVal = False
 		
@@ -95,7 +95,7 @@ class bcolor:
 		return retVal
 		
 	@staticmethod
-	def is_valid_color_formatNum(colorFormatNum):
+	def Is_Valid_Color_FormatNum(colorFormatNum):
 		
 		retVal = False
 		
@@ -106,7 +106,7 @@ class bcolor:
 		
 	# returns color format string based on number
 	@staticmethod
-	def get_colorStr(colorNum, isBackground=False):
+	def Get_ColorStr(colorNum, isBackground=False):
 
 		retStr = ''
 		
@@ -138,8 +138,8 @@ class bcolor:
 	
 		retChar = ''
 		
-		startCharColor = bcolor.get_colorStr(self.__colorList[bcolor.FOREGROUND_INDEX]) + bcolor.get_colorStr(self.__colorList[bcolor.BACKGROUND_INDEX], True)
-		endCharColor = bcolor.get_colorStr(ENDC)
+		startCharColor = bcolor.Get_ColorStr(self.__colorList[bcolor.FOREGROUND_INDEX]) + bcolor.Get_ColorStr(self.__colorList[bcolor.BACKGROUND_INDEX], True)
+		endCharColor = bcolor.Get_ColorStr(ENDC)
 		
 		return startCharColor + self.__formatStr + inChar + endCharColor
 	
@@ -149,7 +149,7 @@ class bcolor:
 		rStat = Const.RT_FAILURE
 		
 		if ((index >= 0) and (index < len(self.__colorList))):
-			if (is_valid_colorNum(colorNum)):
+			if (Is_Valid_ColorNum(colorNum)):
 				self.__colorList[index] = colorNum
 				rStat = Const.RT_SUCCESS
 		
@@ -160,7 +160,7 @@ class bcolor:
 		
 	def add_format(self, colorFormatNum):
 	
-		if (bcolor.is_valid_color_formatNum(colorFormatNum)):
+		if (bcolor.Is_Valid_Color_FormatNum(colorFormatNum)):
 			self.__formatStr += bcolor.COLOR_FORMAT_STR_LIST[colorFormatNum]
 			
 			

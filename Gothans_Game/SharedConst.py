@@ -326,7 +326,7 @@ MAP_CHAR_ITEM = '$'							# 7
 
 
 # Default Map Obj characters colors -> use category as index
-# Oder: Forground, Background, Format
+# Order: Forground, Background, Format
 							
 DEFAULT_CHAR_COLOR_LIST = [ (Console.DEFAULT_COLOR, Console.WHITE, 			INVALID_INDEX), 
 							(Console.DEFAULT_COLOR, Console.DEFAULT_COLOR,	INVALID_INDEX),
